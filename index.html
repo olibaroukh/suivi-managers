@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Suivi Managers</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --noir:#0D0D0D; --rouge:#CC1719; --creme:#F0EDE6;
+  }
+  *{box-sizing:border-box;}
+  body{
+    font-family:'Barlow',Arial,sans-serif; margin:0; background:var(--creme); color:var(--noir);
+    padding-bottom:60px;
+  }
+  header{
+    background:var(--noir); color:#fff; padding:16px 20px; display:flex; align-items:center; justify-content:space-between;
+  }
+  header h1{ font-size:18px; margin:0; font-weight:700; }
+  header .badge{ font-size:12px; opacity:.7; }
+  main{ max-width:640px; margin:0 auto; padding:16px; }
+  .screen{ display:none; }
+  .screen.active{ display:block; }
+  h2{ color:var(--rouge); font-size:20px; margin-top:0; }
+  h3{ font-size:16px; margin:18px 0 8px; }
+  label{ display:block; font-weight:600; font-size:13px; margin:14px 0 4px; }
+  input[type=text], input[type=date], input[type=number], select, textarea{
+    width:100%; padding:10px; border:1px solid #ccc; border-radius:6px; font-family:inherit; font-size:15px; background:#fff;
+  }
+  textarea{ min-height:70px; resize:vertical; }
+  button{
+    font-family:inherit; font-weight:600; font-size:15px; border:none; border-radius:8px;
+    padding:12px 18px; cursor:pointer;
+  }
+  .btn-primary{ background:var(--rouge); color:#fff; width:100%; margin-top:18px; }
+  .btn-secondary{ background:#fff; color:var(--noir); border:1px solid #ccc; width:100%; margin-top:8px; }
+  .btn-menu{
+    display:block; width:100%; text-align:left; background:#fff; border:1px solid #ddd; border-radius:10px;
+    padding:16px; margin-bottom:10px; font-size:16px; font-weight:600; color:var(--noir);
+  }
+  .btn-menu span{ display:block; font-weight:400; font-size:13px; color:#666; margin-top:2px; }
+  .search-results{ margin-top:8px; }
+  .search-item{
+    padding:10px; border-bottom:1px solid #eee; cursor:pointer;
+  }
+  .search-item:hover{ background:#fff; }
+  .hint{ font-size:12px; color:#777; margin-top:4px; }
+  .chip{
+    display:inline-block; background:var(--creme); border:1px solid #ddd; border-radius:20px;
+    padding:4px 12px; font-size:13px; margin-bottom:12px;
+  }
+  table.trame{ width:100%; border-collapse:collapse; margin-top:8px; font-size:13px; }
+  table.trame th, table.trame td{ border:1px solid #ddd; padding:6px; text-align:left; }
+  table.trame th{ background:var(--noir); color:#fff; font-size:12px; }
+  .item-row{ display:flex; align-items:center; gap:8px; padding:6px 0; border-bottom:1px solid #eee; }
+  .item-row .item-label{ flex:1; font-size:14px; }
+  .stats-grid{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px; }
+  .stats-grid .field{ background:#fff; border:1px solid #ddd; border-radius:6px; padding:8px; }
+  .stats-grid .field label{ margin:0 0 2px; font-size:11px; color:#666; }
+  .stats-grid .field input{ border:none; padding:2px 0; font-size:14px; }
+  .stats-hint{ font-size:11px; color:#888; margin-top:4px; }
+  .presents-list label{ display:flex; align-items:center; font-weight:400; gap:8px; padding:6px 0; border-bottom:1px solid #eee; }
+  .presents-list input{ width:auto; }
+  .toast{
+    position:fixed; bottom:16px; left:50%; transform:translateX(-50%); background:var(--noir); color:#fff;
+    padding:12px 20px; border-radius:8px; font-size:14px; display:none; z-index:50;
+  }
+  .top-nav{ display:flex; gap:8px; margin-bottom:14px; }
+  .top-nav button{ background:none; border:none; color:var(--rouge); font-weight:600; padding:4px 0; font-size:13px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Suivi Managers</h1>
+  <span class="badge" id="version-badge"></span>
+</header>
+
+<main>
+
+  <!-- ============ SÉLECTION MAGASIN ============ -->
+  <section class="screen active" id="screen-select">
+    <h2>Choisir un magasin</h2>
+    <label for="ar-select">Animateur</label>
+    <select id="ar-select"></select>
+
+    <label for="mag-search">Magasin</label>
+    <input type="text" id="mag-search" placeholder="Rechercher un magasin…" autocomplete="off">
+    <div class="search-results" id="mag-results"></div>
+  </section>
+
+  <!-- ============ MENU (après sélection magasin) ============ -->
+  <section class="screen" id="screen-menu">
+    <div class="top-nav"><button onclick="goTo('screen-select')">← Changer de magasin</button></div>
+    <div class="chip" id="menu-magasin-chip"></div>
+    <h2>Que veux-tu réaliser ?</h2>
+    <button class="btn-menu" onclick="startEntretien('ecoute_fb')">Écoute & Feedback de vente<span>Taux de concrétisation — checklist devis</span></button>
+    <button class="btn-menu" onclick="startEntretien('pilotage_optique')">Pilotage Optique<span>Entretien de pilotage, 7 étapes</span></button>
+    <button class="btn-menu" onclick="startEntretien('pilotage_audio')">Pilotage Audio<span>Entretien de pilotage, 7 étapes</span></button>
+    <button class="btn-menu" onclick="goTo('screen-lancement')">Lancement de journée<span>Présents, objectifs, note libre</span></button>
+    <button class="btn-menu" onclick="openHistorique()">Historique<span>Accès animateurs réseau / réseau complet</span></button>
+  </section>
+
+  <!-- ============ ÉCOUTE & FEEDBACK ============ -->
+  <section class="screen" id="screen-ecoute-fb">
+    <div class="top-nav"><button onclick="goTo('screen-menu')">← Retour</button></div>
+    <h2>Écoute & Feedback de vente</h2>
+    <div class="chip" id="ecoute-magasin-chip"></div>
+
+    <label>Collaborateur</label>
+    <select id="ecoute-collab"></select>
+
+    <label>Rempli par (ton prénom)</label>
+    <input type="text" id="ecoute-remplipar">
+
+    <label>Date</label>
+    <input type="date" id="ecoute-date">
+
+    <h3>1. Niveau commercial</h3>
+    <div class="stats-grid">
+      <div class="field"><label>PM</label><input type="text" id="ecoute-pm"></div>
+      <div class="field"><label>TXC</label><input type="text" id="ecoute-txc"></div>
+      <div class="field"><label>MQ</label><input type="text" id="ecoute-mq"></div>
+    </div>
+
+    <h3>2. Écoute de la vente — points de contrôle</h3>
+    <div id="ecoute-items"></div>
+
+    <h3>3. Feedback avec le collaborateur</h3>
+    <label>Ce qui va bien (+)</label>
+    <textarea id="ecoute-plus"></textarea>
+    <label>Axes d'amélioration</label>
+    <textarea id="ecoute-axes"></textarea>
+    <label>Apports pédagogiques</label>
+    <textarea id="ecoute-apports"></textarea>
+    <label>Synthèse du collaborateur (validation)</label>
+    <textarea id="ecoute-synthese"></textarea>
+
+    <button class="btn-primary" onclick="submitEntretien('ecoute_fb')">Envoyer</button>
+  </section>
+
+  <!-- ============ PILOTAGE (optique / audio, template commun) ============ -->
+  <section class="screen" id="screen-pilotage">
+    <div class="top-nav"><button onclick="goTo('screen-menu')">← Retour</button></div>
+    <h2 id="pilotage-titre">Pilotage</h2>
+    <div class="chip" id="pilotage-magasin-chip"></div>
+
+    <label>Collaborateur</label>
+    <select id="pilotage-collab"></select>
+
+    <label>Rempli par (ton prénom)</label>
+    <input type="text" id="pilotage-remplipar">
+
+    <label>Date</label>
+    <input type="date" id="pilotage-date">
+
+    <h3>Indicateurs actuels</h3>
+    <div class="stats-grid" id="pilotage-stats-avant"></div>
+    <div class="stats-hint" id="pilotage-stats-hint"></div>
+
+    <h3>1. Valoriser ce qui va bien</h3>
+    <textarea id="pilotage-1"></textarea>
+    <h3>2. Identification des points à améliorer</h3>
+    <textarea id="pilotage-2"></textarea>
+    <h3>3. Recherche des causes</h3>
+    <textarea id="pilotage-3"></textarea>
+
+    <h3>4. Nouvel objectif (3 indicateurs max)</h3>
+    <div class="stats-grid" id="pilotage-stats-objectif"></div>
+
+    <h3>5. Apport en formation / plan d'action</h3>
+    <textarea id="pilotage-5"></textarea>
+    <h3>6. Rôle d'accompagnement et de contrôle</h3>
+    <textarea id="pilotage-6"></textarea>
+    <h3>7. Validation</h3>
+    <textarea id="pilotage-7"></textarea>
+
+    <button class="btn-primary" onclick="submitPilotage()">Envoyer</button>
+  </section>
+
+  <!-- ============ LANCEMENT DE JOURNÉE ============ -->
+  <section class="screen" id="screen-lancement">
+    <div class="top-nav"><button onclick="goTo('screen-menu')">← Retour</button></div>
+    <h2>Lancement de journée</h2>
+    <div class="chip" id="lancement-magasin-chip"></div>
+
+    <label>Ton prénom</label>
+    <input type="text" id="lancement-remplipar">
+    <label>Ton poste / ta tâche</label>
+    <input type="text" id="lancement-poste">
+    <label>Date</label>
+    <input type="date" id="lancement-date">
+
+    <h3>Qui est présent</h3>
+    <div class="presents-list" id="lancement-presents"></div>
+
+    <label>Objectifs du jour</label>
+    <textarea id="lancement-objectifs"></textarea>
+    <label>Note libre</label>
+    <textarea id="lancement-note"></textarea>
+
+    <button class="btn-primary" onclick="submitLancement()">Envoyer</button>
+  </section>
+
+  <!-- ============ HISTORIQUE (login AR) ============ -->
+  <section class="screen" id="screen-historique">
+    <div class="top-nav"><button onclick="goTo('screen-menu')">← Retour</button></div>
+    <h2>Historique</h2>
+    <div id="historique-login">
+      <label>Identifiant Zimbra</label>
+      <input type="text" id="hist-user">
+      <label>Mot de passe</label>
+      <input type="text" id="hist-pass">
+      <button class="btn-primary" onclick="historiqueLogin()">Se connecter</button>
+    </div>
+    <div id="historique-liste" style="display:none;"></div>
+  </section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================================
+// CONFIGURATION — à vérifier/compléter avant mise en prod
+// ============================================================================
+const APP_VERSION = '2026.09.16-1'
+const SW_VERSION = '2026.09.16-1'
+const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
+// URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
+const MAGASINS_CSV_URL = 'https://raw.githubusercontent.com/olibaroukh/bilan-passage/main/magasins.csv'
+// Secret partagé pour X-Store-Token — À COMPLETER avec la vraie valeur (STORE_SECRET du Worker)
+const STORE_TOKEN = 'A_COMPLETER'
+
+document.getElementById('version-badge').textContent = 'v' + APP_VERSION
+
+// ============================================================================
+// ÉTAT
+// ============================================================================
+let state = {
+  magasins: [],       // [{code, libelle, animateur, animateurEmail, email}]
+  currentMagasin: null,
+  currentAR: localStorage.getItem('sm_currentAR') || '',
+  currentType: null,  // 'pilotage_optique' | 'pilotage_audio'
+  collaborateurs: [],
+  arSession: null,
+}
+
+function goTo(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
+  document.getElementById(id).classList.add('active')
+}
+function showToast(msg) {
+  const t = document.getElementById('toast')
+  t.textContent = msg
+  t.style.display = 'block'
+  setTimeout(() => { t.style.display = 'none' }, 3000)
+}
+
+// ============================================================================
+// CHARGEMENT MAGASINS.CSV — parseur générique (détecte , ou ;), colonnes par en-tête
+// ============================================================================
+async function loadMagasins() {
+  try {
+    const res = await fetch(MAGASINS_CSV_URL)
+    const text = await res.text()
+    const sep = text.split('\n')[0].includes(';') ? ';' : ','
+    const lines = text.split('\n').filter(l => l.trim())
+    const headers = lines[0].split(sep).map(h => h.trim().toLowerCase())
+    const idx = (name) => headers.indexOf(name)
+
+    state.magasins = lines.slice(1).map(line => {
+      const c = line.split(sep)
+      return {
+        code: (c[idx('code')] || '').trim(),
+        libelle: (c[idx('libelle')] || c[idx('nom')] || '').trim(),
+        animateur: (c[idx('animateur')] || '').trim(),
+        animateurEmail: (c[idx('animateur_email')] || '').trim(),
+        email: (c[idx('email')] || '').trim(),
+      }
+    }).filter(m => m.code && m.libelle)
+
+    renderArSelect()
+  } catch (e) {
+    showToast('Impossible de charger le référentiel magasins')
+  }
+}
+
+function renderArSelect() {
+  const animateurs = [...new Set(state.magasins.map(m => m.animateur).filter(Boolean))].sort()
+  const sel = document.getElementById('ar-select')
+  sel.innerHTML = '<option value="">Tous les animateurs</option>' +
+    '<option value="Olivier (tout le réseau)">Olivier (tout le réseau)</option>' +
+    animateurs.map(a => `<option value="${a}">${a}</option>`).join('')
+  sel.value = state.currentAR
+  sel.onchange = () => { state.currentAR = sel.value; localStorage.setItem('sm_currentAR', sel.value) }
+}
+
+// ============================================================================
+// RECHERCHE MAGASIN
+// ============================================================================
+document.getElementById('mag-search').addEventListener('input', (e) => {
+  const q = e.target.value.trim().toLowerCase()
+  const resultsEl = document.getElementById('mag-results')
+  if (q.length < 2) { resultsEl.innerHTML = ''; return }
+
+  let pool = state.magasins
+  if (state.currentAR && state.currentAR !== 'Olivier (tout le réseau)') {
+    pool = pool.filter(m => m.animateur === state.currentAR)
+  }
+  const matches = pool.filter(m => m.libelle.toLowerCase().includes(q)).slice(0, 20)
+
+  resultsEl.innerHTML = matches.map(m =>
+    `<div class="search-item" data-code="${m.code}">${m.libelle}</div>`
+  ).join('') || '<div class="hint">Aucun résultat</div>'
+
+  resultsEl.querySelectorAll('.search-item').forEach(el => {
+    el.addEventListener('click', () => selectMagasin(el.dataset.code))
+  })
+})
+
+function selectMagasin(code) {
+  const m = state.magasins.find(x => x.code === code)
+  if (!m) return
+  state.currentMagasin = m
+  document.querySelectorAll('#menu-magasin-chip, #ecoute-magasin-chip, #pilotage-magasin-chip, #lancement-magasin-chip')
+    .forEach(el => el.textContent = m.libelle)
+  loadCollaborateurs(m.code)
+  goTo('screen-menu')
+}
+
+// ============================================================================
+// COLLABORATEURS (import RH)
+// ============================================================================
+async function loadCollaborateurs(magasinCode) {
+  state.collaborateurs = []
+  try {
+    const res = await fetch(RELAY + '/rh-collaborateurs?magasin_code=' + encodeURIComponent(magasinCode), {
+      headers: { 'X-Store-Token': STORE_TOKEN }
+    })
+    const data = await res.json()
+    state.collaborateurs = data.collaborateurs || []
+  } catch (e) { /* liste vide si échec, saisie reste possible */ }
+
+  const optsHtml = '<option value="">—</option>' +
+    state.collaborateurs.map(c => `<option value="${c.matricule}">${c.nom}${c.poste ? ' (' + c.poste + ')' : ''}</option>`).join('')
+  document.getElementById('ecoute-collab').innerHTML = optsHtml
+  document.getElementById('pilotage-collab').innerHTML = optsHtml
+
+  document.getElementById('lancement-presents').innerHTML = state.collaborateurs.map(c =>
+    `<label><input type="checkbox" value="${c.nom}"> ${c.nom}</label>`
+  ).join('') || '<div class="hint">Aucun collaborateur trouvé — la liste dépend de l\'import RH mensuel.</div>'
+}
+
+// ============================================================================
+// ÉCOUTE & FEEDBACK — items de la trame (fidèle au document papier)
+// ============================================================================
+const ECOUTE_ITEMS = [
+  'Accueil VIP (rapide, sourire, dynamique, café)',
+  'Demande de l\'ordonnance, carte vitale et mutuelle',
+  'Découverte client — dans le questionnement',
+  'Découverte client — identification des besoins',
+  'Découverte client — nomme les verres correspondants',
+  'Découverte client — présente sa proposition d\'offre Unique ou Plaisir',
+  'Découverte client — a pu déterminer si on est dans un devis ou pas',
+  'Découverte client — si besoin, quel est votre budget',
+  'Fait 2 propositions (meilleur rapport Q/P et n+1)',
+  'Demande de choisir',
+  'Demande intervention du manager',
+  'Qu\'est-ce qui vous empêche de vous décider aujourd\'hui ?',
+  'Énonce le service : 3 fois sans frais',
+  'Énonce le service : TP et gestion de l\'administratif',
+  'Énonce le service : OC garantit les prix les plus bas',
+  'Énonce le service : si moins cher ailleurs = remboursement de la différence',
+  'Énonce le service : 3 mois de garantie adaptation',
+  'Prévient du rappel',
+]
+function renderEcouteItems() {
+  document.getElementById('ecoute-items').innerHTML = ECOUTE_ITEMS.map((label, i) => `
+    <div class="item-row">
+      <input type="checkbox" id="item-fait-${i}">
+      <span class="item-label">${label}</span>
+    </div>
+    <input type="text" id="item-plus-moins-${i}" placeholder="Les + / les -" style="margin-bottom:4px;">
+    <input type="text" id="item-apports-${i}" placeholder="Apports pédagogiques" style="margin-bottom:10px;">
+  `).join('')
+}
+renderEcouteItems()
+
+// ============================================================================
+// PILOTAGE — champs stats (optique / audio) + pré-remplissage depuis /collab-stats
+// ============================================================================
+const PILOTAGE_FIELDS = {
+  pilotage_optique: [
+    { key: 'pm', label: 'PM', source: 'pmOpt' },
+    { key: 'mdc', label: 'MDC', source: 'mdc' },
+    { key: 'transition', label: 'Transition', source: null },
+    { key: 'pc', label: 'PC', source: null },
+    { key: 'nbVente', label: 'Nbre de vente', source: 'nbVenteOpt' },
+    { key: 'sop', label: 'SOP/Platinium', source: 'sop' },
+    { key: 'ar3', label: 'AR 3', source: null },
+    { key: 'progIndiv', label: 'Prog indiv', source: null },
+    { key: 'txConcret', label: 'Tx de concret', source: 'txConcretOpt' },
+    { key: 'pm1ere', label: 'PM 1ère paire', source: 'pm1erePaire' },
+    { key: 'unifIndiv', label: 'Unif Indiv', source: null },
+    { key: 'testAuditif', label: '% tests auditifs/mois', source: 'pctTestAuditif' },
+  ],
+  pilotage_audio: [
+    { key: 'pm', label: 'PM', source: 'pmAudio' },
+    { key: 'ouiezen', label: 'Ouiezen Prem', source: null },
+    { key: 'caAccessoires', label: 'CA accessoires (%)', source: 'caAccessoiresPct' },
+    { key: 'caAudioMag', label: 'CA audio/CA mag', source: null }, // calculé serveur, cf. note
+    { key: 'txConcret', label: 'Tx de concret', source: 'txConcretAudio' },
+    { key: 'pmHygiene', label: 'PM produits d\'hygiène', source: null },
+    { key: 'ap4', label: 'AP4 + Platinium', source: 'ap4' },
+    { key: 'testAuditif', label: '% tests auditifs/mois', source: 'pctTestAuditif' },
+  ],
+}
+
+function renderPilotageStatsGrid(containerId, type, prefillData) {
+  const fields = PILOTAGE_FIELDS[type]
+  document.getElementById(containerId).innerHTML = fields.map(f => `
+    <div class="field">
+      <label>${f.label}</label>
+      <input type="text" id="stat-${containerId}-${f.key}" value="${prefillData && f.source && prefillData[f.source] != null ? prefillData[f.source] : ''}">
+    </div>
+  `).join('')
+}
+
+async function startEntretien(type) {
+  state.currentType = type
+  if (type === 'ecoute_fb') {
+    document.getElementById('ecoute-date').value = new Date().toISOString().slice(0, 10)
+    goTo('screen-ecoute-fb')
+    return
+  }
+  document.getElementById('pilotage-titre').textContent = type === 'pilotage_optique' ? 'Pilotage Optique' : 'Pilotage Audio'
+  document.getElementById('pilotage-date').value = new Date().toISOString().slice(0, 10)
+  renderPilotageStatsGrid('pilotage-stats-avant', type, null)
+  renderPilotageStatsGrid('pilotage-stats-objectif', type, null)
+  document.getElementById('pilotage-stats-hint').textContent = ''
+  goTo('screen-pilotage')
+}
+
+// Récupère les stats collaborateur dès qu'un collaborateur est choisi dans l'écran Pilotage
+document.getElementById('pilotage-collab').addEventListener('change', async (e) => {
+  const matricule = e.target.value
+  if (!matricule) return
+  try {
+    const res = await fetch(RELAY + '/collab-stats?matricules=' + encodeURIComponent(matricule), {
+      headers: { 'X-Store-Token': STORE_TOKEN }
+    })
+    const data = await res.json()
+    const stats = data.collaborateurs && data.collaborateurs[matricule]
+    renderPilotageStatsGrid('pilotage-stats-avant', state.currentType, stats)
+    document.getElementById('pilotage-stats-hint').textContent = stats
+      ? `Stats pré-remplies (période ${stats.periode}) — modifiables.`
+      : 'Pas de stats trouvées pour ce collaborateur — saisie libre.'
+  } catch (e) {
+    document.getElementById('pilotage-stats-hint').textContent = 'Pré-remplissage indisponible — saisie libre.'
+  }
+})
+
+// ============================================================================
+// ENVOI — Écoute & Feedback
+// ============================================================================
+async function submitEntretien(type) {
+  const collabSelect = document.getElementById('ecoute-collab')
+  const data = {
+    niveauCommercial: {
+      pm: document.getElementById('ecoute-pm').value,
+      txc: document.getElementById('ecoute-txc').value,
+      mq: document.getElementById('ecoute-mq').value,
+    },
+    items: ECOUTE_ITEMS.map((label, i) => ({
+      label,
+      fait: document.getElementById('item-fait-' + i).checked,
+      plusMoins: document.getElementById('item-plus-moins-' + i).value,
+      apports: document.getElementById('item-apports-' + i).value,
+    })),
+    plus: document.getElementById('ecoute-plus').value,
+    axes: document.getElementById('ecoute-axes').value,
+    apports: document.getElementById('ecoute-apports').value,
+    synthese: document.getElementById('ecoute-synthese').value,
+  }
+  await postEntretien(type, collabSelect, document.getElementById('ecoute-remplipar').value, document.getElementById('ecoute-date').value, data)
+}
+
+// ============================================================================
+// ENVOI — Pilotage (optique / audio)
+// ============================================================================
+async function submitPilotage() {
+  const type = state.currentType
+  const fields = PILOTAGE_FIELDS[type]
+  const collabSelect = document.getElementById('pilotage-collab')
+  const readGrid = (containerId) => {
+    const o = {}
+    fields.forEach(f => { o[f.key] = document.getElementById(`stat-${containerId}-${f.key}`).value })
+    return o
+  }
+  const data = {
+    statsActuelles: readGrid('pilotage-stats-avant'),
+    etape1: document.getElementById('pilotage-1').value,
+    etape2: document.getElementById('pilotage-2').value,
+    etape3: document.getElementById('pilotage-3').value,
+    nouvelObjectif: readGrid('pilotage-stats-objectif'),
+    etape5: document.getElementById('pilotage-5').value,
+    etape6: document.getElementById('pilotage-6').value,
+    etape7: document.getElementById('pilotage-7').value,
+  }
+  await postEntretien(type, collabSelect, document.getElementById('pilotage-remplipar').value, document.getElementById('pilotage-date').value, data)
+}
+
+async function postEntretien(type, collabSelectEl, remplipar, date, data) {
+  if (!remplipar || !date) { showToast('Merci de renseigner ton prénom et la date'); return }
+  const matricule = collabSelectEl.value
+  const collaborateurNom = matricule ? collabSelectEl.options[collabSelectEl.selectedIndex].text : ''
+
+  try {
+    const res = await fetch(RELAY + '/entretien-manager', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Store-Token': STORE_TOKEN },
+      body: JSON.stringify({
+        type, magasinCode: state.currentMagasin.code,
+        collaborateurMatricule: matricule || null, collaborateurNom,
+        remplipar, date, data,
+      }),
+    })
+    if (!res.ok) throw new Error('erreur serveur')
+    showToast('Envoyé — mail parti au magasin')
+    goTo('screen-menu')
+  } catch (e) {
+    showToast('Échec de l\'envoi — vérifie ta connexion')
+  }
+}
+
+// ============================================================================
+// ENVOI — Lancement de journée
+// ============================================================================
+document.getElementById('lancement-date').value = new Date().toISOString().slice(0, 10)
+
+async function submitLancement() {
+  const remplipar = document.getElementById('lancement-remplipar').value
+  const poste = document.getElementById('lancement-poste').value
+  const date = document.getElementById('lancement-date').value
+  if (!remplipar || !poste || !date) { showToast('Merci de renseigner prénom, poste et date'); return }
+
+  const presents = [...document.querySelectorAll('#lancement-presents input:checked')].map(el => el.value)
+
+  try {
+    const res = await fetch(RELAY + '/lancement-journee', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Store-Token': STORE_TOKEN },
+      body: JSON.stringify({
+        magasinCode: state.currentMagasin.code,
+        remplipar, posteRemplipar: poste, date, presents,
+        objectifs: document.getElementById('lancement-objectifs').value,
+        noteLibre: document.getElementById('lancement-note').value,
+      }),
+    })
+    if (!res.ok) throw new Error('erreur serveur')
+    showToast('Envoyé — mail parti au magasin')
+    goTo('screen-menu')
+  } catch (e) {
+    showToast('Échec de l\'envoi — vérifie ta connexion')
+  }
+}
+
+// ============================================================================
+// HISTORIQUE (login AR, réutilise /ar-login comme Bilan de Passage)
+// ============================================================================
+function openHistorique() { goTo('screen-historique') }
+
+async function historiqueLogin() {
+  const login = document.getElementById('hist-user').value
+  const pass = document.getElementById('hist-pass').value
+  try {
+    const res = await fetch(RELAY + '/ar-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ login, pass }),
+    })
+    const data = await res.json()
+    if (!res.ok || !data.session) throw new Error('login refusé')
+    state.arSession = data.session
+    document.getElementById('historique-login').style.display = 'none'
+    document.getElementById('historique-liste').style.display = 'block'
+    await loadHistorique()
+  } catch (e) {
+    showToast('Connexion refusée')
+  }
+}
+
+async function loadHistorique() {
+  try {
+    const res = await fetch(RELAY + '/historique-managers', {
+      headers: { 'X-AR-Session': state.arSession }
+    })
+    const data = await res.json()
+    const el = document.getElementById('historique-liste')
+    const entretiens = (data.entretiens || []).map(e =>
+      `<div class="search-item"><b>${e.type}</b> — ${e.magasin_libelle || ''} — ${e.collaborateur_nom || ''} — ${e.date} (${e.rempli_par})</div>`
+    ).join('')
+    const lancements = (data.lancements || []).map(l =>
+      `<div class="search-item"><b>Lancement</b> — ${l.magasin_libelle || ''} — ${l.date} (${l.rempli_par})</div>`
+    ).join('')
+    el.innerHTML = '<h3>Entretiens</h3>' + (entretiens || '<div class="hint">Aucun</div>') +
+      '<h3>Lancements de journée</h3>' + (lancements || '<div class="hint">Aucun</div>')
+  } catch (e) {
+    showToast('Impossible de charger l\'historique')
+  }
+}
+
+// ============================================================================
+// INIT
+// ============================================================================
+loadMagasins()
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js?v=' + SW_VERSION)
+}
+</script>
+</body>
+</html>
