@@ -72,6 +72,16 @@
      (Pilotage), chaque zone reste courte pour que le PDF tienne sur une page
      même quand tous les secteurs sont remplis — voir generateEntretienPdf(). */
   textarea.ta-compact{ min-height:44px; }
+  /* Dictée vocale (17/09) — bouton 🎤 flottant en bas à droite de chaque
+     zone de texte, même principe que sur les autres apps (Web Speech API). */
+  .ta-wrap{ position:relative; }
+  .ta-wrap textarea{ width:100%; padding-right:38px; }
+  .mic-btn{
+    position:absolute; right:6px; bottom:6px; width:26px; height:26px; padding:0;
+    border-radius:50%; background:var(--card); border:1px solid var(--card-border);
+    color:var(--creme); font-size:13px; line-height:1; display:flex; align-items:center; justify-content:center;
+  }
+  .mic-btn.dictating{ background:var(--rouge); border-color:var(--rouge); }
   button{
     font-family:inherit; font-weight:600; font-size:15px; border:none; border-radius:8px;
     padding:12px 18px; cursor:pointer;
@@ -170,7 +180,7 @@
     <button class="btn-menu" onclick="startEntretien('pilotage_optique')">Pilotage Optique<span>Entretien de pilotage, 7 étapes</span></button>
     <button class="btn-menu" onclick="startEntretien('pilotage_audio')">Pilotage Audio<span>Entretien de pilotage, 7 étapes</span></button>
     <button class="btn-menu" onclick="startRecadrage()">Entretien de recadrage<span>Méthode relationnelle / professionnelle</span></button>
-    <button class="btn-menu" onclick="goTo('screen-lancement')">Lancement de journée<span>Présents, objectifs, note libre</span></button>
+    <button class="btn-menu" onclick="startLancement()">Lancement de journée<span>Présents, objectifs, note libre</span></button>
     <button class="btn-menu" onclick="openHistorique()">Historique<span>Accès animateurs réseau / réseau complet</span></button>
   </section>
 
@@ -193,7 +203,7 @@
     <div class="stats-grid">
       <div class="field"><label>PM</label><input type="text" id="ecoute-pm"></div>
       <div class="field"><label>TXC</label><input type="text" id="ecoute-txc"></div>
-      <div class="field"><label>MQ</label><input type="text" id="ecoute-mq"></div>
+      <div class="field"><label id="ecoute-third-label">SOP</label><input type="text" id="ecoute-third"></div>
     </div>
 
     <h3>2. Écoute de la vente — points de contrôle</h3>
@@ -201,13 +211,13 @@
 
     <h3>3. Feedback avec le collaborateur</h3>
     <label>Ce qui va bien (+)</label>
-    <textarea id="ecoute-plus"></textarea>
+    <div class="ta-wrap"><textarea id="ecoute-plus"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('ecoute-plus', this)">🎤</button></div>
     <label>Axes d'amélioration</label>
-    <textarea id="ecoute-axes"></textarea>
+    <div class="ta-wrap"><textarea id="ecoute-axes"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('ecoute-axes', this)">🎤</button></div>
     <label>Apports pédagogiques</label>
-    <textarea id="ecoute-apports"></textarea>
+    <div class="ta-wrap"><textarea id="ecoute-apports"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('ecoute-apports', this)">🎤</button></div>
     <label>Synthèse du collaborateur (validation)</label>
-    <textarea id="ecoute-synthese"></textarea>
+    <div class="ta-wrap"><textarea id="ecoute-synthese"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('ecoute-synthese', this)">🎤</button></div>
 
     <div class="sig-block">
       <h3>Signature du manager</h3>
@@ -243,11 +253,11 @@
     <div class="stats-hint" id="pilotage-stats-hint"></div>
 
     <h3>1. Valoriser ce qui va bien</h3>
-    <textarea id="pilotage-1" class="ta-compact" rows="2" maxlength="180"></textarea>
+    <div class="ta-wrap"><textarea id="pilotage-1" class="ta-compact" rows="2" maxlength="180"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('pilotage-1', this)">🎤</button></div>
     <h3>2. Identification des points à améliorer</h3>
-    <textarea id="pilotage-2" class="ta-compact" rows="2" maxlength="180"></textarea>
+    <div class="ta-wrap"><textarea id="pilotage-2" class="ta-compact" rows="2" maxlength="180"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('pilotage-2', this)">🎤</button></div>
     <h3>3. Recherche des causes</h3>
-    <textarea id="pilotage-3" class="ta-compact" rows="2" maxlength="180"></textarea>
+    <div class="ta-wrap"><textarea id="pilotage-3" class="ta-compact" rows="2" maxlength="180"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('pilotage-3', this)">🎤</button></div>
 
     <h3>4. Nouveaux objectifs (4 maximum)</h3>
     <label>Échéance</label>
@@ -255,11 +265,11 @@
     <div class="stats-grid" id="pilotage-stats-objectif"></div>
 
     <h3>5. Apport en formation / plan d'action</h3>
-    <textarea id="pilotage-5" class="ta-compact" rows="2" maxlength="180"></textarea>
+    <div class="ta-wrap"><textarea id="pilotage-5" class="ta-compact" rows="2" maxlength="180"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('pilotage-5', this)">🎤</button></div>
     <h3>6. Rôle d'accompagnement et de contrôle</h3>
-    <textarea id="pilotage-6" class="ta-compact" rows="2" maxlength="180"></textarea>
+    <div class="ta-wrap"><textarea id="pilotage-6" class="ta-compact" rows="2" maxlength="180"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('pilotage-6', this)">🎤</button></div>
     <h3>7. Validation</h3>
-    <textarea id="pilotage-7" class="ta-compact" rows="2" maxlength="180"></textarea>
+    <div class="ta-wrap"><textarea id="pilotage-7" class="ta-compact" rows="2" maxlength="180"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('pilotage-7', this)">🎤</button></div>
 
     <div class="sig-block">
       <h3>Signature du manager</h3>
@@ -290,36 +300,35 @@
     <label>Date</label>
     <input type="date" id="recadrage-date">
 
-    <h3>Indicateurs</h3>
-    <div class="stats-grid" id="recadrage-stats"></div>
     <label>Évolution de sa tâche</label>
-    <textarea id="recadrage-evolution"></textarea>
+    <div class="ta-wrap"><textarea id="recadrage-evolution"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('recadrage-evolution', this)">🎤</button></div>
 
+    <h3>Constat</h3>
     <h3>1. Décrire la situation de manière factuelle</h3>
     <div class="hint">Sans agressivité ni « le tu qui tue ». Ex : « J'ai constaté que tel jour à telle heure… »</div>
-    <textarea id="recadrage-1"></textarea>
+    <div class="ta-wrap"><textarea id="recadrage-1"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('recadrage-1', this)">🎤</button></div>
 
     <h3>2. Rappeler la règle</h3>
     <div class="hint">En utilisant le document « les règles du jeu ». Ex : « Je te rappelle que dans nos règles du jeu… »</div>
-    <textarea id="recadrage-2"></textarea>
+    <div class="ta-wrap"><textarea id="recadrage-2"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('recadrage-2', this)">🎤</button></div>
 
     <h3>3. Redéfinir les besoins de l'entreprise et de l'équipe</h3>
-    <textarea id="recadrage-3"></textarea>
+    <div class="ta-wrap"><textarea id="recadrage-3"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('recadrage-3', this)">🎤</button></div>
 
     <h3>Méthode relationnelle</h3>
     <label>4. Quelles solutions peut-on trouver ensemble ?</label>
-    <textarea id="recadrage-rel-4"></textarea>
+    <div class="ta-wrap"><textarea id="recadrage-rel-4"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('recadrage-rel-4', this)">🎤</button></div>
     <label>5. Valider l'engagement</label>
     <div class="hint">Ex : « Es-tu bien d'accord avec cette solution et peux-tu me la reformuler ? »</div>
-    <textarea id="recadrage-rel-5"></textarea>
+    <div class="ta-wrap"><textarea id="recadrage-rel-5"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('recadrage-rel-5', this)">🎤</button></div>
 
     <h3>Méthode professionnelle</h3>
     <label>4. Définir la sanction</label>
     <div class="hint">Ex : « Voilà ce qui va se passer si cela se reproduit la prochaine fois »</div>
-    <textarea id="recadrage-pro-4"></textarea>
+    <div class="ta-wrap"><textarea id="recadrage-pro-4"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('recadrage-pro-4', this)">🎤</button></div>
     <label>5. Valider la compréhension</label>
     <div class="hint">Ex : « Est-ce que tu as bien compris ? »</div>
-    <textarea id="recadrage-pro-5"></textarea>
+    <div class="ta-wrap"><textarea id="recadrage-pro-5"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('recadrage-pro-5', this)">🎤</button></div>
 
     <div class="sig-block">
       <h3>Signature du manager</h3>
@@ -341,6 +350,10 @@
     <h2>Lancement de journée</h2>
     <div class="chip" id="lancement-magasin-chip"></div>
 
+    <h3>Données du mois</h3>
+    <div class="hint" id="lancement-mensuel-hint"></div>
+    <div class="stats-grid" id="lancement-mensuel"></div>
+
     <label>Ton prénom</label>
     <input type="text" id="lancement-remplipar">
     <label>Ton poste / ta tâche</label>
@@ -350,11 +363,15 @@
 
     <h3>Qui est présent</h3>
     <div class="presents-list" id="lancement-presents"></div>
+    <div style="display:flex; gap:8px; margin-top:8px;">
+      <input type="text" id="lancement-presents-libre" placeholder="Ajouter une personne...">
+      <button type="button" class="btn-secondary" style="margin:0; width:auto; padding:10px 16px;" onclick="ajouterPresentLibre()">Ajouter</button>
+    </div>
 
     <label>Objectifs du jour</label>
-    <textarea id="lancement-objectifs"></textarea>
+    <div class="ta-wrap"><textarea id="lancement-objectifs"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('lancement-objectifs', this)">🎤</button></div>
     <label>Note libre</label>
-    <textarea id="lancement-note"></textarea>
+    <div class="ta-wrap"><textarea id="lancement-note"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('lancement-note', this)">🎤</button></div>
 
     <button class="btn-primary" onclick="previewLancement()">Aperçu</button>
   </section>
@@ -390,8 +407,8 @@
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.09.17-6'
-const SW_VERSION = '2026.09.17-6'
+const APP_VERSION = '2026.09.17-7'
+const SW_VERSION = '2026.09.17-7'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://raw.githubusercontent.com/olibaroukh/bilan-passage/main/magasins.csv'
@@ -509,7 +526,7 @@ async function loadCollaborateurs(magasinCode) {
   } catch (e) { /* liste vide si échec, saisie reste possible */ }
 
   const optsHtml = '<option value="">—</option>' +
-    state.collaborateurs.map(c => `<option value="${c.matricule}">${c.nom}${c.poste ? ' (' + c.poste + ')' : ''}</option>`).join('')
+    state.collaborateurs.map(c => `<option value="${c.matricule}" data-poste="${c.poste || ''}">${c.nom}${c.poste ? ' (' + c.poste + ')' : ''}</option>`).join('')
   document.getElementById('ecoute-collab').innerHTML = optsHtml
   document.getElementById('pilotage-collab').innerHTML = optsHtml
   document.getElementById('recadrage-collab').innerHTML = optsHtml
@@ -582,34 +599,13 @@ const PILOTAGE_FIELDS = {
     { key: 'pm', label: 'PM', source: 'pmAudio', unit: '€' },
     { key: 'ouiezen', label: 'Ouiezen Prem', source: null, unit: '' },
     { key: 'caAccessoires', label: 'CA accessoires', source: 'caAccessoiresPct', unit: '%' },
-    { key: 'caAudioMag', label: 'CA audio/CA mag', source: null, unit: '%' },
+    { key: 'caAudioMag', label: 'CA audio/CA mag', source: 'caAudioMag', unit: '%' },
     { key: 'txConcret', label: 'Tx de concret', source: 'txConcretAudio', unit: '%' },
     { key: 'pmHygiene', label: 'PM produits d\'hygiène', source: null, unit: '€' },
     { key: 'ap4', label: 'AP4 + Platinium', source: 'ap4', unit: '%' },
     { key: 'testAuditif', label: 'Tests auditifs/mois', source: 'pctTestAuditif', unit: '%' },
   ],
 }
-
-// Entretien de recadrage — mêmes familles d'indicateurs que Pilotage Optique
-// (+ Fform, Positionnement annuel, AR MAX propres à cette trame). Saisie
-// manuelle uniquement (pas de pré-remplissage /collab-stats) : un recadrage
-// est plus rare et plus engageant qu'un pilotage courant, le manager vérifie
-// ses chiffres à la main plutôt que de faire confiance à un import.
-const RECADRAGE_FIELDS = [
-  { key: 'pm', label: 'PM', unit: '€' },
-  { key: 'nbVentes', label: 'Nbre de ventes', unit: '' },
-  { key: 'fform', label: 'Fform', unit: '' },
-  { key: 'positionnementAnnuel', label: 'Positionnement annuel', unit: '%' },
-  { key: 'txConcret', label: 'Tx concret', unit: '%' },
-  { key: 'sop', label: 'SOP', unit: '%' },
-  { key: 'transitions', label: 'Transitions', unit: '' },
-  { key: 'mdc', label: 'MDC', unit: '%' },
-  { key: 'packConfort', label: 'Pack Confort', unit: '' },
-  { key: 'arMax', label: 'AR MAX', unit: '' },
-  { key: 'ar3', label: 'AR 3', unit: '' },
-  { key: 'pm1erePaire', label: 'PM 1ère paire', unit: '€' },
-  { key: 'testsAuditifs', label: 'Tests auditifs (1 mois)', unit: '%' },
-]
 
 function pilotagePrefillValue(f, prefillData) {
   if (!prefillData) return ''
@@ -650,22 +646,9 @@ function enforceObjectifsLimit(containerId, fields) {
   apply()
 }
 
-function renderRecadrageStatsGrid() {
-  document.getElementById('recadrage-stats').innerHTML = RECADRAGE_FIELDS.map(f => `
-    <div class="field">
-      <label>${f.label}</label>
-      <div style="display:flex; align-items:baseline; gap:2px;">
-        <input type="text" id="stat-recadrage-${f.key}" style="flex:1;">
-        ${f.unit ? `<span style="font-size:11px; color:#888; flex-shrink:0;">${f.unit}</span>` : ''}
-      </div>
-    </div>
-  `).join('')
-}
-
 async function startRecadrage() {
   state.currentType = 'recadrage'
   document.getElementById('recadrage-date').value = new Date().toISOString().slice(0, 10)
-  renderRecadrageStatsGrid()
   goTo('screen-recadrage')
   initSignaturePad('sig-recadrage-manager')
   initSignaturePad('sig-recadrage-collab')
@@ -700,13 +683,38 @@ document.getElementById('pilotage-collab').addEventListener('change', async (e) 
     })
     const data = await res.json()
     const stats = data.collaborateurs && data.collaborateurs[matricule]
-    renderPilotageStatsGrid('pilotage-stats-avant', state.currentType, stats)
+    // CA audio/CA mag (17/09) est un ratio magasin, pas collaborateur — vient
+    // de /store-monthly-stats (store_stats, alimentée par PEDLV), fusionné
+    // dans le même objet de pré-remplissage que les stats individuelles.
+    let statsAvecMagasin = stats
+    if (state.currentType === 'pilotage_audio' && state.currentMagasin) {
+      try {
+        const resMag = await fetch(RELAY + '/store-monthly-stats?magasin_code=' + encodeURIComponent(state.currentMagasin.code), {
+          headers: { 'X-Store-Token': STORE_TOKEN }
+        })
+        const dataMag = await resMag.json()
+        if (dataMag.caAudioMagPct != null) {
+          statsAvecMagasin = { ...(stats || {}), caAudioMag: dataMag.caAudioMagPct }
+        }
+      } catch (e) { /* ratio magasin optionnel, jamais bloquant */ }
+    }
+    renderPilotageStatsGrid('pilotage-stats-avant', state.currentType, statsAvecMagasin)
     document.getElementById('pilotage-stats-hint').textContent = stats
       ? `Stats pré-remplies (période ${stats.periode}) — modifiables.`
       : 'Pas de stats trouvées pour ce collaborateur — saisie libre.'
   } catch (e) {
     document.getElementById('pilotage-stats-hint').textContent = 'Pré-remplissage indisponible — saisie libre.'
   }
+})
+
+// Écoute & Feedback — le 3ᵉ indicateur du "Niveau commercial" dépend du poste
+// (17/09) : AP 4 ans (garantie audio 4 ans) pour Audioprothésiste/Technicien
+// audio, SOP pour tous les autres (opticiens). Jamais "MQ".
+document.getElementById('ecoute-collab').addEventListener('change', (e) => {
+  const opt = e.target.selectedOptions[0]
+  const poste = (opt && opt.dataset.poste || '').toLowerCase()
+  const isAudio = poste.includes('audioprothésiste') || poste.includes('technicien audio')
+  document.getElementById('ecoute-third-label').textContent = isAudio ? 'AP 4 ans' : 'SOP'
 })
 
 // ============================================================================
@@ -795,6 +803,52 @@ function formatDateFr(iso) {
   return m ? `${m[3]}/${m[2]}/${m[1]}` : iso
 }
 
+// ============================================================================
+// DICTÉE VOCALE — Web Speech API, fr-FR, même principe que sur les autres
+// apps du périmètre. Un seul micro actif à la fois (démarrer sur un autre
+// champ coupe automatiquement le précédent).
+// ============================================================================
+let dictationRecognition = null
+let dictationBtn = null
+
+function toggleDictation(fieldId, btn) {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+  if (!SpeechRecognition) { showToast('Dictée vocale non supportée sur ce navigateur'); return }
+
+  if (dictationRecognition) {
+    const wasSameField = dictationBtn === btn
+    dictationRecognition.stop()
+    if (wasSameField) return
+  }
+
+  const field = document.getElementById(fieldId)
+  const recognition = new SpeechRecognition()
+  recognition.lang = 'fr-FR'
+  recognition.continuous = true
+  recognition.interimResults = false
+  dictationRecognition = recognition
+  dictationBtn = btn
+  btn.textContent = '🔴'
+  btn.classList.add('dictating')
+
+  recognition.onresult = (e) => {
+    let finalText = ''
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) finalText += e.results[i][0].transcript
+    }
+    if (finalText.trim()) field.value = (field.value ? field.value + ' ' : '') + finalText.trim()
+  }
+  recognition.onerror = () => { endDictation() }
+  recognition.onend = () => { endDictation() }
+  recognition.start()
+}
+
+function endDictation() {
+  if (dictationBtn) { dictationBtn.textContent = '🎤'; dictationBtn.classList.remove('dictating') }
+  dictationRecognition = null
+  dictationBtn = null
+}
+
 function pdfSafe(str) {
   if (!str) return ''
   return String(str)
@@ -803,7 +857,8 @@ function pdfSafe(str) {
     .replace(/\u2026/g, '...')
     .replace(/[\u2013\u2014]/g, '-')
     .replace(/\u00A0/g, ' ')
-    .replace(/\u20AC/g, 'EUR')
+    // (17/09) € retiré de la liste : jsPDF/Helvetica le rend correctement
+    // (encodage WinAnsi), pas besoin de le convertir en "EUR".
     .replace(/🔁|🎤|📄|→|✓|✗/g, '')
     .replace(/[^\x00-\xFF]/g, '?')
 }
@@ -950,7 +1005,7 @@ function generateEntretienPdf(pending) {
       statGrid([
         { label: 'PM', val: data.niveauCommercial.pm, unit: '€' },
         { label: 'TXC', val: data.niveauCommercial.txc, unit: '%' },
-        { label: 'MQ', val: data.niveauCommercial.mq },
+        { label: data.niveauCommercial.thirdLabel, val: data.niveauCommercial.thirdVal, unit: '%' },
       ], 3, false)
     }
     sectionLabel('Points de contrôle')
@@ -958,18 +1013,33 @@ function generateEntretienPdf(pending) {
       doc.autoTable({
         startY: y, margin: { left: mar, right: mar },
         head: [['Fait', 'Point de contrôle', '+/-', 'Apports']],
-        body: (data.items || []).map(it => [it.fait ? '\u2713' : '', pdfSafe(it.label), pdfSafe(it.plusMoins), pdfSafe(it.apports)]),
+        body: (data.items || []).map(it => [it.fait ? '1' : '', pdfSafe(it.label), pdfSafe(it.plusMoins), pdfSafe(it.apports)]),
         theme: 'grid', headStyles: { fillColor: NOIR, fontSize: 8 }, styles: { fontSize: 8, cellPadding: 1.5, valign: 'top' },
         columnStyles: { 0: { cellWidth: 12, halign: 'center' }, 1: { cellWidth: 70 } },
         didParseCell: (d) => {
-          if (d.column.index === 0 && d.cell.section === 'body') {
-            d.cell.styles.textColor = RED
-            d.cell.styles.fontStyle = 'bold'
+          // Coche dessinée à la main (17/09, plus visible qu'un simple ✓ en
+          // texte) : on vide le texte par défaut, didDrawCell la remplace par
+          // un rond rouge plein avec un ✓ blanc.
+          if (d.column.index === 0 && d.cell.section === 'body') d.cell.text = []
+        },
+        didDrawCell: (d) => {
+          if (d.column.index === 0 && d.cell.section === 'body' && d.cell.raw === '1') {
+            const cx = d.cell.x + d.cell.width / 2
+            const cy = d.cell.y + d.cell.height / 2
+            doc.setFillColor(...RED)
+            doc.circle(cx, cy, 2.3, 'F')
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(8); doc.setTextColor(255, 255, 255)
+            doc.text('\u2713', cx, cy + 1, { align: 'center' })
           }
         },
       })
       y = doc.lastAutoTable.finalY + 6
     }
+    // Écoute & Feedback est volontairement sur 2 pages (17/09, contrairement
+    // aux autres trames) : page 1 = en-tête + indicateurs + tableau de
+    // contrôle, page 2 = le feedback texte + signatures. Saut de page forcé,
+    // pas seulement quand ça déborde.
+    doc.addPage(); y = 16
     bodyText('Ce qui va bien', data.plus)
     bodyText("Axes d'amélioration", data.axes)
     bodyText('Apports pédagogiques', data.apports)
@@ -1002,8 +1072,7 @@ function generateEntretienPdf(pending) {
     bodyText("6. Rôle d'accompagnement et de contrôle", data.etape6, 2)
     bodyText('7. Validation', data.etape7, 2)
   } else if (pending.type === 'recadrage') {
-    sectionLabel('Indicateurs')
-    statGrid(RECADRAGE_FIELDS.map(f => ({ label: f.label, val: (data.stats || {})[f.key], unit: f.unit })), 6, false, false)
+    sectionLabel('Constat')
     bodyText("Évolution de sa tâche", data.evolution)
     bodyText('1. Décrire la situation de manière factuelle', data.etape1)
     bodyText('2. Rappeler la règle', data.etape2)
@@ -1042,6 +1111,12 @@ function generateLancementPdf(pending) {
   let y = 0
 
   function ensureSpace(needed) { if (y + needed > H - 18) { doc.addPage(); y = 16 } }
+  function sectionLabel(title) {
+    ensureSpace(8)
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(...RED)
+    doc.text(pdfSafe(title.toUpperCase()), mar, y)
+    y += 5.5
+  }
   function bodyText(label, value) {
     ensureSpace(14)
     doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(...ROSE_TXT)
@@ -1050,6 +1125,28 @@ function generateLancementPdf(pending) {
     const lines = doc.splitTextToSize(pdfSafe(value || '-'), W - 2 * mar)
     lines.forEach(line => { ensureSpace(5); doc.text(line, mar, y); y += 5 })
     y += 2.5
+  }
+  function statGrid(items, cols) {
+    const list = items.filter(it => it.val && String(it.val).trim() !== '')
+    if (!list.length) return
+    const gap = 2.5
+    const cellW = (W - 2 * mar - gap * (cols - 1)) / cols
+    const cellH = 10.5
+    const rows = Math.ceil(list.length / cols)
+    ensureSpace(rows * (cellH + gap) + 4)
+    let col = 0, rowY = y
+    list.forEach(it => {
+      const cx = mar + col * (cellW + gap)
+      doc.setFillColor(...ROSE)
+      doc.roundedRect(cx, rowY, cellW, cellH, 1.3, 1.3, 'F')
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(5.8); doc.setTextColor(...ROSE_TXT)
+      doc.text(pdfSafe(it.label), cx + 1.8, rowY + 3.6, { maxWidth: cellW - 3.6 })
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...RED)
+      doc.text(pdfSafe(it.val) + (it.unit || ''), cx + 1.8, rowY + 8.3, { maxWidth: cellW - 3.6 })
+      col++
+      if (col >= cols) { col = 0; rowY += cellH + gap }
+    })
+    y = rowY + (col > 0 ? cellH + gap : 0) + 2
   }
 
   const magasinNom = state.currentMagasin ? state.currentMagasin.libelle : ''
@@ -1062,6 +1159,11 @@ function generateLancementPdf(pending) {
   doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...RED)
   doc.text(pdfSafe(pending.remplipar + ' (' + pending.poste + ')'), mar + 1.8, y + 8.3)
   y += 14
+
+  if (pending.mensuel) {
+    sectionLabel('Données du mois')
+    statGrid(LANCEMENT_MENSUEL_FIELDS.map(f => ({ label: f.label, val: pending.mensuel[f.key], unit: f.unit })), 3)
+  }
 
   bodyText('Présents', (pending.presents || []).join(', '))
   bodyText('Objectifs du jour', pending.objectifs)
@@ -1127,7 +1229,8 @@ function previewEntretien(type) {
     niveauCommercial: {
       pm: document.getElementById('ecoute-pm').value,
       txc: document.getElementById('ecoute-txc').value,
-      mq: document.getElementById('ecoute-mq').value,
+      thirdLabel: document.getElementById('ecoute-third-label').textContent,
+      thirdVal: document.getElementById('ecoute-third').value,
     },
     items,
     plus: document.getElementById('ecoute-plus').value,
@@ -1148,7 +1251,7 @@ function previewEntretien(type) {
     previewRow('Collaborateur', collaborateurNom) +
     previewRow('Rempli par', remplipar) +
     previewRow('Date', formatDateFr(date)) +
-    previewRow('PM / TXC / MQ', `${data.niveauCommercial.pm || '—'} / ${data.niveauCommercial.txc || '—'} / ${data.niveauCommercial.mq || '—'}`) +
+    previewRow('PM / TXC / ' + data.niveauCommercial.thirdLabel, `${data.niveauCommercial.pm || '—'} / ${data.niveauCommercial.txc || '—'} / ${data.niveauCommercial.thirdVal || '—'}`) +
     `<div class="preview-block"><h3>Points de contrôle</h3>` +
     items.map(it => `<div class="preview-item"><span class="${it.fait ? 'ok' : 'no'}">${it.fait ? '✓' : '✗'}</span> ${it.label}${it.plusMoins ? ' — ' + it.plusMoins : ''}${it.apports ? ' (' + it.apports + ')' : ''}</div>`).join('') +
     `</div>` +
@@ -1232,10 +1335,7 @@ function previewRecadrage() {
   const date = document.getElementById('recadrage-date').value
   if (!remplipar || !date) { showToast('Merci de renseigner ton prénom et la date'); return }
 
-  const stats = {}
-  RECADRAGE_FIELDS.forEach(f => { stats[f.key] = document.getElementById(`stat-recadrage-${f.key}`).value })
   const data = {
-    stats,
     evolution: document.getElementById('recadrage-evolution').value,
     etape1: document.getElementById('recadrage-1').value,
     etape2: document.getElementById('recadrage-2').value,
@@ -1252,14 +1352,12 @@ function previewRecadrage() {
 
   state.pending = { kind: 'entretien', type: 'recadrage', remplipar, date, matricule, collaborateurNom, data, returnScreen: 'screen-recadrage' }
 
-  const gridLine = RECADRAGE_FIELDS.map(f => `${f.label}: ${stats[f.key] || '—'}`).join(' · ')
   document.getElementById('preview-titre').textContent = 'Aperçu — Entretien de recadrage'
   document.getElementById('preview-content').innerHTML =
     previewRow('Magasin', state.currentMagasin ? state.currentMagasin.libelle : '') +
     previewRow('Collaborateur', collaborateurNom) +
     previewRow('Rempli par', remplipar) +
     previewRow('Date', formatDateFr(date)) +
-    previewText('Indicateurs', gridLine) +
     previewText('Évolution de sa tâche', data.evolution) +
     previewText('1. Situation factuelle', data.etape1) +
     previewText('2. Rappel de la règle', data.etape2) +
@@ -1274,6 +1372,68 @@ function previewRecadrage() {
   goTo('screen-preview')
 }
 
+// Lancement de journée — données du mois (17/09), tirées de store_stats
+// (alimentée par PEDLV) via /store-monthly-stats, toujours modifiables :
+// si l'import du mois n'est pas encore passé pour ce magasin, les champs
+// restent simplement vides plutôt que de bloquer la saisie.
+const LANCEMENT_MENSUEL_FIELDS = [
+  { key: 'ca', label: 'CA', unit: '€' },
+  { key: 'positionnement', label: 'Positionnement mensuel', unit: '%' },
+  { key: 'caAudio', label: 'CA audio', unit: '€' },
+  { key: 'nbVenteOpt', label: 'Nb de vente optique', unit: '' },
+  { key: 'nbProthese', label: 'Nb de prothèses', unit: '' },
+]
+
+function renderLancementMensuelGrid(prefillData) {
+  document.getElementById('lancement-mensuel').innerHTML = LANCEMENT_MENSUEL_FIELDS.map(f => `
+    <div class="field">
+      <label>${f.label}</label>
+      <div style="display:flex; align-items:baseline; gap:2px;">
+        <input type="text" id="stat-lancement-mensuel-${f.key}" value="${prefillData && prefillData[f.key] != null ? prefillData[f.key] : ''}" style="flex:1;">
+        ${f.unit ? `<span style="font-size:11px; color:#888; flex-shrink:0;">${f.unit}</span>` : ''}
+      </div>
+    </div>
+  `).join('')
+}
+
+async function startLancement() {
+  document.getElementById('lancement-date').value = new Date().toISOString().slice(0, 10)
+  renderLancementMensuelGrid(null)
+  document.getElementById('lancement-mensuel-hint').textContent = ''
+  goTo('screen-lancement')
+  if (!state.currentMagasin) return
+  try {
+    const res = await fetch(RELAY + '/store-monthly-stats?magasin_code=' + encodeURIComponent(state.currentMagasin.code), {
+      headers: { 'X-Store-Token': STORE_TOKEN }
+    })
+    const d = await res.json()
+    if (d.periode) {
+      renderLancementMensuelGrid({
+        ca: d.caTotal, positionnement: d.positionnementMensuel, caAudio: d.caAudio,
+        nbVenteOpt: d.nbVenteOpt, nbProthese: d.protheses,
+      })
+      document.getElementById('lancement-mensuel-hint').textContent = `Pré-rempli depuis l'import PEDLV (période ${d.periode}) — modifiable.`
+    } else {
+      document.getElementById('lancement-mensuel-hint').textContent = 'Pas de données PEDLV trouvées pour ce magasin — saisie libre.'
+    }
+  } catch (e) {
+    document.getElementById('lancement-mensuel-hint').textContent = 'Pré-remplissage indisponible — saisie libre.'
+  }
+}
+
+function ajouterPresentLibre() {
+  const input = document.getElementById('lancement-presents-libre')
+  const nom = input.value.trim()
+  if (!nom) return
+  const label = document.createElement('label')
+  const cb = document.createElement('input')
+  cb.type = 'checkbox'; cb.value = nom; cb.checked = true
+  label.appendChild(cb)
+  label.appendChild(document.createTextNode(' ' + nom))
+  document.getElementById('lancement-presents').appendChild(label)
+  input.value = ''
+}
+
 function previewLancement() {
   const remplipar = document.getElementById('lancement-remplipar').value
   const poste = document.getElementById('lancement-poste').value
@@ -1283,14 +1443,21 @@ function previewLancement() {
   const presents = [...document.querySelectorAll('#lancement-presents input:checked')].map(el => el.value)
   const objectifs = document.getElementById('lancement-objectifs').value
   const noteLibre = document.getElementById('lancement-note').value
+  const mensuel = {}
+  LANCEMENT_MENSUEL_FIELDS.forEach(f => { mensuel[f.key] = document.getElementById(`stat-lancement-mensuel-${f.key}`).value })
 
-  state.pending = { kind: 'lancement', remplipar, poste, date, presents, objectifs, noteLibre, returnScreen: 'screen-lancement' }
+  state.pending = { kind: 'lancement', remplipar, poste, date, presents, objectifs, noteLibre, mensuel, returnScreen: 'screen-lancement' }
 
+  const mensuelLine = LANCEMENT_MENSUEL_FIELDS
+    .filter(f => mensuel[f.key] && mensuel[f.key].trim() !== '')
+    .map(f => `${f.label}: ${mensuel[f.key]}${f.unit || ''}`)
+    .join(' · ') || '—'
   document.getElementById('preview-titre').textContent = 'Aperçu — Lancement de journée'
   document.getElementById('preview-content').innerHTML =
     previewRow('Magasin', state.currentMagasin ? state.currentMagasin.libelle : '') +
     previewRow('Rempli par', `${remplipar} (${poste})`) +
     previewRow('Date', formatDateFr(date)) +
+    previewText('Données du mois', mensuelLine) +
     previewRow('Présents', presents.join(', ') || 'Aucun') +
     previewText('Objectifs du jour', objectifs) +
     previewText('Note libre', noteLibre)
@@ -1353,7 +1520,7 @@ async function confirmSend() {
         body: JSON.stringify({
           magasinCode: state.currentMagasin.code,
           remplipar: pending.remplipar, posteRemplipar: pending.poste, date: pending.date, presents: pending.presents,
-          objectifs: pending.objectifs, noteLibre: pending.noteLibre,
+          objectifs: pending.objectifs, noteLibre: pending.noteLibre, mensuel: pending.mensuel,
           pdfBase64, pdfFilename,
         }),
       })
@@ -1392,6 +1559,37 @@ async function historiqueLogin() {
   }
 }
 
+const MOIS_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
+
+// Historique (17/09) — classé par année puis par mois, plus récent en premier,
+// comme un système de sous-dossiers. Le tri repose sur le format ISO
+// (aaaa-mm-jj) déjà stocké, jamais sur la version française affichée.
+function groupByYearMonth(items) {
+  const tree = {}
+  items.forEach(it => {
+    const [y, m] = (it.date || '').split('-')
+    if (!y || !m) return
+    tree[y] = tree[y] || {}
+    tree[y][m] = tree[y][m] || []
+    tree[y][m].push(it)
+  })
+  return tree
+}
+
+function renderGrouped(tree, renderItem) {
+  const years = Object.keys(tree).sort((a, b) => b.localeCompare(a))
+  if (!years.length) return '<div class="hint">Aucun</div>'
+  return years.map(y => {
+    const months = Object.keys(tree[y]).sort((a, b) => b.localeCompare(a))
+    const monthsHtml = months.map(m => {
+      const label = MOIS_FR[parseInt(m, 10) - 1] || m
+      const itemsHtml = tree[y][m].map(renderItem).join('')
+      return `<div style="margin-left:10px;"><div style="font-weight:600; font-size:12px; color:var(--text-dim); margin:8px 0 4px;">${label}</div>${itemsHtml}</div>`
+    }).join('')
+    return `<div style="margin-bottom:6px;"><div style="font-weight:700; color:var(--rouge); margin:12px 0 2px;">${y}</div>${monthsHtml}</div>`
+  }).join('')
+}
+
 async function loadHistorique() {
   try {
     const res = await fetch(RELAY + '/historique-managers', {
@@ -1399,14 +1597,13 @@ async function loadHistorique() {
     })
     const data = await res.json()
     const el = document.getElementById('historique-liste')
-    const entretiens = (data.entretiens || []).map(e =>
-      `<div class="search-item"><b>${e.type}</b> — ${e.magasin_libelle || ''} — ${e.collaborateur_nom || ''} — ${e.date} (${e.rempli_par})</div>`
-    ).join('')
-    const lancements = (data.lancements || []).map(l =>
-      `<div class="search-item"><b>Lancement</b> — ${l.magasin_libelle || ''} — ${l.date} (${l.rempli_par})</div>`
-    ).join('')
-    el.innerHTML = '<h3>Entretiens</h3>' + (entretiens || '<div class="hint">Aucun</div>') +
-      '<h3>Lancements de journée</h3>' + (lancements || '<div class="hint">Aucun</div>')
+    const entretiensHtml = renderGrouped(groupByYearMonth(data.entretiens || []), e =>
+      `<div class="search-item"><b>${e.type}</b> — ${e.magasin_libelle || ''} — ${e.collaborateur_nom || ''} — ${formatDateFr(e.date)} (${e.rempli_par})</div>`
+    )
+    const lancementsHtml = renderGrouped(groupByYearMonth(data.lancements || []), l =>
+      `<div class="search-item"><b>Lancement</b> — ${l.magasin_libelle || ''} — ${formatDateFr(l.date)} (${l.rempli_par})</div>`
+    )
+    el.innerHTML = '<h3>Entretiens</h3>' + entretiensHtml + '<h3>Lancements de journée</h3>' + lancementsHtml
   } catch (e) {
     showToast('Impossible de charger l\'historique')
   }
