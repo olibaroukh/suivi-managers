@@ -1,4 +1,4 @@
-const SW_VERSION = '2026.09.16-2'
+const SW_VERSION = '2026.09.16-3'
 const CACHE_NAME = 'suivi-managers-' + SW_VERSION
 
 self.addEventListener('install', (e) => {

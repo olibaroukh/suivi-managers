@@ -42,11 +42,11 @@
   .screen{ display:none; position:relative; }
   .screen.active{ display:block; }
   /* Filigrane — écran de sélection magasin uniquement, comme sur Kaizen */
-  #screen-select{ isolation:isolate; }
   #screen-select::before{
-    content:''; position:absolute; inset:-16px -16px auto -16px; height:420px;
-    background-image:var(--wm-logo); background-repeat:no-repeat; background-position:center top;
-    background-size:60%; mix-blend-mode:screen; opacity:0.06; pointer-events:none; z-index:0;
+    content:''; position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:min(70vw,320px); height:min(70vw,320px);
+    background-image:var(--wm-logo); background-repeat:no-repeat; background-position:center;
+    background-size:contain; mix-blend-mode:screen; opacity:0.07; pointer-events:none; z-index:0;
   }
   #screen-select > *{ position:relative; z-index:1; }
   .logo-hero{
@@ -267,8 +267,8 @@
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.09.16-2'
-const SW_VERSION = '2026.09.16-2'
+const APP_VERSION = '2026.09.16-3'
+const SW_VERSION = '2026.09.16-3'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://raw.githubusercontent.com/olibaroukh/bilan-passage/main/magasins.csv'
