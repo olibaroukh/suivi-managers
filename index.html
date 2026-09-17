@@ -267,13 +267,13 @@
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.09.16-3'
-const SW_VERSION = '2026.09.16-3'
+const APP_VERSION = '2026.09.16-4'
+const SW_VERSION = '2026.09.16-4'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://raw.githubusercontent.com/olibaroukh/bilan-passage/main/magasins.csv'
-// Secret partagé pour X-Store-Token — À COMPLETER avec la vraie valeur (STORE_SECRET du Worker)
-const STORE_TOKEN = 'A_COMPLETER'
+// Vérifié dans le worker.js réel (16/09)
+const STORE_TOKEN = 'OC-bilan-store-2026'
 
 document.getElementById('version-badge').textContent = 'v' + APP_VERSION
 
@@ -615,17 +615,17 @@ async function submitLancement() {
 function openHistorique() { goTo('screen-historique') }
 
 async function historiqueLogin() {
-  const login = document.getElementById('hist-user').value
-  const pass = document.getElementById('hist-pass').value
+  const zimbraUser = document.getElementById('hist-user').value
+  const zimbraPass = document.getElementById('hist-pass').value
   try {
     const res = await fetch(RELAY + '/ar-login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ login, pass }),
+      headers: { 'Content-Type': 'application/json', 'X-Store-Token': STORE_TOKEN },
+      body: JSON.stringify({ zimbraUser, zimbraPass }),
     })
     const data = await res.json()
-    if (!res.ok || !data.session) throw new Error('login refusé')
-    state.arSession = data.session
+    if (!res.ok || !data.sessionToken) throw new Error('login refusé')
+    state.arSession = data.sessionToken
     document.getElementById('historique-login').style.display = 'none'
     document.getElementById('historique-liste').style.display = 'block'
     await loadHistorique()
@@ -637,7 +637,7 @@ async function historiqueLogin() {
 async function loadHistorique() {
   try {
     const res = await fetch(RELAY + '/historique-managers', {
-      headers: { 'X-AR-Session': state.arSession }
+      headers: { 'X-Store-Token': STORE_TOKEN, 'X-AR-Session': state.arSession }
     })
     const data = await res.json()
     const el = document.getElementById('historique-liste')
