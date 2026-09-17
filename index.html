@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Suivi Managers</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -295,6 +297,7 @@
     <div class="top-nav"><button onclick="backFromPreview()">← Modifier</button></div>
     <h2 id="preview-titre">Aperçu</h2>
     <div id="preview-content"></div>
+    <button class="btn-secondary" onclick="previewPdfDoc()">📄 Prévisualiser le PDF</button>
     <button class="btn-primary" onclick="confirmSend()">Confirmer l'envoi</button>
   </section>
 
@@ -320,8 +323,8 @@
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.09.17-1'
-const SW_VERSION = '2026.09.17-1'
+const APP_VERSION = '2026.09.17-2'
+const SW_VERSION = '2026.09.17-2'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://raw.githubusercontent.com/olibaroukh/bilan-passage/main/magasins.csv'
@@ -617,6 +620,229 @@ function getSignatureDataURL(canvasId) {
 }
 
 // ============================================================================
+// PDF — même identité visuelle que les autres outils (bandeau rouge #CC1719,
+// logo, sections sur bandeau beige #E3DBC8, Helvetica), en portrait A4 comme
+// demandé (17/09) plutôt que le paysage de Bilan de Passage. Le logo n'est
+// pas réembarqué en base64 ici : on récupère la même image déjà posée dans
+// --wm-logo (CSS) pour ne pas tripler ~150 Ko de base64 dans le fichier.
+// ============================================================================
+const LOGO_RATIO = 2450 / 1691 // largeur/hauteur réelles du logo (mesurées une fois)
+let _logoOcCache = null
+function getLogoOc() {
+  if (_logoOcCache) return _logoOcCache
+  const raw = getComputedStyle(document.documentElement).getPropertyValue('--wm-logo').trim()
+  const m = raw.match(/^url\((['"]?)(.*)\1\)$/)
+  _logoOcCache = m ? m[2] : null
+  return _logoOcCache
+}
+
+// Sanitize pour Helvetica (jsPDF core font, Latin-1 uniquement) — même liste
+// que sur les autres outils (accents composés déjà en Latin-1 OK, guillemets
+// typographiques/tirets longs/emoji remplacés ou retirés).
+function pdfSafe(str) {
+  if (!str) return ''
+  return String(str)
+    .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
+    .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
+    .replace(/\u2026/g, '...')
+    .replace(/[\u2013\u2014]/g, '-')
+    .replace(/\u00A0/g, ' ')
+    .replace(/\u20AC/g, 'EUR')
+    .replace(/🔁|🎤|📄|→|✓|✗/g, '')
+    .replace(/[^\x00-\xFF]/g, '?')
+}
+
+function pdfHeaderFooter(doc, W, H, mar, titre, sousTitre) {
+  const headerH = 22
+  doc.setFillColor(204, 23, 25)
+  doc.rect(0, 0, W, headerH, 'F')
+  let textX = mar
+  try {
+    const logo = getLogoOc()
+    if (logo) {
+      const logoH = headerH - 6
+      const logoW = logoH * LOGO_RATIO
+      doc.addImage(logo, 'JPEG', mar, 3, logoW, logoH)
+      textX = mar + logoW + 6
+    }
+  } catch (e) { /* logo optionnel, jamais bloquant */ }
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(255, 255, 255)
+  doc.text(pdfSafe(titre), textX, 11)
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9)
+  doc.text(pdfSafe(sousTitre), textX, 17)
+  return headerH
+}
+
+function pdfAddFooters(doc, W, H) {
+  const n = doc.internal.getNumberOfPages()
+  for (let i = 1; i <= n; i++) {
+    doc.setPage(i)
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(140, 140, 140)
+    doc.text('Suivi Managers — Optical Center', 12, H - 8)
+    doc.text(String(i) + ' / ' + n, W - 12, H - 8, { align: 'right' })
+  }
+}
+
+// generateEntretienPdf / generateLancementPdf : construisent le PDF portrait
+// A4 pour, respectivement, une trame d'entretien (Écoute&FB / Pilotage) et un
+// lancement de journée. Reprend le contenu déjà affiché dans l'aperçu écran
+// (previewEntretien / previewPilotage / previewLancement) — mêmes données,
+// mise en page imprimée plutôt qu'écran.
+function generateEntretienPdf(pending) {
+  const { jsPDF } = window.jspdf
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const W = 210, H = 297, mar = 14
+  let y = 0
+
+  function ensureSpace(needed) { if (y + needed > H - 16) { doc.addPage(); y = 16 } }
+  function sectionTitle(title) {
+    ensureSpace(12)
+    doc.setFillColor(227, 219, 200)
+    doc.rect(mar, y, W - 2 * mar, 8, 'F')
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(13, 13, 13)
+    doc.text(pdfSafe(title), mar + 3, y + 5.5)
+    y += 12
+  }
+  function bodyText(label, value) {
+    ensureSpace(14)
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(132, 123, 104)
+    doc.text(pdfSafe(label), mar, y); y += 4.5
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(13, 13, 13)
+    const lines = doc.splitTextToSize(pdfSafe(value || '-'), W - 2 * mar)
+    lines.forEach(line => { ensureSpace(5); doc.text(line, mar, y); y += 5 })
+    y += 2
+  }
+
+  const libelles = { ecoute_fb: 'Écoute & Feedback de vente', pilotage_optique: 'Pilotage Optique', pilotage_audio: 'Pilotage Audio' }
+  const sousTitre = (state.currentMagasin ? state.currentMagasin.libelle : '') + ' - ' + pdfSafe(pending.date)
+  y = pdfHeaderFooter(doc, W, H, mar, libelles[pending.type] || 'Entretien manager', sousTitre) + 8
+
+  sectionTitle('Informations générales')
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(13, 13, 13)
+  doc.text(pdfSafe('Collaborateur : ' + (pending.collaborateurNom || '-')), mar, y); y += 5.5
+  doc.text(pdfSafe('Rempli par : ' + pending.remplipar + ' - Date : ' + pending.date), mar, y); y += 8
+
+  const data = pending.data
+  if (pending.type === 'ecoute_fb') {
+    if (data.niveauCommercial) {
+      sectionTitle('Niveau commercial')
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(13, 13, 13)
+      doc.text(pdfSafe('PM : ' + (data.niveauCommercial.pm || '-') + '   TXC : ' + (data.niveauCommercial.txc || '-') + '   MQ : ' + (data.niveauCommercial.mq || '-')), mar, y)
+      y += 8
+    }
+    sectionTitle('Points de contrôle')
+    if (doc.autoTable) {
+      doc.autoTable({
+        startY: y, margin: { left: mar, right: mar },
+        head: [['Fait', 'Point de contrôle', '+/-', 'Apports']],
+        body: (data.items || []).map(it => [it.fait ? 'OUI' : 'NON', pdfSafe(it.label), pdfSafe(it.plusMoins), pdfSafe(it.apports)]),
+        theme: 'grid', headStyles: { fillColor: [13, 13, 13], fontSize: 8 }, styles: { fontSize: 8, cellPadding: 1.5, valign: 'top' },
+        columnStyles: { 0: { cellWidth: 14 }, 1: { cellWidth: 70 } },
+      })
+      y = doc.lastAutoTable.finalY + 6
+    }
+    bodyText('Ce qui va bien', data.plus)
+    bodyText("Axes d'amélioration", data.axes)
+    bodyText('Apports pédagogiques', data.apports)
+    bodyText('Synthèse du collaborateur', data.synthese)
+  } else {
+    const fields = PILOTAGE_FIELDS[pending.type]
+    const gridLine = (grid) => fields.map(f => f.label + ': ' + (grid[f.key] || '-')).join('   ')
+    bodyText('Indicateurs actuels', gridLine(data.statsActuelles || {}))
+    bodyText('1. Valoriser ce qui va bien', data.etape1)
+    bodyText('2. Identification des points à améliorer', data.etape2)
+    bodyText('3. Recherche des causes', data.etape3)
+    bodyText('4. Nouvel objectif', gridLine(data.nouvelObjectif || {}))
+    bodyText("5. Apport en formation / plan d'action", data.etape5)
+    bodyText('6. Rôle d\'accompagnement et de contrôle', data.etape6)
+    bodyText('7. Validation', data.etape7)
+  }
+
+  // Signatures
+  ensureSpace(50)
+  sectionTitle('Signatures')
+  const sigW = (W - 2 * mar - 10) / 2, sigH = 28
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(132, 123, 104)
+  doc.text('Manager', mar, y)
+  doc.text('Collaborateur', mar + sigW + 10, y)
+  y += 3
+  doc.setDrawColor(200, 200, 200)
+  doc.rect(mar, y, sigW, sigH)
+  doc.rect(mar + sigW + 10, y, sigW, sigH)
+  try { if (data.signatureManager) doc.addImage(data.signatureManager, 'PNG', mar + 2, y + 2, sigW - 4, sigH - 4) } catch (e) {}
+  try { if (data.signatureCollaborateur) doc.addImage(data.signatureCollaborateur, 'PNG', mar + sigW + 12, y + 2, sigW - 4, sigH - 4) } catch (e) {}
+
+  pdfAddFooters(doc, W, H)
+  return doc.output('arraybuffer')
+}
+
+function generateLancementPdf(pending) {
+  const { jsPDF } = window.jspdf
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const W = 210, H = 297, mar = 14
+  let y = 0
+
+  function ensureSpace(needed) { if (y + needed > H - 16) { doc.addPage(); y = 16 } }
+  function sectionTitle(title) {
+    ensureSpace(12)
+    doc.setFillColor(227, 219, 200)
+    doc.rect(mar, y, W - 2 * mar, 8, 'F')
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(13, 13, 13)
+    doc.text(pdfSafe(title), mar + 3, y + 5.5)
+    y += 12
+  }
+  function bodyText(label, value) {
+    ensureSpace(14)
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(132, 123, 104)
+    doc.text(pdfSafe(label), mar, y); y += 4.5
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(13, 13, 13)
+    const lines = doc.splitTextToSize(pdfSafe(value || '-'), W - 2 * mar)
+    lines.forEach(line => { ensureSpace(5); doc.text(line, mar, y); y += 5 })
+    y += 2
+  }
+
+  const sousTitre = (state.currentMagasin ? state.currentMagasin.libelle : '') + ' - ' + pdfSafe(pending.date)
+  y = pdfHeaderFooter(doc, W, H, mar, 'Lancement de journée', sousTitre) + 8
+
+  sectionTitle('Informations générales')
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(13, 13, 13)
+  doc.text(pdfSafe('Rempli par : ' + pending.remplipar + ' (' + pending.poste + ')'), mar, y); y += 5.5
+  doc.text(pdfSafe('Date : ' + pending.date), mar, y); y += 8
+
+  bodyText('Présents', (pending.presents || []).join(', '))
+  bodyText('Objectifs du jour', pending.objectifs)
+  bodyText('Note libre', pending.noteLibre)
+
+  pdfAddFooters(doc, W, H)
+  return doc.output('arraybuffer')
+}
+
+function generatePendingPdf(pending) {
+  return pending.kind === 'lancement' ? generateLancementPdf(pending) : generateEntretienPdf(pending)
+}
+
+function arrayBufferToBase64(buf) {
+  let binary = ''
+  const bytes = new Uint8Array(buf)
+  const chunk = 0x8000
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunk))
+  }
+  return btoa(binary)
+}
+
+function previewPdfDoc() {
+  if (!state.pending) return
+  try {
+    const bytes = generatePendingPdf(state.pending)
+    const blob = new Blob([bytes], { type: 'application/pdf' })
+    window.open(URL.createObjectURL(blob), '_blank')
+  } catch (e) {
+    showToast('Impossible de générer l\'aperçu PDF')
+  }
+}
+
+// ============================================================================
 // APERÇU — commun aux 4 trames. On construit le payload complet (sans
 // l'envoyer), on le stocke dans state.pending, et on affiche un résumé
 // lisible avant confirmation — même esprit que le rapport PEDLV ouvert dans
@@ -770,6 +996,19 @@ async function confirmSend() {
   const pending = state.pending
   if (!pending) { goTo('screen-menu'); return }
 
+  // Génération du PDF (mêmes données que l'aperçu écran, mise en forme imprimée)
+  // — jamais bloquant : un échec de génération n'empêche pas l'envoi, l'email
+  // part alors sans pièce jointe plutôt que d'échouer complètement.
+  let pdfBase64 = null, pdfFilename = null
+  try {
+    const bytes = generatePendingPdf(pending)
+    pdfBase64 = arrayBufferToBase64(bytes)
+    const magLabel = (state.currentMagasin ? state.currentMagasin.libelle : 'magasin').replace(/[^a-zA-Z0-9]+/g, '_')
+    pdfFilename = (pending.kind === 'lancement' ? 'Lancement' : 'Entretien') + '_' + magLabel + '_' + pending.date + '.pdf'
+  } catch (e) {
+    console.warn('Génération PDF échouée, envoi sans pièce jointe:', e)
+  }
+
   if (pending.kind === 'entretien') {
     try {
       const res = await fetch(RELAY + '/entretien-manager', {
@@ -779,6 +1018,7 @@ async function confirmSend() {
           type: pending.type, magasinCode: state.currentMagasin.code,
           collaborateurMatricule: pending.matricule || null, collaborateurNom: pending.collaborateurNom,
           remplipar: pending.remplipar, date: pending.date, data: pending.data,
+          pdfBase64, pdfFilename,
         }),
       })
       if (!res.ok) throw new Error('erreur serveur')
@@ -800,6 +1040,7 @@ async function confirmSend() {
           magasinCode: state.currentMagasin.code,
           remplipar: pending.remplipar, posteRemplipar: pending.poste, date: pending.date, presents: pending.presents,
           objectifs: pending.objectifs, noteLibre: pending.noteLibre,
+          pdfBase64, pdfFilename,
         }),
       })
       if (!res.ok) throw new Error('erreur serveur')
