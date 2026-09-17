@@ -68,6 +68,10 @@
     outline:none; border-color:var(--rouge);
   }
   textarea{ min-height:70px; resize:vertical; }
+  /* Limite volontaire (17/09) : sur les trames à beaucoup de sections libres
+     (Pilotage), chaque zone reste courte pour que le PDF tienne sur une page
+     même quand tous les secteurs sont remplis — voir generateEntretienPdf(). */
+  textarea.ta-compact{ min-height:44px; }
   button{
     font-family:inherit; font-weight:600; font-size:15px; border:none; border-radius:8px;
     padding:12px 18px; cursor:pointer;
@@ -239,23 +243,23 @@
     <div class="stats-hint" id="pilotage-stats-hint"></div>
 
     <h3>1. Valoriser ce qui va bien</h3>
-    <textarea id="pilotage-1"></textarea>
+    <textarea id="pilotage-1" class="ta-compact" rows="2" maxlength="180"></textarea>
     <h3>2. Identification des points à améliorer</h3>
-    <textarea id="pilotage-2"></textarea>
+    <textarea id="pilotage-2" class="ta-compact" rows="2" maxlength="180"></textarea>
     <h3>3. Recherche des causes</h3>
-    <textarea id="pilotage-3"></textarea>
+    <textarea id="pilotage-3" class="ta-compact" rows="2" maxlength="180"></textarea>
 
-    <h3>4. Nouvel objectif (3 indicateurs max)</h3>
+    <h3>4. Nouveaux objectifs (4 maximum)</h3>
     <label>Échéance</label>
     <input type="date" id="pilotage-echeance">
     <div class="stats-grid" id="pilotage-stats-objectif"></div>
 
     <h3>5. Apport en formation / plan d'action</h3>
-    <textarea id="pilotage-5"></textarea>
+    <textarea id="pilotage-5" class="ta-compact" rows="2" maxlength="180"></textarea>
     <h3>6. Rôle d'accompagnement et de contrôle</h3>
-    <textarea id="pilotage-6"></textarea>
+    <textarea id="pilotage-6" class="ta-compact" rows="2" maxlength="180"></textarea>
     <h3>7. Validation</h3>
-    <textarea id="pilotage-7"></textarea>
+    <textarea id="pilotage-7" class="ta-compact" rows="2" maxlength="180"></textarea>
 
     <div class="sig-block">
       <h3>Signature du manager</h3>
@@ -386,8 +390,8 @@
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.09.17-3'
-const SW_VERSION = '2026.09.17-3'
+const APP_VERSION = '2026.09.17-4'
+const SW_VERSION = '2026.09.17-4'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://raw.githubusercontent.com/olibaroukh/bilan-passage/main/magasins.csv'
@@ -553,30 +557,36 @@ renderEcouteItems()
 // ============================================================================
 // PILOTAGE — champs stats (optique / audio) + pré-remplissage depuis /collab-stats
 // ============================================================================
+// PILOTAGE_FIELDS — chaque champ porte son unité (17/09 : ajoutée automatiquement
+// à l'affichage, jamais tapée par l'utilisateur, pour rester sur des valeurs
+// numériques propres en base). 'pc' (Pack Confort) est un cas particulier :
+// une seule case affiche à la fois le % et le PM Pack Confort, combinés depuis
+// deux colonnes distinctes de collab_stats_mensuel — jamais un champ "source"
+// simple comme les autres.
 const PILOTAGE_FIELDS = {
   pilotage_optique: [
-    { key: 'pm', label: 'PM', source: 'pmOpt' },
-    { key: 'mdc', label: 'MDC', source: 'mdc' },
-    { key: 'transition', label: 'Transition', source: null },
-    { key: 'pc', label: 'PC', source: null },
-    { key: 'nbVente', label: 'Nbre de vente', source: 'nbVenteOpt' },
-    { key: 'sop', label: 'SOP/Platinium', source: 'sop' },
-    { key: 'ar3', label: 'AR 3', source: null },
-    { key: 'progIndiv', label: 'Prog indiv', source: null },
-    { key: 'txConcret', label: 'Tx de concret', source: 'txConcretOpt' },
-    { key: 'pm1ere', label: 'PM 1ère paire', source: 'pm1erePaire' },
-    { key: 'unifIndiv', label: 'Unif Indiv', source: null },
-    { key: 'testAuditif', label: '% tests auditifs/mois', source: 'pctTestAuditif' },
+    { key: 'pm', label: 'PM', source: 'pmOpt', unit: '€' },
+    { key: 'mdc', label: 'MDC', source: 'mdc', unit: '%' },
+    { key: 'transition', label: 'Transition', source: null, unit: '' },
+    { key: 'pc', label: 'Pack Confort', source: null, unit: '', combo: ['packConfortPct', 'packConfortPm'], comboUnits: ['%', '€'] },
+    { key: 'nbVente', label: 'Nbre de vente', source: 'nbVenteOpt', unit: '' },
+    { key: 'sop', label: 'SOP', source: 'sop', unit: '%' },
+    { key: 'ar3', label: 'AR 3', source: null, unit: '' },
+    { key: 'progIndiv', label: 'Prog indiv', source: null, unit: '' },
+    { key: 'txConcret', label: 'Tx de concret', source: 'txConcretOpt', unit: '%' },
+    { key: 'pm1ere', label: 'PM 1ère paire', source: 'pm1erePaire', unit: '€' },
+    { key: 'unifIndiv', label: 'Unif Indiv', source: null, unit: '' },
+    { key: 'testAuditif', label: 'Tests auditifs/mois', source: 'pctTestAuditif', unit: '%' },
   ],
   pilotage_audio: [
-    { key: 'pm', label: 'PM', source: 'pmAudio' },
-    { key: 'ouiezen', label: 'Ouiezen Prem', source: null },
-    { key: 'caAccessoires', label: 'CA accessoires (%)', source: 'caAccessoiresPct' },
-    { key: 'caAudioMag', label: 'CA audio/CA mag', source: null },
-    { key: 'txConcret', label: 'Tx de concret', source: 'txConcretAudio' },
-    { key: 'pmHygiene', label: 'PM produits d\'hygiène', source: null },
-    { key: 'ap4', label: 'AP4 + Platinium', source: 'ap4' },
-    { key: 'testAuditif', label: '% tests auditifs/mois', source: 'pctTestAuditif' },
+    { key: 'pm', label: 'PM', source: 'pmAudio', unit: '€' },
+    { key: 'ouiezen', label: 'Ouiezen Prem', source: null, unit: '' },
+    { key: 'caAccessoires', label: 'CA accessoires', source: 'caAccessoiresPct', unit: '%' },
+    { key: 'caAudioMag', label: 'CA audio/CA mag', source: null, unit: '%' },
+    { key: 'txConcret', label: 'Tx de concret', source: 'txConcretAudio', unit: '%' },
+    { key: 'pmHygiene', label: 'PM produits d\'hygiène', source: null, unit: '€' },
+    { key: 'ap4', label: 'AP4 + Platinium', source: 'ap4', unit: '%' },
+    { key: 'testAuditif', label: 'Tests auditifs/mois', source: 'pctTestAuditif', unit: '%' },
   ],
 }
 
@@ -586,36 +596,68 @@ const PILOTAGE_FIELDS = {
 // est plus rare et plus engageant qu'un pilotage courant, le manager vérifie
 // ses chiffres à la main plutôt que de faire confiance à un import.
 const RECADRAGE_FIELDS = [
-  { key: 'pm', label: 'PM' },
-  { key: 'nbVentes', label: 'Nbre de ventes' },
-  { key: 'fform', label: 'Fform' },
-  { key: 'positionnementAnnuel', label: 'Positionnement annuel' },
-  { key: 'txConcret', label: 'Tx concret' },
-  { key: 'sopPlatinium', label: 'SOP + Platinium' },
-  { key: 'transitions', label: 'Transitions' },
-  { key: 'mdc', label: 'MDC' },
-  { key: 'packConfort', label: 'Pack Confort' },
-  { key: 'arMax', label: 'AR MAX' },
-  { key: 'ar3', label: 'AR 3' },
-  { key: 'pm1erePaire', label: 'PM 1ère paire' },
-  { key: 'testsAuditifs', label: '% tests auditifs (1 mois)' },
+  { key: 'pm', label: 'PM', unit: '€' },
+  { key: 'nbVentes', label: 'Nbre de ventes', unit: '' },
+  { key: 'fform', label: 'Fform', unit: '' },
+  { key: 'positionnementAnnuel', label: 'Positionnement annuel', unit: '%' },
+  { key: 'txConcret', label: 'Tx concret', unit: '%' },
+  { key: 'sop', label: 'SOP', unit: '%' },
+  { key: 'transitions', label: 'Transitions', unit: '' },
+  { key: 'mdc', label: 'MDC', unit: '%' },
+  { key: 'packConfort', label: 'Pack Confort', unit: '' },
+  { key: 'arMax', label: 'AR MAX', unit: '' },
+  { key: 'ar3', label: 'AR 3', unit: '' },
+  { key: 'pm1erePaire', label: 'PM 1ère paire', unit: '€' },
+  { key: 'testsAuditifs', label: 'Tests auditifs (1 mois)', unit: '%' },
 ]
+
+function pilotagePrefillValue(f, prefillData) {
+  if (!prefillData) return ''
+  if (f.combo) {
+    const parts = f.combo.map((src, i) => prefillData[src] != null ? (prefillData[src] + (f.comboUnits[i] || '')) : null).filter(Boolean)
+    return parts.join(' · ')
+  }
+  return f.source && prefillData[f.source] != null ? prefillData[f.source] : ''
+}
 
 function renderPilotageStatsGrid(containerId, type, prefillData) {
   const fields = PILOTAGE_FIELDS[type]
   document.getElementById(containerId).innerHTML = fields.map(f => `
     <div class="field">
       <label>${f.label}</label>
-      <input type="text" id="stat-${containerId}-${f.key}" value="${prefillData && f.source && prefillData[f.source] != null ? prefillData[f.source] : ''}">
+      <div style="display:flex; align-items:baseline; gap:2px;">
+        <input type="text" id="stat-${containerId}-${f.key}" value="${pilotagePrefillValue(f, prefillData)}" style="flex:1;">
+        ${f.unit ? `<span style="font-size:11px; color:#888; flex-shrink:0;">${f.unit}</span>` : ''}
+      </div>
     </div>
   `).join('')
+  // "Nouveaux objectifs" (17/09) : 4 indicateurs maximum, on désactive les
+  // champs encore vides dès que 4 sont remplis plutôt que de valider après
+  // coup — évite qu'on ait à revenir en arrière une fois le formulaire saisi.
+  if (containerId === 'pilotage-stats-objectif') enforceObjectifsLimit(containerId, fields)
+}
+
+function enforceObjectifsLimit(containerId, fields) {
+  const inputs = fields.map(f => document.getElementById(`stat-${containerId}-${f.key}`))
+  const apply = () => {
+    const filled = inputs.filter(el => el.value.trim() !== '')
+    const atLimit = filled.length >= 4
+    inputs.forEach(el => {
+      if (el.value.trim() === '') el.disabled = atLimit
+    })
+  }
+  inputs.forEach(el => el.addEventListener('input', apply))
+  apply()
 }
 
 function renderRecadrageStatsGrid() {
   document.getElementById('recadrage-stats').innerHTML = RECADRAGE_FIELDS.map(f => `
     <div class="field">
       <label>${f.label}</label>
-      <input type="text" id="stat-recadrage-${f.key}">
+      <div style="display:flex; align-items:baseline; gap:2px;">
+        <input type="text" id="stat-recadrage-${f.key}" style="flex:1;">
+        ${f.unit ? `<span style="font-size:11px; color:#888; flex-shrink:0;">${f.unit}</span>` : ''}
+      </div>
     </div>
   `).join('')
 }
@@ -638,7 +680,7 @@ async function startEntretien(type) {
     initSignaturePad('sig-ecoute-collab')
     return
   }
-  document.getElementById('pilotage-titre').textContent = type === 'pilotage_optique' ? 'Pilotage Optique' : 'Pilotage Audio'
+  document.getElementById('pilotage-titre').textContent = type === 'pilotage_optique' ? 'Entretien de pilotage Optique' : 'Entretien de pilotage Audio'
   document.getElementById('pilotage-date').value = new Date().toISOString().slice(0, 10)
   renderPilotageStatsGrid('pilotage-stats-avant', type, null)
   renderPilotageStatsGrid('pilotage-stats-objectif', type, null)
@@ -756,7 +798,7 @@ function pdfSafe(str) {
     .replace(/[^\x00-\xFF]/g, '?')
 }
 
-function pdfHeader(doc, mar, titre, sousTitre) {
+function pdfHeader(doc, W, mar, titre, magasin, date) {
   let y = 13
   try {
     if (LOGO_OC_ICON && LOGO_OC_ICON.indexOf('LOGO_ICON_B64') === -1) {
@@ -764,21 +806,26 @@ function pdfHeader(doc, mar, titre, sousTitre) {
       const logoW = logoH * LOGO_ICON_RATIO
       doc.addImage(LOGO_OC_ICON, 'PNG', mar, y - 5.3, logoW, logoH)
       doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...RED)
-      doc.text('SUIVI MANAGERS \u00B7 OPTICAL CENTER', mar + logoW + 4, y)
+      doc.text('OPTICAL CENTER', mar + logoW + 4, y)
     } else {
       doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...RED)
-      doc.text('SUIVI MANAGERS \u00B7 OPTICAL CENTER', mar, y)
+      doc.text('OPTICAL CENTER', mar, y)
     }
   } catch (e) {
     doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(...RED)
-    doc.text('SUIVI MANAGERS \u00B7 OPTICAL CENTER', mar, y)
+    doc.text('OPTICAL CENTER', mar, y)
   }
   y += 11
   doc.setFont('helvetica', 'bold'); doc.setFontSize(19); doc.setTextColor(...NOIR)
   doc.text(pdfSafe(titre), mar, y)
-  y += 6.5
-  doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(...RED)
-  doc.text(pdfSafe(sousTitre), mar, y)
+  // Magasin + date sur la même ligne que le titre, alignés à droite (17/09 —
+  // gagne une ligne par rapport à l'ancien sous-titre sur sa propre ligne).
+  const meta = [pdfSafe(magasin), pdfSafe(date)].filter(Boolean).join('  \u2014  ')
+  if (meta) {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor(...RED)
+    const w = doc.getTextWidth(meta)
+    doc.text(meta, W - mar - w, y)
+  }
   y += 8
   return y
 }
@@ -802,7 +849,7 @@ function pdfFooter(doc, W, H, mar, i, n) {
 
 function generateEntretienPdf(pending) {
   const { jsPDF } = window.jspdf
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true })
   const W = 210, H = 297, mar = 14
   let y = 0
 
@@ -824,14 +871,19 @@ function generateEntretienPdf(pending) {
   }
   // Grille compacte de puces (indicateurs / objectifs) — style aligné sur le
   // mockup validé : fond rose plein pour l'actuel, contour rouge pour l'objectif.
-  function statGrid(items, cols, outline) {
+  // skipEmpty (17/09) : pour les "Nouveaux objectifs", les champs vides ne
+  // sont même pas dessinés (pas de case "-") — c'est ce qui fait gagner la
+  // ligne quand on se limite à 4 objectifs maximum au lieu des 8-12 champs.
+  function statGrid(items, cols, outline, skipEmpty) {
+    const list = skipEmpty ? items.filter(it => it.val && String(it.val).trim() !== '') : items
+    if (!list.length) return
     const gap = 2.5
     const cellW = (W - 2 * mar - gap * (cols - 1)) / cols
     const cellH = 10.5
-    const rows = Math.ceil(items.length / cols)
+    const rows = Math.ceil(list.length / cols)
     ensureSpace(rows * (cellH + gap) + 4)
     let col = 0, rowY = y
-    items.forEach(it => {
+    list.forEach(it => {
       const cx = mar + col * (cellW + gap)
       if (outline) {
         doc.setDrawColor(...RED); doc.setLineWidth(0.35)
@@ -845,7 +897,8 @@ function generateEntretienPdf(pending) {
       doc.text(pdfSafe(it.label), cx + 1.8, rowY + 3.6, { maxWidth: cellW - 3.6 })
       doc.setFont('helvetica', 'bold'); doc.setFontSize(9)
       doc.setTextColor(...(outline ? NOIR : RED))
-      doc.text(pdfSafe(it.val || '-'), cx + 1.8, rowY + 8.3, { maxWidth: cellW - 3.6 })
+      const val = it.val ? pdfSafe(it.val) + (it.unit || '') : '-'
+      doc.text(val, cx + 1.8, rowY + 8.3, { maxWidth: cellW - 3.6 })
       col++
       if (col >= cols) { col = 0; rowY += cellH + gap }
     })
@@ -861,12 +914,12 @@ function generateEntretienPdf(pending) {
 
   const libelles = {
     ecoute_fb: 'Écoute & feedback de vente',
-    pilotage_optique: 'Pilotage optique',
-    pilotage_audio: 'Pilotage audio',
+    pilotage_optique: 'Entretien de pilotage Optique',
+    pilotage_audio: 'Entretien de pilotage Audio',
     recadrage: 'Entretien de recadrage',
   }
-  const sousTitre = (state.currentMagasin ? state.currentMagasin.libelle : '') + ' — ' + pdfSafe(pending.date)
-  y = pdfHeader(doc, mar, libelles[pending.type] || 'Entretien manager', sousTitre)
+  const magasinNom = state.currentMagasin ? state.currentMagasin.libelle : ''
+  y = pdfHeader(doc, W, mar, libelles[pending.type] || 'Entretien manager', magasinNom, pending.date)
 
   infoRow(pending.collaborateurNom, pending.remplipar, pending.date)
 
@@ -875,8 +928,8 @@ function generateEntretienPdf(pending) {
     if (data.niveauCommercial) {
       sectionLabel('Niveau commercial')
       statGrid([
-        { label: 'PM', val: data.niveauCommercial.pm },
-        { label: 'TXC', val: data.niveauCommercial.txc },
+        { label: 'PM', val: data.niveauCommercial.pm, unit: '€' },
+        { label: 'TXC', val: data.niveauCommercial.txc, unit: '%' },
         { label: 'MQ', val: data.niveauCommercial.mq },
       ], 3, false)
     }
@@ -903,16 +956,16 @@ function generateEntretienPdf(pending) {
     bodyText('Synthèse du collaborateur', data.synthese)
   } else if (pending.type === 'pilotage_optique' || pending.type === 'pilotage_audio') {
     const fields = PILOTAGE_FIELDS[pending.type]
-    const toItems = (grid) => fields.map(f => ({ label: f.label, val: grid[f.key] }))
+    const toItems = (grid) => fields.map(f => ({ label: f.label, val: grid[f.key], unit: f.unit }))
     sectionLabel('Indicateurs actuels')
-    statGrid(toItems(data.statsActuelles || {}), 6, false)
+    statGrid(toItems(data.statsActuelles || {}), 6, false, false)
     bodyText('1. Valoriser ce qui va bien', data.etape1)
     bodyText('2. Identification des points à améliorer', data.etape2)
     bodyText('3. Recherche des causes', data.etape3)
 
     ensureSpace(8)
     doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(...RED)
-    doc.text('NOUVEL OBJECTIF', mar, y)
+    doc.text('NOUVEAUX OBJECTIFS', mar, y)
     if (data.echeance) {
       const label = 'ECHEANCE : ' + pdfSafe(data.echeance)
       doc.setFont('helvetica', 'bold'); doc.setFontSize(8)
@@ -923,14 +976,14 @@ function generateEntretienPdf(pending) {
       doc.text(label, W - mar - tw - 3, y)
     }
     y += 5.5
-    statGrid(toItems(data.nouvelObjectif || {}), 6, true)
+    statGrid(toItems(data.nouveauxObjectifs || {}), 6, true, true)
 
     bodyText("5. Apport en formation / plan d'action", data.etape5)
     bodyText("6. Rôle d'accompagnement et de contrôle", data.etape6)
     bodyText('7. Validation', data.etape7)
   } else if (pending.type === 'recadrage') {
     sectionLabel('Indicateurs')
-    statGrid(RECADRAGE_FIELDS.map(f => ({ label: f.label, val: (data.stats || {})[f.key] })), 6, false)
+    statGrid(RECADRAGE_FIELDS.map(f => ({ label: f.label, val: (data.stats || {})[f.key], unit: f.unit })), 6, false, false)
     bodyText("Évolution de sa tâche", data.evolution)
     bodyText('1. Décrire la situation de manière factuelle', data.etape1)
     bodyText('2. Rappeler la règle', data.etape2)
@@ -964,7 +1017,7 @@ function generateEntretienPdf(pending) {
 
 function generateLancementPdf(pending) {
   const { jsPDF } = window.jspdf
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true })
   const W = 210, H = 297, mar = 14
   let y = 0
 
@@ -979,8 +1032,8 @@ function generateLancementPdf(pending) {
     y += 2.5
   }
 
-  const sousTitre = (state.currentMagasin ? state.currentMagasin.libelle : '') + ' — ' + pdfSafe(pending.date)
-  y = pdfHeader(doc, mar, 'Lancement de journée', sousTitre)
+  const magasinNom = state.currentMagasin ? state.currentMagasin.libelle : ''
+  y = pdfHeader(doc, W, mar, 'Lancement de journée', magasinNom, pending.date)
 
   doc.setFillColor(...ROSE)
   doc.roundedRect(mar, y, W - 2 * mar, 10.5, 1.3, 1.3, 'F')
@@ -1103,14 +1156,16 @@ function previewPilotage() {
     return o
   }
   const statsActuelles = readGrid('pilotage-stats-avant')
-  const nouvelObjectif = readGrid('pilotage-stats-objectif')
+  const nouveauxObjectifsRaw = readGrid('pilotage-stats-objectif')
+  const nbObjectifsRemplis = Object.values(nouveauxObjectifsRaw).filter(v => v.trim() !== '').length
+  if (nbObjectifsRemplis > 4) { showToast('4 nouveaux objectifs maximum'); return }
   const echeance = document.getElementById('pilotage-echeance').value
   const data = {
     statsActuelles,
     etape1: document.getElementById('pilotage-1').value,
     etape2: document.getElementById('pilotage-2').value,
     etape3: document.getElementById('pilotage-3').value,
-    nouvelObjectif,
+    nouveauxObjectifs: nouveauxObjectifsRaw,
     echeance,
     etape5: document.getElementById('pilotage-5').value,
     etape6: document.getElementById('pilotage-6').value,
@@ -1123,8 +1178,14 @@ function previewPilotage() {
 
   state.pending = { kind: 'entretien', type, remplipar, date, matricule, collaborateurNom, data, returnScreen: 'screen-pilotage' }
 
-  const gridLine = (grid) => fields.map(f => `${f.label}: ${grid[f.key] || '—'}`).join(' · ')
-  document.getElementById('preview-titre').textContent = 'Aperçu — ' + (type === 'pilotage_optique' ? 'Pilotage Optique' : 'Pilotage Audio')
+  // N'affiche que les champs remplis (indicateurs "actuels" comme "objectifs")
+  // — un champ vide n'a pas de sens à montrer, et c'est ce qui permet aux
+  // "Nouveaux objectifs" de tenir sur une seule ligne dans le PDF.
+  const gridLine = (grid) => fields
+    .filter(f => grid[f.key] && grid[f.key].trim() !== '')
+    .map(f => `${f.label}: ${grid[f.key]}${f.unit || ''}`)
+    .join(' · ') || '—'
+  document.getElementById('preview-titre').textContent = 'Aperçu — ' + (type === 'pilotage_optique' ? 'Entretien de pilotage Optique' : 'Entretien de pilotage Audio')
   document.getElementById('preview-content').innerHTML =
     previewRow('Magasin', state.currentMagasin ? state.currentMagasin.libelle : '') +
     previewRow('Collaborateur', collaborateurNom) +
@@ -1134,8 +1195,8 @@ function previewPilotage() {
     previewText('1. Valoriser ce qui va bien', data.etape1) +
     previewText('2. Points à améliorer', data.etape2) +
     previewText('3. Recherche des causes', data.etape3) +
-    previewRow('Échéance du nouvel objectif', echeance) +
-    previewText('4. Nouvel objectif', gridLine(nouvelObjectif)) +
+    previewRow('Échéance des nouveaux objectifs', echeance) +
+    previewText('4. Nouveaux objectifs', gridLine(nouveauxObjectifsRaw)) +
     previewText('5. Apport en formation / plan d\'action', data.etape5) +
     previewText('6. Rôle d\'accompagnement et de contrôle', data.etape6) +
     previewText('7. Validation', data.etape7) +
