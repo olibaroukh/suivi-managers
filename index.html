@@ -390,8 +390,8 @@
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.09.17-4'
-const SW_VERSION = '2026.09.17-4'
+const APP_VERSION = '2026.09.17-6'
+const SW_VERSION = '2026.09.17-6'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://raw.githubusercontent.com/olibaroukh/bilan-passage/main/magasins.csv'
@@ -785,6 +785,16 @@ const GRIS = [118, 118, 118]   // #767676
 // Sanitize pour Helvetica (jsPDF core font, Latin-1 uniquement) — même liste
 // que sur les autres outils (accents composés déjà en Latin-1 OK, guillemets
 // typographiques/tirets longs/emoji remplacés ou retirés).
+// Toute date affichée à l'humain (PDF, aperçu écran, mail) doit être en
+// jj/mm/aaaa — <input type="date"> renvoie toujours du ISO (aaaa-mm-jj), et
+// c'est ce format ISO qui doit rester dans data_json / la base (tri, requêtes),
+// jamais celui-ci : formatDateFr() n'est appelé qu'au moment de l'affichage.
+function formatDateFr(iso) {
+  if (!iso) return ''
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso)
+  return m ? `${m[3]}/${m[2]}/${m[1]}` : iso
+}
+
 function pdfSafe(str) {
   if (!str) return ''
   return String(str)
@@ -820,7 +830,7 @@ function pdfHeader(doc, W, mar, titre, magasin, date) {
   doc.text(pdfSafe(titre), mar, y)
   // Magasin + date sur la même ligne que le titre, alignés à droite (17/09 —
   // gagne une ligne par rapport à l'ancien sous-titre sur sa propre ligne).
-  const meta = [pdfSafe(magasin), pdfSafe(date)].filter(Boolean).join('  \u2014  ')
+  const meta = [pdfSafe(magasin), pdfSafe(formatDateFr(date))].filter(Boolean).join('  \u2014  ')
   if (meta) {
     doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor(...RED)
     const w = doc.getTextWidth(meta)
@@ -860,12 +870,22 @@ function generateEntretienPdf(pending) {
     doc.text(pdfSafe(title.toUpperCase()), mar, y)
     y += 5.5
   }
-  function bodyText(label, value) {
+  function bodyText(label, value, maxLines) {
     ensureSpace(14)
     doc.setFont('helvetica', 'bold'); doc.setFontSize(8.5); doc.setTextColor(...ROSE_TXT)
     doc.text(pdfSafe(label), mar, y); y += 4.3
     doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(44, 44, 42)
-    const lines = doc.splitTextToSize(pdfSafe(value || '-'), W - 2 * mar)
+    let lines = doc.splitTextToSize(pdfSafe(value || '-'), W - 2 * mar)
+    // Troncature stricte (17/09) : sur les secteurs limités (Pilotage), on ne
+    // se fie plus à une limite de caractères côté saisie (un mot large peut
+    // quand même déborder sur 3 lignes) — ici le budget de page est garanti
+    // quel que soit le texte tapé, avec "…" si ça dépasse.
+    if (maxLines && lines.length > maxLines) {
+      lines = lines.slice(0, maxLines)
+      let last = lines[maxLines - 1]
+      while (last.length > 1 && doc.getTextWidth(last + '\u2026') > W - 2 * mar) last = last.slice(0, -1)
+      lines[maxLines - 1] = last + '\u2026'
+    }
     lines.forEach(line => { ensureSpace(5); doc.text(line, mar, y); y += 5 })
     y += 2.5
   }
@@ -959,15 +979,15 @@ function generateEntretienPdf(pending) {
     const toItems = (grid) => fields.map(f => ({ label: f.label, val: grid[f.key], unit: f.unit }))
     sectionLabel('Indicateurs actuels')
     statGrid(toItems(data.statsActuelles || {}), 6, false, false)
-    bodyText('1. Valoriser ce qui va bien', data.etape1)
-    bodyText('2. Identification des points à améliorer', data.etape2)
-    bodyText('3. Recherche des causes', data.etape3)
+    bodyText('1. Valoriser ce qui va bien', data.etape1, 2)
+    bodyText('2. Identification des points à améliorer', data.etape2, 2)
+    bodyText('3. Recherche des causes', data.etape3, 2)
 
     ensureSpace(8)
     doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(...RED)
     doc.text('NOUVEAUX OBJECTIFS', mar, y)
     if (data.echeance) {
-      const label = 'ECHEANCE : ' + pdfSafe(data.echeance)
+      const label = 'ECHEANCE : ' + pdfSafe(formatDateFr(data.echeance))
       doc.setFont('helvetica', 'bold'); doc.setFontSize(8)
       const tw = doc.getTextWidth(label)
       doc.setFillColor(...NOIR)
@@ -978,9 +998,9 @@ function generateEntretienPdf(pending) {
     y += 5.5
     statGrid(toItems(data.nouveauxObjectifs || {}), 6, true, true)
 
-    bodyText("5. Apport en formation / plan d'action", data.etape5)
-    bodyText("6. Rôle d'accompagnement et de contrôle", data.etape6)
-    bodyText('7. Validation', data.etape7)
+    bodyText("5. Apport en formation / plan d'action", data.etape5, 2)
+    bodyText("6. Rôle d'accompagnement et de contrôle", data.etape6, 2)
+    bodyText('7. Validation', data.etape7, 2)
   } else if (pending.type === 'recadrage') {
     sectionLabel('Indicateurs')
     statGrid(RECADRAGE_FIELDS.map(f => ({ label: f.label, val: (data.stats || {})[f.key], unit: f.unit })), 6, false, false)
@@ -1127,7 +1147,7 @@ function previewEntretien(type) {
     previewRow('Magasin', state.currentMagasin ? state.currentMagasin.libelle : '') +
     previewRow('Collaborateur', collaborateurNom) +
     previewRow('Rempli par', remplipar) +
-    previewRow('Date', date) +
+    previewRow('Date', formatDateFr(date)) +
     previewRow('PM / TXC / MQ', `${data.niveauCommercial.pm || '—'} / ${data.niveauCommercial.txc || '—'} / ${data.niveauCommercial.mq || '—'}`) +
     `<div class="preview-block"><h3>Points de contrôle</h3>` +
     items.map(it => `<div class="preview-item"><span class="${it.fait ? 'ok' : 'no'}">${it.fait ? '✓' : '✗'}</span> ${it.label}${it.plusMoins ? ' — ' + it.plusMoins : ''}${it.apports ? ' (' + it.apports + ')' : ''}</div>`).join('') +
@@ -1190,12 +1210,12 @@ function previewPilotage() {
     previewRow('Magasin', state.currentMagasin ? state.currentMagasin.libelle : '') +
     previewRow('Collaborateur', collaborateurNom) +
     previewRow('Rempli par', remplipar) +
-    previewRow('Date', date) +
+    previewRow('Date', formatDateFr(date)) +
     previewText('Indicateurs actuels', gridLine(statsActuelles)) +
     previewText('1. Valoriser ce qui va bien', data.etape1) +
     previewText('2. Points à améliorer', data.etape2) +
     previewText('3. Recherche des causes', data.etape3) +
-    previewRow('Échéance des nouveaux objectifs', echeance) +
+    previewRow('Échéance des nouveaux objectifs', formatDateFr(echeance)) +
     previewText('4. Nouveaux objectifs', gridLine(nouveauxObjectifsRaw)) +
     previewText('5. Apport en formation / plan d\'action', data.etape5) +
     previewText('6. Rôle d\'accompagnement et de contrôle', data.etape6) +
@@ -1238,7 +1258,7 @@ function previewRecadrage() {
     previewRow('Magasin', state.currentMagasin ? state.currentMagasin.libelle : '') +
     previewRow('Collaborateur', collaborateurNom) +
     previewRow('Rempli par', remplipar) +
-    previewRow('Date', date) +
+    previewRow('Date', formatDateFr(date)) +
     previewText('Indicateurs', gridLine) +
     previewText('Évolution de sa tâche', data.evolution) +
     previewText('1. Situation factuelle', data.etape1) +
@@ -1270,7 +1290,7 @@ function previewLancement() {
   document.getElementById('preview-content').innerHTML =
     previewRow('Magasin', state.currentMagasin ? state.currentMagasin.libelle : '') +
     previewRow('Rempli par', `${remplipar} (${poste})`) +
-    previewRow('Date', date) +
+    previewRow('Date', formatDateFr(date)) +
     previewRow('Présents', presents.join(', ') || 'Aucun') +
     previewText('Objectifs du jour', objectifs) +
     previewText('Note libre', noteLibre)
