@@ -106,6 +106,29 @@
   }
   .top-nav{ display:flex; gap:8px; margin-bottom:14px; }
   .top-nav button{ background:none; border:none; color:var(--rouge); font-weight:600; padding:4px 0; font-size:13px; }
+
+  /* ── SIGNATURE ── */
+  .sig-block{ margin-top:16px; }
+  .sig-canvas-wrap{
+    background:#fff; border:1px solid var(--input-border); border-radius:8px; overflow:hidden; touch-action:none;
+  }
+  .sig-canvas-wrap canvas{ display:block; width:100%; height:140px; }
+  .sig-actions{ display:flex; justify-content:space-between; align-items:center; margin-top:4px; }
+  .sig-actions button{ background:none; border:none; color:var(--rouge); font-size:12px; font-weight:600; padding:4px 0; }
+  .sig-empty-hint{ font-size:11px; color:var(--text-dim); }
+
+  /* ── APERÇU ── */
+  .preview-block{ margin-bottom:16px; }
+  .preview-block h3{ color:var(--rouge); margin-bottom:6px; }
+  .preview-row{ display:flex; justify-content:space-between; gap:10px; padding:6px 0; border-bottom:1px solid var(--card-border); font-size:14px; }
+  .preview-row .k{ color:var(--text-dim); flex-shrink:0; }
+  .preview-row .v{ text-align:right; }
+  .preview-text{ font-size:14px; white-space:pre-wrap; padding:8px 0; border-bottom:1px solid var(--card-border); }
+  .preview-item{ font-size:13px; padding:6px 0; border-bottom:1px solid var(--card-border); }
+  .preview-item .ok{ color:#4CAF6E; font-weight:700; }
+  .preview-item .no{ color:var(--rouge); font-weight:700; }
+  .preview-sig-img{ max-width:200px; max-height:80px; background:#fff; border-radius:6px; padding:4px; margin-top:4px; }
+  .preview-sig-missing{ font-size:12px; color:var(--text-dim); font-style:italic; }
 </style>
 </head>
 <body>
@@ -179,7 +202,18 @@
     <label>Synthèse du collaborateur (validation)</label>
     <textarea id="ecoute-synthese"></textarea>
 
-    <button class="btn-primary" onclick="submitEntretien('ecoute_fb')">Envoyer</button>
+    <div class="sig-block">
+      <h3>Signature du manager</h3>
+      <div class="sig-canvas-wrap"><canvas id="sig-ecoute-manager"></canvas></div>
+      <div class="sig-actions"><span class="sig-empty-hint">Signe avec le doigt / la souris</span><button type="button" onclick="clearSignature('sig-ecoute-manager')">Effacer</button></div>
+    </div>
+    <div class="sig-block">
+      <h3>Signature du collaborateur</h3>
+      <div class="sig-canvas-wrap"><canvas id="sig-ecoute-collab"></canvas></div>
+      <div class="sig-actions"><span class="sig-empty-hint">Signe avec le doigt / la souris</span><button type="button" onclick="clearSignature('sig-ecoute-collab')">Effacer</button></div>
+    </div>
+
+    <button class="btn-primary" onclick="previewEntretien('ecoute_fb')">Aperçu</button>
   </section>
 
   <!-- ============ PILOTAGE (optique / audio, template commun) ============ -->
@@ -218,7 +252,18 @@
     <h3>7. Validation</h3>
     <textarea id="pilotage-7"></textarea>
 
-    <button class="btn-primary" onclick="submitPilotage()">Envoyer</button>
+    <div class="sig-block">
+      <h3>Signature du manager</h3>
+      <div class="sig-canvas-wrap"><canvas id="sig-pilotage-manager"></canvas></div>
+      <div class="sig-actions"><span class="sig-empty-hint">Signe avec le doigt / la souris</span><button type="button" onclick="clearSignature('sig-pilotage-manager')">Effacer</button></div>
+    </div>
+    <div class="sig-block">
+      <h3>Signature du collaborateur</h3>
+      <div class="sig-canvas-wrap"><canvas id="sig-pilotage-collab"></canvas></div>
+      <div class="sig-actions"><span class="sig-empty-hint">Signe avec le doigt / la souris</span><button type="button" onclick="clearSignature('sig-pilotage-collab')">Effacer</button></div>
+    </div>
+
+    <button class="btn-primary" onclick="previewPilotage()">Aperçu</button>
   </section>
 
   <!-- ============ LANCEMENT DE JOURNÉE ============ -->
@@ -242,7 +287,15 @@
     <label>Note libre</label>
     <textarea id="lancement-note"></textarea>
 
-    <button class="btn-primary" onclick="submitLancement()">Envoyer</button>
+    <button class="btn-primary" onclick="previewLancement()">Aperçu</button>
+  </section>
+
+  <!-- ============ APERÇU (commun aux 4 trames) ============ -->
+  <section class="screen" id="screen-preview">
+    <div class="top-nav"><button onclick="backFromPreview()">← Modifier</button></div>
+    <h2 id="preview-titre">Aperçu</h2>
+    <div id="preview-content"></div>
+    <button class="btn-primary" onclick="confirmSend()">Confirmer l'envoi</button>
   </section>
 
   <!-- ============ HISTORIQUE (login AR) ============ -->
@@ -267,8 +320,8 @@
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.09.16-4'
-const SW_VERSION = '2026.09.16-4'
+const APP_VERSION = '2026.09.17-1'
+const SW_VERSION = '2026.09.17-1'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://raw.githubusercontent.com/olibaroukh/bilan-passage/main/magasins.csv'
@@ -475,6 +528,8 @@ async function startEntretien(type) {
   if (type === 'ecoute_fb') {
     document.getElementById('ecoute-date').value = new Date().toISOString().slice(0, 10)
     goTo('screen-ecoute-fb')
+    initSignaturePad('sig-ecoute-manager')
+    initSignaturePad('sig-ecoute-collab')
     return
   }
   document.getElementById('pilotage-titre').textContent = type === 'pilotage_optique' ? 'Pilotage Optique' : 'Pilotage Audio'
@@ -483,6 +538,8 @@ async function startEntretien(type) {
   renderPilotageStatsGrid('pilotage-stats-objectif', type, null)
   document.getElementById('pilotage-stats-hint').textContent = ''
   goTo('screen-pilotage')
+  initSignaturePad('sig-pilotage-manager')
+  initSignaturePad('sig-pilotage-collab')
 }
 
 // Récupère les stats collaborateur dès qu'un collaborateur est choisi dans l'écran Pilotage
@@ -505,107 +562,253 @@ document.getElementById('pilotage-collab').addEventListener('change', async (e) 
 })
 
 // ============================================================================
-// ENVOI — Écoute & Feedback
+// SIGNATURE — pad canvas tactile/souris, une paire (manager + collaborateur)
+// par trame d'entretien. Rien n'est envoyé si le pad reste vide (signature
+// optionnelle : on ne bloque jamais l'envoi pour ça).
 // ============================================================================
-async function submitEntretien(type) {
+const sigPads = {} // canvasId -> { ctx, drawing, hasInk }
+
+function initSignaturePad(canvasId) {
+  const canvas = document.getElementById(canvasId)
+  if (!canvas) return
+  // Dimensionner le canvas en pixels réels (devicePixelRatio) une fois qu'il
+  // est visible (l'écran doit déjà être actif — appelé juste après goTo()).
+  const rect = canvas.getBoundingClientRect()
+  const ratio = window.devicePixelRatio || 1
+  canvas.width = Math.max(1, Math.round(rect.width * ratio))
+  canvas.height = Math.max(1, Math.round(rect.height * ratio))
+  const ctx = canvas.getContext('2d')
+  ctx.scale(ratio, ratio)
+  ctx.lineWidth = 2
+  ctx.lineCap = 'round'
+  ctx.strokeStyle = '#0D0D0D'
+  sigPads[canvasId] = { ctx, drawing: false, hasInk: false }
+
+  const pos = (e) => {
+    const r = canvas.getBoundingClientRect()
+    const p = e.touches ? e.touches[0] : e
+    return { x: p.clientX - r.left, y: p.clientY - r.top }
+  }
+  const start = (e) => { e.preventDefault(); const p = pos(e); sigPads[canvasId].drawing = true; ctx.beginPath(); ctx.moveTo(p.x, p.y) }
+  const move = (e) => {
+    if (!sigPads[canvasId].drawing) return
+    e.preventDefault()
+    const p = pos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); sigPads[canvasId].hasInk = true
+  }
+  const end = () => { sigPads[canvasId].drawing = false }
+
+  canvas.onmousedown = start; canvas.onmousemove = move
+  window.addEventListener('mouseup', end)
+  canvas.ontouchstart = start; canvas.ontouchmove = move; canvas.ontouchend = end
+}
+
+function clearSignature(canvasId) {
+  const canvas = document.getElementById(canvasId)
+  const pad = sigPads[canvasId]
+  if (!canvas || !pad) return
+  pad.ctx.clearRect(0, 0, canvas.width, canvas.height)
+  pad.hasInk = false
+}
+
+function getSignatureDataURL(canvasId) {
+  const pad = sigPads[canvasId]
+  if (!pad || !pad.hasInk) return null
+  return document.getElementById(canvasId).toDataURL('image/png')
+}
+
+// ============================================================================
+// APERÇU — commun aux 4 trames. On construit le payload complet (sans
+// l'envoyer), on le stocke dans state.pending, et on affiche un résumé
+// lisible avant confirmation — même esprit que le rapport PEDLV ouvert dans
+// un nouvel onglet avant impression, ou l'aperçu PDF de Bilan de Passage.
+// ============================================================================
+function previewRow(k, v) { return `<div class="preview-row"><span class="k">${k}</span><span class="v">${v || '—'}</span></div>` }
+function previewText(label, v) { return v ? `<div class="preview-block"><h3>${label}</h3><div class="preview-text">${(v+'').replace(/</g,'&lt;')}</div></div>` : '' }
+function previewSigBlock(label, dataUrl) {
+  return `<div class="preview-block"><h3>${label}</h3>` +
+    (dataUrl ? `<img class="preview-sig-img" src="${dataUrl}">` : `<span class="preview-sig-missing">Non signé</span>`) +
+    `</div>`
+}
+
+function previewEntretien(type) {
   const collabSelect = document.getElementById('ecoute-collab')
+  const remplipar = document.getElementById('ecoute-remplipar').value
+  const date = document.getElementById('ecoute-date').value
+  if (!remplipar || !date) { showToast('Merci de renseigner ton prénom et la date'); return }
+
+  const items = ECOUTE_ITEMS.map((label, i) => ({
+    label,
+    fait: document.getElementById('item-fait-' + i).checked,
+    plusMoins: document.getElementById('item-plus-moins-' + i).value,
+    apports: document.getElementById('item-apports-' + i).value,
+  }))
   const data = {
     niveauCommercial: {
       pm: document.getElementById('ecoute-pm').value,
       txc: document.getElementById('ecoute-txc').value,
       mq: document.getElementById('ecoute-mq').value,
     },
-    items: ECOUTE_ITEMS.map((label, i) => ({
-      label,
-      fait: document.getElementById('item-fait-' + i).checked,
-      plusMoins: document.getElementById('item-plus-moins-' + i).value,
-      apports: document.getElementById('item-apports-' + i).value,
-    })),
+    items,
     plus: document.getElementById('ecoute-plus').value,
     axes: document.getElementById('ecoute-axes').value,
     apports: document.getElementById('ecoute-apports').value,
     synthese: document.getElementById('ecoute-synthese').value,
+    signatureManager: getSignatureDataURL('sig-ecoute-manager'),
+    signatureCollaborateur: getSignatureDataURL('sig-ecoute-collab'),
   }
-  await postEntretien(type, collabSelect, document.getElementById('ecoute-remplipar').value, document.getElementById('ecoute-date').value, data)
+  const matricule = collabSelect.value
+  const collaborateurNom = matricule ? collabSelect.options[collabSelect.selectedIndex].text : ''
+
+  state.pending = { kind: 'entretien', type, remplipar, date, matricule, collaborateurNom, data, returnScreen: 'screen-ecoute-fb' }
+
+  document.getElementById('preview-titre').textContent = 'Aperçu — Écoute & Feedback de vente'
+  document.getElementById('preview-content').innerHTML =
+    previewRow('Magasin', state.currentMagasin ? state.currentMagasin.libelle : '') +
+    previewRow('Collaborateur', collaborateurNom) +
+    previewRow('Rempli par', remplipar) +
+    previewRow('Date', date) +
+    previewRow('PM / TXC / MQ', `${data.niveauCommercial.pm || '—'} / ${data.niveauCommercial.txc || '—'} / ${data.niveauCommercial.mq || '—'}`) +
+    `<div class="preview-block"><h3>Points de contrôle</h3>` +
+    items.map(it => `<div class="preview-item"><span class="${it.fait ? 'ok' : 'no'}">${it.fait ? '✓' : '✗'}</span> ${it.label}${it.plusMoins ? ' — ' + it.plusMoins : ''}${it.apports ? ' (' + it.apports + ')' : ''}</div>`).join('') +
+    `</div>` +
+    previewText('Ce qui va bien', data.plus) +
+    previewText("Axes d'amélioration", data.axes) +
+    previewText('Apports pédagogiques', data.apports) +
+    previewText('Synthèse du collaborateur', data.synthese) +
+    previewSigBlock('Signature du manager', data.signatureManager) +
+    previewSigBlock('Signature du collaborateur', data.signatureCollaborateur)
+
+  goTo('screen-preview')
 }
 
-// ============================================================================
-// ENVOI — Pilotage (optique / audio)
-// ============================================================================
-async function submitPilotage() {
+function previewPilotage() {
   const type = state.currentType
   const fields = PILOTAGE_FIELDS[type]
   const collabSelect = document.getElementById('pilotage-collab')
+  const remplipar = document.getElementById('pilotage-remplipar').value
+  const date = document.getElementById('pilotage-date').value
+  if (!remplipar || !date) { showToast('Merci de renseigner ton prénom et la date'); return }
+
   const readGrid = (containerId) => {
     const o = {}
     fields.forEach(f => { o[f.key] = document.getElementById(`stat-${containerId}-${f.key}`).value })
     return o
   }
+  const statsActuelles = readGrid('pilotage-stats-avant')
+  const nouvelObjectif = readGrid('pilotage-stats-objectif')
   const data = {
-    statsActuelles: readGrid('pilotage-stats-avant'),
+    statsActuelles,
     etape1: document.getElementById('pilotage-1').value,
     etape2: document.getElementById('pilotage-2').value,
     etape3: document.getElementById('pilotage-3').value,
-    nouvelObjectif: readGrid('pilotage-stats-objectif'),
+    nouvelObjectif,
     etape5: document.getElementById('pilotage-5').value,
     etape6: document.getElementById('pilotage-6').value,
     etape7: document.getElementById('pilotage-7').value,
+    signatureManager: getSignatureDataURL('sig-pilotage-manager'),
+    signatureCollaborateur: getSignatureDataURL('sig-pilotage-collab'),
   }
-  await postEntretien(type, collabSelect, document.getElementById('pilotage-remplipar').value, document.getElementById('pilotage-date').value, data)
+  const matricule = collabSelect.value
+  const collaborateurNom = matricule ? collabSelect.options[collabSelect.selectedIndex].text : ''
+
+  state.pending = { kind: 'entretien', type, remplipar, date, matricule, collaborateurNom, data, returnScreen: 'screen-pilotage' }
+
+  const gridLine = (grid) => fields.map(f => `${f.label}: ${grid[f.key] || '—'}`).join(' · ')
+  document.getElementById('preview-titre').textContent = 'Aperçu — ' + (type === 'pilotage_optique' ? 'Pilotage Optique' : 'Pilotage Audio')
+  document.getElementById('preview-content').innerHTML =
+    previewRow('Magasin', state.currentMagasin ? state.currentMagasin.libelle : '') +
+    previewRow('Collaborateur', collaborateurNom) +
+    previewRow('Rempli par', remplipar) +
+    previewRow('Date', date) +
+    previewText('Indicateurs actuels', gridLine(statsActuelles)) +
+    previewText('1. Valoriser ce qui va bien', data.etape1) +
+    previewText('2. Points à améliorer', data.etape2) +
+    previewText('3. Recherche des causes', data.etape3) +
+    previewText('4. Nouvel objectif', gridLine(nouvelObjectif)) +
+    previewText('5. Apport en formation / plan d\'action', data.etape5) +
+    previewText('6. Rôle d\'accompagnement et de contrôle', data.etape6) +
+    previewText('7. Validation', data.etape7) +
+    previewSigBlock('Signature du manager', data.signatureManager) +
+    previewSigBlock('Signature du collaborateur', data.signatureCollaborateur)
+
+  goTo('screen-preview')
 }
 
-async function postEntretien(type, collabSelectEl, remplipar, date, data) {
-  if (!remplipar || !date) { showToast('Merci de renseigner ton prénom et la date'); return }
-  const matricule = collabSelectEl.value
-  const collaborateurNom = matricule ? collabSelectEl.options[collabSelectEl.selectedIndex].text : ''
-
-  try {
-    const res = await fetch(RELAY + '/entretien-manager', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Store-Token': STORE_TOKEN },
-      body: JSON.stringify({
-        type, magasinCode: state.currentMagasin.code,
-        collaborateurMatricule: matricule || null, collaborateurNom,
-        remplipar, date, data,
-      }),
-    })
-    if (!res.ok) throw new Error('erreur serveur')
-    showToast('Envoyé — mail parti au magasin')
-    goTo('screen-menu')
-  } catch (e) {
-    showToast('Échec de l\'envoi — vérifie ta connexion')
-  }
-}
-
-// ============================================================================
-// ENVOI — Lancement de journée
-// ============================================================================
-document.getElementById('lancement-date').value = new Date().toISOString().slice(0, 10)
-
-async function submitLancement() {
+function previewLancement() {
   const remplipar = document.getElementById('lancement-remplipar').value
   const poste = document.getElementById('lancement-poste').value
   const date = document.getElementById('lancement-date').value
   if (!remplipar || !poste || !date) { showToast('Merci de renseigner prénom, poste et date'); return }
 
   const presents = [...document.querySelectorAll('#lancement-presents input:checked')].map(el => el.value)
+  const objectifs = document.getElementById('lancement-objectifs').value
+  const noteLibre = document.getElementById('lancement-note').value
 
-  try {
-    const res = await fetch(RELAY + '/lancement-journee', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'X-Store-Token': STORE_TOKEN },
-      body: JSON.stringify({
-        magasinCode: state.currentMagasin.code,
-        remplipar, posteRemplipar: poste, date, presents,
-        objectifs: document.getElementById('lancement-objectifs').value,
-        noteLibre: document.getElementById('lancement-note').value,
-      }),
-    })
-    if (!res.ok) throw new Error('erreur serveur')
-    showToast('Envoyé — mail parti au magasin')
-    goTo('screen-menu')
-  } catch (e) {
-    showToast('Échec de l\'envoi — vérifie ta connexion')
+  state.pending = { kind: 'lancement', remplipar, poste, date, presents, objectifs, noteLibre, returnScreen: 'screen-lancement' }
+
+  document.getElementById('preview-titre').textContent = 'Aperçu — Lancement de journée'
+  document.getElementById('preview-content').innerHTML =
+    previewRow('Magasin', state.currentMagasin ? state.currentMagasin.libelle : '') +
+    previewRow('Rempli par', `${remplipar} (${poste})`) +
+    previewRow('Date', date) +
+    previewRow('Présents', presents.join(', ') || 'Aucun') +
+    previewText('Objectifs du jour', objectifs) +
+    previewText('Note libre', noteLibre)
+
+  goTo('screen-preview')
+}
+
+function backFromPreview() {
+  const back = state.pending && state.pending.returnScreen
+  goTo(back || 'screen-menu')
+}
+
+// ============================================================================
+// ENVOI — appelé uniquement depuis l'écran d'aperçu, après confirmation
+// ============================================================================
+async function confirmSend() {
+  const pending = state.pending
+  if (!pending) { goTo('screen-menu'); return }
+
+  if (pending.kind === 'entretien') {
+    try {
+      const res = await fetch(RELAY + '/entretien-manager', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Store-Token': STORE_TOKEN },
+        body: JSON.stringify({
+          type: pending.type, magasinCode: state.currentMagasin.code,
+          collaborateurMatricule: pending.matricule || null, collaborateurNom: pending.collaborateurNom,
+          remplipar: pending.remplipar, date: pending.date, data: pending.data,
+        }),
+      })
+      if (!res.ok) throw new Error('erreur serveur')
+      showToast('Envoyé — mail parti au magasin')
+      state.pending = null
+      goTo('screen-menu')
+    } catch (e) {
+      showToast('Échec de l\'envoi — vérifie ta connexion')
+    }
+    return
+  }
+
+  if (pending.kind === 'lancement') {
+    try {
+      const res = await fetch(RELAY + '/lancement-journee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Store-Token': STORE_TOKEN },
+        body: JSON.stringify({
+          magasinCode: state.currentMagasin.code,
+          remplipar: pending.remplipar, posteRemplipar: pending.poste, date: pending.date, presents: pending.presents,
+          objectifs: pending.objectifs, noteLibre: pending.noteLibre,
+        }),
+      })
+      if (!res.ok) throw new Error('erreur serveur')
+      showToast('Envoyé — mail parti au magasin')
+      state.pending = null
+      goTo('screen-menu')
+    } catch (e) {
+      showToast('Échec de l\'envoi — vérifie ta connexion')
+    }
   }
 }
 
@@ -658,6 +861,7 @@ async function loadHistorique() {
 // INIT
 // ============================================================================
 loadMagasins()
+document.getElementById('lancement-date').value = new Date().toISOString().slice(0, 10)
 
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js?v=' + SW_VERSION)
