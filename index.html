@@ -470,8 +470,8 @@
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.09.18-3'
-const SW_VERSION = '2026.09.18-3'
+const APP_VERSION = '2026.09.18-4'
+const SW_VERSION = '2026.09.18-4'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://raw.githubusercontent.com/olibaroukh/bilan-passage/main/magasins.csv'
@@ -1007,17 +1007,20 @@ function pdfHeader(doc, W, mar, titre, magasin, date) {
     doc.setFont('Montserrat', 'bold'); doc.setFontSize(9); doc.setTextColor(...RED)
     doc.text('OPTICAL CENTER', mar, y)
   }
+  // 18/09 : le magasin passe sur la ligne "OPTICAL CENTER" (aligné à droite),
+  // la date est retirée du header — elle est déjà affichée dans la vignette
+  // DATE juste en dessous du titre. Le titre récupère toute sa ligne, donc
+  // plus de chevauchement même quand il est long ("Entretien de pilotage
+  // Optique") ni quand le nom du magasin est long ("BOULOGNE - JEAN-JAURÉS").
+  if (magasin) {
+    doc.setFont('Montserrat', 'bold'); doc.setFontSize(9.5); doc.setTextColor(...RED)
+    const magasinTxt = pdfSafe(magasin)
+    const w = doc.getTextWidth(magasinTxt)
+    doc.text(magasinTxt, W - mar - w, y)
+  }
   y += 11
   doc.setFont('Montserrat', 'extrabold'); doc.setFontSize(19); doc.setTextColor(...NOIR)
   doc.text(pdfSafe(titre), mar, y)
-  // Magasin + date sur la même ligne que le titre, alignés à droite (17/09 —
-  // gagne une ligne par rapport à l'ancien sous-titre sur sa propre ligne).
-  const meta = [pdfSafe(magasin), pdfSafe(formatDateFr(date))].filter(Boolean).join('  \u2014  ')
-  if (meta) {
-    doc.setFont('Montserrat', 'bold'); doc.setFontSize(10.5); doc.setTextColor(...RED)
-    const w = doc.getTextWidth(meta)
-    doc.text(meta, W - mar - w, y)
-  }
   y += 8
   return y
 }
