@@ -122,7 +122,28 @@
     padding:10px; border-bottom:1px solid var(--card-border); cursor:pointer; color:var(--creme);
   }
   .search-item:hover{ background:var(--card); }
+  .hist-item{ display:flex; align-items:center; justify-content:space-between; gap:10px; cursor:default; }
+  .btn-hist-pdf{
+    flex-shrink:0; background:var(--noir); color:var(--creme); border:1px solid var(--card-border);
+    border-radius:6px; padding:6px 10px; font-size:12px; font-weight:600;
+  }
+  .btn-hist-pdf:active{ border-color:var(--rouge); }
   .hint{ font-size:12px; color:var(--text-dim); margin-top:4px; }
+  /* 18/09 : modal de confirmation du code site (type Kaizen) */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,0.72); z-index:200;
+    display:flex; align-items:center; justify-content:center; padding:20px;
+  }
+  .modal-box{
+    background:var(--card); border:1px solid var(--card-border); border-radius:14px;
+    padding:22px; width:100%; max-width:360px;
+  }
+  .modal-box h3{ color:var(--rouge); margin:0 0 6px; font-size:18px; }
+  .modal-box p{ color:var(--creme); font-size:14px; margin:0 0 14px; }
+  .modal-box input{ text-transform:uppercase; }
+  .modal-error{ color:var(--rouge); font-size:13px; font-weight:600; margin-top:6px; min-height:16px; }
+  .modal-actions{ display:flex; gap:10px; margin-top:16px; }
+  .modal-actions button{ margin-top:0; flex:1; }
   .chip{
     display:inline-block; background:var(--card); border:1px solid var(--card-border); color:var(--creme);
     border-radius:20px; padding:4px 12px; font-size:13px; margin-bottom:12px;
@@ -193,6 +214,20 @@
     <input type="text" id="mag-search" placeholder="Rechercher un magasin…" autocomplete="off">
     <div class="search-results" id="mag-results"></div>
   </section>
+
+  <!-- ============ CONFIRMATION CODE SITE (type Kaizen) ============ -->
+  <div class="modal-overlay" id="modal-confirm-magasin" style="display:none;">
+    <div class="modal-box">
+      <h3>Confirmer le magasin</h3>
+      <p>Pour confirmer <b id="confirm-magasin-nom"></b>, saisis le code site.</p>
+      <input type="text" id="confirm-magasin-code" placeholder="Code site" autocomplete="off" autocapitalize="characters" inputmode="text" onkeydown="if(event.key==='Enter'){event.preventDefault();validateConfirmMagasin();}">
+      <div class="modal-error" id="confirm-magasin-error"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="cancelConfirmMagasin()">Annuler</button>
+        <button class="btn-primary" onclick="validateConfirmMagasin()">Valider</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ============ MENU (après sélection magasin) ============ -->
   <section class="screen" id="screen-menu">
@@ -413,11 +448,13 @@
     <div class="top-nav"><button onclick="goTo('screen-menu')">← Retour</button></div>
     <h2>Historique</h2>
     <div id="historique-login">
-      <label>Identifiant Zimbra</label>
-      <input type="text" id="hist-user">
-      <label>Mot de passe</label>
-      <input type="text" id="hist-pass">
-      <button class="btn-primary" onclick="historiqueLogin()">Se connecter</button>
+      <form id="hist-login-form" autocomplete="on" onsubmit="event.preventDefault(); historiqueLogin();">
+        <label for="hist-user">Identifiant Zimbra</label>
+        <input type="text" id="hist-user" name="username" autocomplete="username">
+        <label for="hist-pass">Mot de passe</label>
+        <input type="password" id="hist-pass" name="password" autocomplete="current-password">
+        <button type="submit" class="btn-primary">Se connecter</button>
+      </form>
     </div>
     <div id="historique-liste" style="display:none;">
       <input type="text" id="historique-search" placeholder="Rechercher un magasin..." oninput="renderHistoriqueFiltered()" style="margin:8px 0 14px;">
@@ -433,8 +470,8 @@
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.09.18-2'
-const SW_VERSION = '2026.09.18-2'
+const APP_VERSION = '2026.09.18-3'
+const SW_VERSION = '2026.09.18-3'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://raw.githubusercontent.com/olibaroukh/bilan-passage/main/magasins.csv'
@@ -531,7 +568,33 @@ document.getElementById('mag-search').addEventListener('input', (e) => {
 function selectMagasin(code) {
   const m = state.magasins.find(x => x.code === code)
   if (!m) return
+  // 18/09 : avant de rentrer dans le magasin, on impose la saisie du code
+  // site pour confirmer (même logique que le Kaizen) — bloquant si faux.
+  state.pendingMagasin = m
+  document.getElementById('confirm-magasin-nom').textContent = m.libelle
+  document.getElementById('confirm-magasin-code').value = ''
+  document.getElementById('confirm-magasin-error').textContent = ''
+  document.getElementById('modal-confirm-magasin').style.display = 'flex'
+  setTimeout(() => document.getElementById('confirm-magasin-code').focus(), 50)
+}
+
+function cancelConfirmMagasin() {
+  state.pendingMagasin = null
+  document.getElementById('modal-confirm-magasin').style.display = 'none'
+}
+
+function validateConfirmMagasin() {
+  const m = state.pendingMagasin
+  if (!m) return
+  const saisi = (document.getElementById('confirm-magasin-code').value || '').trim().toUpperCase()
+  const attendu = String(m.code || '').trim().toUpperCase()
+  if (!saisi || saisi !== attendu) {
+    document.getElementById('confirm-magasin-error').textContent = 'Code site incorrect — réessaie.'
+    return
+  }
+  document.getElementById('modal-confirm-magasin').style.display = 'none'
   state.currentMagasin = m
+  state.pendingMagasin = null
   document.querySelectorAll('#menu-magasin-chip, #ecoute-magasin-chip, #pilotage-magasin-chip, #lancement-magasin-chip, #recadrage-magasin-chip')
     .forEach(el => el.textContent = m.libelle)
   loadCollaborateurs(m.code)
@@ -1014,6 +1077,16 @@ function generateEntretienPdf(pending) {
   // skipEmpty (17/09) : pour les "Nouveaux objectifs", les champs vides ne
   // sont même pas dessinés (pas de case "-") — c'est ce qui fait gagner la
   // ligne quand on se limite à 4 objectifs maximum au lieu des 8-12 champs.
+  // Tronque une chaîne pour qu'elle tienne sur une seule ligne dans la
+  // largeur donnée (avec la police/taille déjà active), ajoute "…" sinon —
+  // remplace le comportement "maxWidth" de jsPDF qui, lui, renvoie
+  // automatiquement à la ligne et fait déborder les vignettes à hauteur fixe.
+  function fitOneLine(text, maxW) {
+    let s = String(text)
+    if (doc.getTextWidth(s) <= maxW) return s
+    while (s.length > 1 && doc.getTextWidth(s + '…') > maxW) s = s.slice(0, -1)
+    return s.replace(/\s+$/, '') + '…'
+  }
   function statGrid(items, cols, outline, skipEmpty) {
     const list = skipEmpty ? items.filter(it => it.val && String(it.val).trim() !== '') : items
     if (!list.length) return
@@ -1034,22 +1107,29 @@ function generateEntretienPdf(pending) {
       }
       doc.setFont('Montserrat', 'bold'); doc.setFontSize(5.8)
       doc.setTextColor(...(outline ? GRIS : ROSE_TXT))
-      doc.text(pdfSafe(it.label), cx + 1.8, rowY + 3.6, { maxWidth: cellW - 3.6 })
-      doc.setFont('Montserrat', 'bold'); doc.setFontSize(9)
+      doc.text(fitOneLine(pdfSafe(it.label), cellW - 3.6), cx + 1.8, rowY + 3.6)
+      doc.setFont('Montserrat', 'bold'); doc.setFontSize(it.small ? 7.5 : 9)
       doc.setTextColor(...(outline ? NOIR : RED))
       const val = it.val ? pdfSafe(it.val) + (it.unit || '') : '-'
-      doc.text(val, cx + 1.8, rowY + 8.3, { maxWidth: cellW - 3.6 })
+      doc.text(fitOneLine(val, cellW - 3.6), cx + 1.8, rowY + 8.3)
       col++
       if (col >= cols) { col = 0; rowY += cellH + gap }
     })
     y = rowY + (col > 0 ? cellH + gap : 0) + 2
   }
   function infoRow(collaborateurNom, remplipar, date) {
+    // 18/09 : le poste (entre parenthèses) est retiré de la vignette — c'est
+    // lui qui faisait passer le nom sur 2 lignes et déborder sur le titre
+    // suivant. On garde juste le nom, avec une police légèrement réduite et
+    // une troncature "…" en dernier recours pour les noms très longs.
+    const nomSeul = (collaborateurNom || '-').replace(/\s*\([^)]*\)\s*$/, '')
+    y -= 1.5 // remonte légèrement les vignettes sous l'en-tête
     statGrid([
-      { label: 'COLLABORATEUR', val: collaborateurNom || '-' },
-      { label: 'REMPLI PAR', val: remplipar },
+      { label: 'COLLABORATEUR', val: nomSeul, small: true },
+      { label: 'REMPLI PAR', val: remplipar, small: true },
       { label: 'DATE', val: date },
     ], 3, false)
+    y += 2 // baisse le titre de section suivant pour respirer davantage
   }
 
   const libelles = {
@@ -1058,7 +1138,9 @@ function generateEntretienPdf(pending) {
     pilotage_audio: 'Entretien de pilotage Audio',
     recadrage: 'Entretien de recadrage',
   }
-  const magasinNom = state.currentMagasin ? state.currentMagasin.libelle : ''
+  // 18/09 : magasinLibelle explicite (régénération depuis l'Historique, où le
+  // magasin courant en mémoire ne correspond pas forcément à l'entretien).
+  const magasinNom = pending.magasinLibelle || (state.currentMagasin ? state.currentMagasin.libelle : '')
   y = pdfHeader(doc, W, mar, libelles[pending.type] || 'Entretien manager', magasinNom, pending.date)
 
   infoRow(pending.collaborateurNom, pending.remplipar, pending.date)
@@ -1193,6 +1275,12 @@ function generateLancementPdf(pending) {
     lines.forEach(line => { ensureSpace(5); doc.text(line, mar, y); y += 5 })
     y += 2.5
   }
+  function fitOneLine(text, maxW) {
+    let s = String(text)
+    if (doc.getTextWidth(s) <= maxW) return s
+    while (s.length > 1 && doc.getTextWidth(s + '…') > maxW) s = s.slice(0, -1)
+    return s.replace(/\s+$/, '') + '…'
+  }
   function statGrid(items, cols) {
     const list = items.filter(it => it.val && String(it.val).trim() !== '')
     if (!list.length) return
@@ -1207,25 +1295,28 @@ function generateLancementPdf(pending) {
       doc.setFillColor(...ROSE)
       doc.roundedRect(cx, rowY, cellW, cellH, 1.3, 1.3, 'F')
       doc.setFont('Montserrat', 'bold'); doc.setFontSize(5.8); doc.setTextColor(...ROSE_TXT)
-      doc.text(pdfSafe(it.label), cx + 1.8, rowY + 3.6, { maxWidth: cellW - 3.6 })
+      doc.text(fitOneLine(pdfSafe(it.label), cellW - 3.6), cx + 1.8, rowY + 3.6)
       doc.setFont('Montserrat', 'bold'); doc.setFontSize(9); doc.setTextColor(...RED)
-      doc.text(pdfSafe(it.val) + (it.unit || ''), cx + 1.8, rowY + 8.3, { maxWidth: cellW - 3.6 })
+      doc.text(fitOneLine(pdfSafe(it.val) + (it.unit || ''), cellW - 3.6), cx + 1.8, rowY + 8.3)
       col++
       if (col >= cols) { col = 0; rowY += cellH + gap }
     })
     y = rowY + (col > 0 ? cellH + gap : 0) + 2
   }
 
-  const magasinNom = state.currentMagasin ? state.currentMagasin.libelle : ''
+  const magasinNom = pending.magasinLibelle || (state.currentMagasin ? state.currentMagasin.libelle : '')
   y = pdfHeader(doc, W, mar, 'Lancement de journée', magasinNom, pending.date)
 
+  // 18/09 : troncature "…" en dernier recours (vignette pleine largeur, donc
+  // rarement atteinte, mais évite le même débordement que sur Collaborateur).
+  y -= 1.5
   doc.setFillColor(...ROSE)
   doc.roundedRect(mar, y, W - 2 * mar, 10.5, 1.3, 1.3, 'F')
   doc.setFont('Montserrat', 'bold'); doc.setFontSize(5.8); doc.setTextColor(...ROSE_TXT)
   doc.text('REMPLI PAR', mar + 1.8, y + 3.6)
   doc.setFont('Montserrat', 'bold'); doc.setFontSize(9); doc.setTextColor(...RED)
-  doc.text(pdfSafe(pending.remplipar + ' (' + pending.poste + ')'), mar + 1.8, y + 8.3)
-  y += 14
+  doc.text(fitOneLine(pdfSafe(pending.remplipar + ' (' + pending.poste + ')'), W - 2 * mar - 3.6), mar + 1.8, y + 8.3)
+  y += 16
 
   if (pending.mensuel) {
     sectionLabel('Données du mois')
@@ -1243,6 +1334,38 @@ function generateLancementPdf(pending) {
 
 function generatePendingPdf(pending) {
   return pending.kind === 'lancement' ? generateLancementPdf(pending) : generateEntretienPdf(pending)
+}
+
+// 18/09 : régénération du PDF signé depuis l'Historique — rien n'est stocké
+// à part le JSON structuré (data_json, qui inclut les signatures en base64),
+// donc on reconstruit le même objet "pending" que celui utilisé au moment de
+// l'envoi et on repasse par generatePendingPdf, à l'identique du PDF envoyé.
+function regenerateHistoriquePdf(kind, id) {
+  try {
+    let pending
+    if (kind === 'entretien') {
+      const e = (state.historiqueEntretiens || []).find(x => x.id === id)
+      if (!e) { showToast('Entretien introuvable'); return }
+      pending = {
+        kind: 'entretien', type: e.type, collaborateurNom: e.collaborateur_nom,
+        remplipar: e.rempli_par, date: e.date, data: e.data_json || {},
+        magasinLibelle: e.magasin_libelle,
+      }
+    } else {
+      const l = (state.historiqueLancements || []).find(x => x.id === id)
+      if (!l) { showToast('Lancement introuvable'); return }
+      pending = {
+        kind: 'lancement', remplipar: l.rempli_par, poste: l.poste_rempli_par, date: l.date,
+        presents: l.presents_json || [], objectifs: l.objectifs, noteLibre: l.note_libre,
+        mensuel: l.mensuel_json || {}, magasinLibelle: l.magasin_libelle,
+      }
+    }
+    const bytes = generatePendingPdf(pending)
+    const blob = new Blob([bytes], { type: 'application/pdf' })
+    window.open(URL.createObjectURL(blob), '_blank')
+  } catch (e) {
+    showToast('Impossible de régénérer le PDF')
+  }
 }
 
 function arrayBufferToBase64(buf) {
@@ -1686,10 +1809,12 @@ function renderHistoriqueFiltered() {
   const lancements = (state.historiqueLancements || []).filter(l => matches(l.magasin_libelle))
 
   const entretiensHtml = renderGrouped(groupByYearMonth(entretiens), e =>
-    `<div class="search-item"><b>${e.type}</b> — ${e.magasin_libelle || ''} — ${e.collaborateur_nom || ''} — ${formatDateFr(e.date)} (${e.rempli_par})</div>`
+    `<div class="search-item hist-item"><div><b>${e.type}</b> — ${e.magasin_libelle || ''} — ${e.collaborateur_nom || ''} — ${formatDateFr(e.date)} (${e.rempli_par})</div>` +
+    `<button type="button" class="btn-hist-pdf" onclick="event.stopPropagation(); regenerateHistoriquePdf('entretien', ${e.id})">📄 Voir le PDF</button></div>`
   )
   const lancementsHtml = renderGrouped(groupByYearMonth(lancements), l =>
-    `<div class="search-item"><b>Lancement</b> — ${l.magasin_libelle || ''} — ${formatDateFr(l.date)} (${l.rempli_par})</div>`
+    `<div class="search-item hist-item"><div><b>Lancement</b> — ${l.magasin_libelle || ''} — ${formatDateFr(l.date)} (${l.rempli_par})</div>` +
+    `<button type="button" class="btn-hist-pdf" onclick="event.stopPropagation(); regenerateHistoriquePdf('lancement', ${l.id})">📄 Voir le PDF</button></div>`
   )
   document.getElementById('historique-content').innerHTML =
     '<h3>Entretiens</h3>' + entretiensHtml + '<h3>Lancements de journée</h3>' + lancementsHtml
