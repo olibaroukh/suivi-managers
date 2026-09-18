@@ -213,6 +213,12 @@
     <label for="mag-search">Magasin</label>
     <input type="text" id="mag-search" placeholder="Rechercher un magasin…" autocomplete="off">
     <div class="search-results" id="mag-results"></div>
+
+    <!-- 18/09 : accès direct à l'Historique, sans passer par un magasin —
+         l'Historique n'est pas rattaché à un magasin en particulier (login
+         AR/Olivier + filtrage par périmètre), donc pas de raison d'en
+         imposer un avant. -->
+    <button type="button" class="btn-secondary" style="margin-top:18px;" onclick="openHistorique()">📖 Accéder à l'historique</button>
   </section>
 
   <!-- ============ CONFIRMATION CODE SITE (type Kaizen) ============ -->
@@ -445,7 +451,7 @@
 
   <!-- ============ HISTORIQUE (login AR) ============ -->
   <section class="screen" id="screen-historique">
-    <div class="top-nav"><button onclick="goTo('screen-menu')">← Retour</button></div>
+    <div class="top-nav"><button onclick="backFromHistorique()">← Retour</button></div>
     <h2>Historique</h2>
     <div id="historique-login">
       <form id="hist-login-form" autocomplete="on" onsubmit="event.preventDefault(); historiqueLogin();">
@@ -470,8 +476,8 @@
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.09.18-4'
-const SW_VERSION = '2026.09.18-4'
+const APP_VERSION = '2026.09.18-5'
+const SW_VERSION = '2026.09.18-5'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://raw.githubusercontent.com/olibaroukh/bilan-passage/main/magasins.csv'
@@ -1731,6 +1737,10 @@ async function confirmSend() {
 // HISTORIQUE (login AR, réutilise /ar-login comme Bilan de Passage)
 // ============================================================================
 function openHistorique() { goTo('screen-historique') }
+// 18/09 : l'Historique est accessible sans magasin sélectionné — le retour
+// va au menu du magasin si un magasin est en cours, sinon directement à
+// l'écran de sélection.
+function backFromHistorique() { goTo(state.currentMagasin ? 'screen-menu' : 'screen-select') }
 
 async function historiqueLogin() {
   const zimbraUser = document.getElementById('hist-user').value
