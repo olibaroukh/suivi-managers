@@ -753,8 +753,8 @@ select,input,textarea,button{font-family:inherit}
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.09.26-2'
-const SW_VERSION = '2026.09.26-2'
+const APP_VERSION = '2026.09.26-3'
+const SW_VERSION = '2026.09.26-3'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://raw.githubusercontent.com/olibaroukh/bilan-passage/main/magasins.csv'
@@ -935,6 +935,7 @@ const STAT = {
   txChargeur:    { key: 'txChargeur', label: 'Tx de chargeur', source: null, unit: '%' },
   transitions:   { key: 'transitions', label: 'Transitions', source: null, unit: '' },
   mdc:           { key: 'mdc', label: 'MDC', source: 'mdc', unit: '%' },
+  mq:            { key: 'mq', label: 'MQ', source: null, unit: '' },
   pc:            { key: 'pc', label: 'Pack Confort', source: null, unit: '', combo: ['packConfortPct', 'packConfortPm'], comboUnits: ['%', '€'] },
   arMax:         { key: 'arMax', label: 'AR MAX', source: null, unit: '' },
   ar3:           { key: 'ar3', label: 'AR 3', source: null, unit: '' },
@@ -952,8 +953,9 @@ function isPosteAudio(poste) {
 // ÉCOUTE & FEEDBACK — 4 trames au catalogue (26/09), fidèles aux documents
 // papier. Un seul type en base ('ecoute_fb'), le modèle part dans data.modele.
 // Les anciennes fiches sans modèle sont des « Taux de concrétisation ».
-// Niveau commercial : le 3ᵉ indicateur reste SOP (opticien) / AP 4 ans
-// (audio) plutôt que MQ — règle du 17/09 conservée, MQ n'est pas dans PEDLV.
+// Niveau commercial : Taux de concrétisation garde SOP (opticien) / AP 4 ans
+// (audio) — règle du 17/09. Découverte optique : PM / TXC / MQ comme le
+// papier, MQ en saisie manuelle (pas dans PEDLV) — décision du 26/09.
 // ============================================================================
 const AIDE_FEEDBACK_GRILLE = `
   <ul>
@@ -1001,7 +1003,7 @@ const EFB_MODELES = {
   decouverte_optique: {
     titre: 'Écoute & Feedback — Découverte client optique',
     objectif: "Objectif : former son collaborateur à l'application de la stratégie accueil et mise en relation client (partie DC).",
-    stats: () => [STAT.pm, STAT.txc, STAT.sop],
+    stats: () => [STAT.pm, STAT.txc, STAT.mq],
     items: [
       { groupe: 'Accueil VIP', label: 'Bonjour' },
       { groupe: 'Accueil VIP', label: "Propose de s'asseoir et offre une boisson" },
