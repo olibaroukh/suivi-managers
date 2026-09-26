@@ -16,10 +16,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <style>
   :root{
-    --noir:#0D0D0D; --rouge:#CC1719; --creme:#F0EDE6;
+    --noir:#0D0D0D; --rouge:#E2231A; --creme:#F5F5F5;
     /* Charte réseau (Kaizen / PEDLV / Bilan de Passage) : fond noir dégradé, logo,
        filigrane — le logo n'est embarqué qu'UNE fois ici et réutilisé partout en
        background-image (header, hero, filigrane) pour ne pas tripler ~200 Ko de base64. */
@@ -30,17 +30,17 @@
   *{box-sizing:border-box;}
   html, body{ min-height:100vh; }
   body{
-    font-family:'Barlow',Arial,sans-serif; margin:0; color:var(--creme);
+    font-family:'Montserrat',Arial,sans-serif; margin:0; color:var(--creme);
     padding-bottom:60px;
     background:
-      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(204,23,25,0.18) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(204,23,25,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(226,35,26,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 80% 80%, rgba(226,35,26,0.08) 0%, transparent 50%),
       linear-gradient(160deg, #1A1210 0%, #0D0D0D 40%, #111010 70%, #0A0A0A 100%);
     background-attachment:fixed;
   }
   header{
     background:var(--noir); color:#fff; padding:16px 20px; display:flex; align-items:center;
-    justify-content:space-between; gap:10px; border-bottom:1px solid rgba(204,23,25,0.35);
+    justify-content:space-between; gap:10px; border-bottom:1px solid rgba(226,35,26,0.35);
   }
   header .header-left{ display:flex; align-items:center; gap:10px; }
   header .logo-mini{
@@ -189,6 +189,7 @@
   .preview-item .no{ color:var(--rouge); font-weight:700; }
   .preview-sig-img{ max-width:200px; max-height:80px; background:#fff; border-radius:6px; padding:4px; margin-top:4px; }
   .preview-sig-missing{ font-size:12px; color:var(--text-dim); font-style:italic; }
+select,input,textarea,button{font-family:inherit}
 </style>
 </head>
 <body>
@@ -476,8 +477,8 @@
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.09.18-5'
-const SW_VERSION = '2026.09.18-5'
+const APP_VERSION = '2026.09.26-1'
+const SW_VERSION = '2026.09.26-1'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://raw.githubusercontent.com/olibaroukh/bilan-passage/main/magasins.csv'
