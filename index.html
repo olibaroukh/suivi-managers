@@ -189,6 +189,60 @@
   .preview-item .no{ color:var(--rouge); font-weight:700; }
   .preview-sig-img{ max-width:200px; max-height:80px; background:#fff; border-radius:6px; padding:4px; margin-top:4px; }
   .preview-sig-missing{ font-size:12px; color:var(--text-dim); font-style:italic; }
+  /* ── Suivi Managers v2 (26/09) ── */
+  /* Aide-mémoire : consignes de la trame papier, repliées par défaut. */
+  details.aide{ background:var(--card); border:1px solid var(--card-border); border-radius:8px; padding:8px 12px; margin:12px 0; }
+  details.aide > summary{ cursor:pointer; font-weight:600; font-size:13px; color:var(--rouge); list-style:none; }
+  details.aide > summary::-webkit-details-marker{ display:none; }
+  details.aide > summary::before{ content:'▶ '; font-size:9px; }
+  details.aide[open] > summary::before{ content:'▼ '; }
+  details.aide .aide-body{ font-size:13px; color:var(--creme); line-height:1.5; margin-top:6px; }
+  details.aide .aide-body ul{ margin:4px 0 8px; padding-left:18px; }
+  details.aide .aide-body p{ margin:4px 0; }
+  .step-hint{ font-size:12px; color:var(--text-dim); font-style:italic; margin:2px 0 4px; }
+  /* Grille compacte des points de contrôle : Fait + choix +/− + zone dépliable. */
+  .ctrl-item{ border-bottom:1px solid var(--card-border); padding:8px 0; }
+  .ctrl-main{ display:flex; align-items:center; gap:8px; }
+  .ctrl-main input[type=checkbox]{ width:20px; height:20px; flex-shrink:0; accent-color:var(--rouge); }
+  .ctrl-main .item-label{ flex:1; font-size:14px; }
+  .ctrl-group{ font-size:11px; font-weight:700; color:var(--rouge); text-transform:uppercase; letter-spacing:.04em; margin:14px 0 2px; }
+  .seg{ display:flex; flex-shrink:0; }
+  .seg button{ margin:0; padding:5px 10px; font-size:14px; border-radius:0; background:var(--card); color:var(--text-dim); border:1px solid var(--card-border); }
+  .seg button:first-child{ border-radius:6px 0 0 6px; }
+  .seg button:last-child{ border-radius:0 6px 6px 0; border-left:none; }
+  .seg button.on-plus{ background:#2E7D4F; color:#fff; border-color:#2E7D4F; }
+  .seg button.on-moins{ background:var(--rouge); color:#fff; border-color:var(--rouge); }
+  .seg button.on-fait{ background:#2E7D4F; color:#fff; border-color:#2E7D4F; }
+  .seg button.on-pasfait{ background:var(--rouge); color:#fff; border-color:var(--rouge); }
+  .btn-note{ margin:0; padding:5px 8px; font-size:13px; background:none; color:var(--text-dim); border:1px solid var(--card-border); border-radius:6px; flex-shrink:0; }
+  .btn-note.has-note{ color:var(--rouge); border-color:var(--rouge); }
+  .ctrl-notes{ display:none; margin:6px 0 0 28px; }
+  .ctrl-notes.open{ display:block; }
+  .ctrl-notes input{ margin-bottom:4px; font-size:14px; padding:8px; }
+  /* Reprise des suivis du précédent entretien + bandeau « À suivre ». */
+  .reprise-box, .suivis-bandeau{ background:var(--card); border:1px solid var(--card-border); border-left:3px solid var(--rouge); border-radius:8px; padding:10px 12px; margin:12px 0; }
+  .reprise-box h3, .suivis-bandeau h3{ margin:0 0 6px; color:var(--rouge); font-size:15px; }
+  .suivi-row{ display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid var(--card-border); font-size:13px; }
+  .suivi-row:last-child{ border-bottom:none; }
+  .suivi-row .suivi-txt{ flex:1; }
+  .suivi-row .suivi-meta{ display:block; font-size:11px; color:var(--text-dim); margin-top:2px; }
+  .suivi-row.retard .suivi-ech{ color:var(--rouge); font-weight:700; }
+  .suivi-row.bientot{ opacity:.8; }
+  .suivi-row .btn-fait{ margin:0; padding:6px 10px; font-size:12px; background:var(--noir); color:var(--creme); border:1px solid var(--card-border); border-radius:6px; flex-shrink:0; }
+  /* Liste d'échéances (objectifs Pilotage) et étapes du plan (Remotivation). */
+  .ech-row{ display:flex; align-items:center; gap:8px; padding:4px 0; }
+  .ech-row span{ flex:1; font-size:13px; }
+  .ech-row input[type=date]{ width:auto; flex-shrink:0; padding:6px; font-size:14px; }
+  .etape-row{ background:var(--card); border:1px solid var(--card-border); border-radius:8px; padding:8px; margin-bottom:8px; }
+  .etape-row .etape-line{ display:flex; gap:6px; margin-top:6px; }
+  .etape-row .etape-line > *{ flex:1; }
+  .etape-row .btn-suppr{ margin:0; flex:0 0 auto; padding:6px 10px; background:none; color:var(--rouge); border:1px solid var(--card-border); font-size:13px; }
+  .note-scale{ display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+  .note-scale button{ margin:0; width:40px; padding:8px 0; background:var(--card); color:var(--creme); border:1px solid var(--card-border); font-size:15px; }
+  .note-scale button.on{ background:var(--rouge); border-color:var(--rouge); color:#fff; }
+  .solution-row{ display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+  .solution-row input[type=radio]{ width:20px; height:20px; flex-shrink:0; accent-color:var(--rouge); }
+  .required-star{ color:var(--rouge); }
 select,input,textarea,button{font-family:inherit}
 </style>
 </head>
@@ -236,24 +290,57 @@ select,input,textarea,button{font-family:inherit}
     </div>
   </div>
 
+  <!-- ============ SOLDER UN SUIVI DEPUIS LE BANDEAU (26/09) ============ -->
+  <div class="modal-overlay" id="modal-suivi-fait" style="display:none;">
+    <div class="modal-box">
+      <h3>Marquer comme fait</h3>
+      <p id="suivi-fait-libelle"></p>
+      <label for="suivi-fait-par" style="margin-top:0;">Ton prénom</label>
+      <input type="text" id="suivi-fait-par" autocomplete="off" style="text-transform:none;" onkeydown="if(event.key==='Enter'){event.preventDefault();validerSuiviFait();}">
+      <div class="modal-error" id="suivi-fait-error"></div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="fermerSuiviFait()">Annuler</button>
+        <button class="btn-primary" onclick="validerSuiviFait()">Valider</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ============ MENU (après sélection magasin) ============ -->
   <section class="screen" id="screen-menu">
     <div class="top-nav"><button onclick="goTo('screen-select')">← Changer de magasin</button></div>
     <div class="chip" id="menu-magasin-chip"></div>
+    <!-- 26/09 : bandeau « À suivre » — objectifs d'entretien en retard ou à
+         échéance dans les 7 jours, chargé à chaque sélection du magasin. -->
+    <div id="suivis-bandeau"></div>
     <h2>Que veux-tu réaliser ?</h2>
-    <button class="btn-menu" onclick="startEntretien('ecoute_fb')">Écoute &amp; Feedback de vente<span>Taux de concrétisation — checklist devis</span></button>
+    <button class="btn-menu" onclick="goTo('screen-efb-choix')">Écoute &amp; Feedback de vente<span>4 trames : taux de concrétisation, découverte optique / audio, vierge</span></button>
     <button class="btn-menu" onclick="startEntretien('pilotage_optique')">Pilotage Optique<span>Entretien de pilotage, 7 étapes</span></button>
     <button class="btn-menu" onclick="startEntretien('pilotage_audio')">Pilotage Audio<span>Entretien de pilotage, 7 étapes</span></button>
+    <button class="btn-menu" onclick="startValorisation()">Entretien de valorisation<span>Développer le plaisir dans le travail</span></button>
+    <button class="btn-menu" onclick="startRemotivation()">Entretien de remotivation<span>Remettre le collaborateur en phase de conquête</span></button>
     <button class="btn-menu" onclick="startRecadrage()">Entretien de recadrage<span>Méthode relationnelle / professionnelle</span></button>
     <button class="btn-menu" onclick="startLancement()">Lancement de journée<span>Présents, objectifs, note libre</span></button>
     <button class="btn-menu" onclick="openHistorique()">Historique<span>Accès animateurs réseau / réseau complet</span></button>
   </section>
 
-  <!-- ============ ÉCOUTE & FEEDBACK ============ -->
-  <section class="screen" id="screen-ecoute-fb">
+  <!-- ============ ÉCOUTE & FEEDBACK — choix de la trame (26/09) ============ -->
+  <section class="screen" id="screen-efb-choix">
     <div class="top-nav"><button onclick="goTo('screen-menu')">← Retour</button></div>
     <h2>Écoute &amp; Feedback de vente</h2>
+    <div class="chip" id="efb-choix-magasin-chip"></div>
+    <h3>Quelle trame ?</h3>
+    <button class="btn-menu" onclick="startEcoute('taux_concretisation')">Taux de concrétisation<span>Stratégie n° 4 — checklist devis</span></button>
+    <button class="btn-menu" onclick="startEcoute('decouverte_optique')">Découverte client optique<span>Accueil et mise en relation client (partie DC)</span></button>
+    <button class="btn-menu" onclick="startEcoute('decouverte_audio')">Découverte client audio<span>Accueil et mise en relation client audio (partie DC)</span></button>
+    <button class="btn-menu" onclick="startEcoute('vierge')">Trame vierge<span>Stratégies OC — savoir-faire et savoir-être, objectif SMART</span></button>
+  </section>
+
+  <!-- ============ ÉCOUTE & FEEDBACK (générique, 4 trames) ============ -->
+  <section class="screen" id="screen-ecoute-fb">
+    <div class="top-nav"><button onclick="goTo('screen-efb-choix')">← Changer de trame</button></div>
+    <h2 id="ecoute-titre">Écoute &amp; Feedback de vente</h2>
     <div class="chip" id="ecoute-magasin-chip"></div>
+    <div class="hint" id="ecoute-objectif"></div>
 
     <label>Collaborateur</label>
     <select id="ecoute-collab"></select>
@@ -264,25 +351,63 @@ select,input,textarea,button{font-family:inherit}
     <label>Date</label>
     <input type="date" id="ecoute-date">
 
-    <h3>1. Niveau commercial</h3>
-    <div class="stats-grid">
-      <div class="field"><label>PM</label><input type="text" id="ecoute-pm"></div>
-      <div class="field"><label>TXC</label><input type="text" id="ecoute-txc"></div>
-      <div class="field"><label id="ecoute-third-label">SOP</label><input type="text" id="ecoute-third"></div>
+    <div id="ecoute-reprise"></div>
+
+    <h3 id="ecoute-stats-titre">1. Niveau commercial</h3>
+    <div class="stats-grid" id="ecoute-stats"></div>
+    <div class="stats-hint" id="ecoute-stats-hint"></div>
+    <div id="ecoute-qualitatif-wrap" style="display:none;">
+      <label>Qualitatif</label>
+      <div class="ta-wrap"><textarea id="ecoute-qualitatif"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('ecoute-qualitatif', this)">🎤</button></div>
     </div>
 
-    <h3>2. Écoute de la vente — points de contrôle</h3>
+    <h3>2. Écoute de la vente</h3>
+    <div class="step-hint">Prendre des notes.</div>
     <div id="ecoute-items"></div>
+    <div id="ecoute-libre-wrap" style="display:none;">
+      <label>Les « + »</label>
+      <div class="ta-wrap"><textarea id="ecoute-libre-plus"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('ecoute-libre-plus', this)">🎤</button></div>
+      <label>Les « − »</label>
+      <div class="ta-wrap"><textarea id="ecoute-libre-moins"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('ecoute-libre-moins', this)">🎤</button></div>
+      <label>Apports pédagogiques correspondants</label>
+      <div class="ta-wrap"><textarea id="ecoute-libre-apports"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('ecoute-libre-apports', this)">🎤</button></div>
+    </div>
 
     <h3>3. Feedback avec le collaborateur</h3>
+    <details class="aide"><summary>Aide-mémoire — feedback (10 à 15 min)</summary><div class="aide-body" id="ecoute-aide-feedback"></div></details>
     <label>Ce qui va bien (+)</label>
     <div class="ta-wrap"><textarea id="ecoute-plus"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('ecoute-plus', this)">🎤</button></div>
     <label>Axes d'amélioration</label>
     <div class="ta-wrap"><textarea id="ecoute-axes"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('ecoute-axes', this)">🎤</button></div>
-    <label>Apports pédagogiques</label>
+    <label id="ecoute-apports-label">Apports pédagogiques</label>
     <div class="ta-wrap"><textarea id="ecoute-apports"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('ecoute-apports', this)">🎤</button></div>
-    <label>Synthèse du collaborateur (validation)</label>
+
+    <!-- Trame vierge : objectif SMART + rôle d'accompagnement et de contrôle -->
+    <div id="ecoute-smart-wrap" style="display:none;">
+      <h3>5. Nouvel objectif SMART</h3>
+      <div class="step-hint">Spécifique, Mesurable, Ambitieux, Réalisable, dans un Timing.</div>
+      <div class="stats-grid" id="ecoute-objectifs"></div>
+      <label>Qualitatif</label>
+      <div class="ta-wrap"><textarea id="ecoute-objectif-qualitatif"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('ecoute-objectif-qualitatif', this)">🎤</button></div>
+      <label>Échéance de l'objectif <span class="required-star">*</span></label>
+      <input type="date" id="ecoute-echeance">
+      <h3>6. Rôle d'accompagnement et de contrôle</h3>
+      <div class="step-hint">« Pour ma part je t'accompagnerai dans (telle étape) et je contrôlerai (quoi) (quand), lors d'une prochaine écoute de vente. » Tu peux aussi utiliser les quiz en contrôle des connaissances.</div>
+      <div class="ta-wrap"><textarea id="ecoute-role"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('ecoute-role', this)">🎤</button></div>
+    </div>
+
+    <label id="ecoute-synthese-label">Synthèse du collaborateur (validation)</label>
+    <div class="step-hint">« Peux-tu me faire une synthèse de ce que tu vas améliorer et comment tu vas t'y prendre ? »</div>
     <div class="ta-wrap"><textarea id="ecoute-synthese"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('ecoute-synthese', this)">🎤</button></div>
+
+    <!-- Trames à grille : engagement + date de la prochaine écoute (suivi daté) -->
+    <div id="ecoute-engagement-wrap">
+      <h3>Engagement et prochaine écoute</h3>
+      <label>Engagement du collaborateur</label>
+      <input type="text" id="ecoute-engagement" placeholder="Ex : reformuler systématiquement les besoins avant les propositions">
+      <label>Date de la prochaine écoute <span class="required-star">*</span></label>
+      <input type="date" id="ecoute-prochaine">
+    </div>
 
     <div class="sig-block">
       <h3>Signature du manager</h3>
@@ -313,6 +438,8 @@ select,input,textarea,button{font-family:inherit}
     <label>Date</label>
     <input type="date" id="pilotage-date">
 
+    <div id="pilotage-reprise"></div>
+
     <h3>Indicateurs actuels</h3>
     <div class="stats-grid" id="pilotage-stats-avant"></div>
     <div class="stats-hint" id="pilotage-stats-hint"></div>
@@ -325,9 +452,11 @@ select,input,textarea,button{font-family:inherit}
     <div class="ta-wrap"><textarea id="pilotage-3" class="ta-compact" rows="2" maxlength="180"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('pilotage-3', this)">🎤</button></div>
 
     <h3>4. Nouveaux objectifs (4 maximum)</h3>
-    <label>Échéance</label>
+    <label>Échéance par défaut</label>
+    <div class="step-hint">Reportée sur chaque objectif rempli, modifiable objectif par objectif ci-dessous.</div>
     <input type="date" id="pilotage-echeance">
     <div class="stats-grid" id="pilotage-stats-objectif"></div>
+    <div id="pilotage-echeances"></div>
 
     <h3>5. Apport en formation / plan d'action</h3>
     <div class="ta-wrap"><textarea id="pilotage-5" class="ta-compact" rows="2" maxlength="180"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('pilotage-5', this)">🎤</button></div>
@@ -348,6 +477,153 @@ select,input,textarea,button{font-family:inherit}
     </div>
 
     <button class="btn-primary" onclick="previewPilotage()">Aperçu</button>
+  </section>
+
+  <!-- ============ ENTRETIEN DE VALORISATION (26/09) ============ -->
+  <section class="screen" id="screen-valorisation">
+    <div class="top-nav"><button onclick="goTo('screen-menu')">← Retour</button></div>
+    <h2>Entretien de valorisation</h2>
+    <div class="chip" id="valorisation-magasin-chip"></div>
+    <div class="hint">Objectif : développer le plaisir dans le travail et donc le niveau d'énergie…</div>
+
+    <label>Collaborateur</label>
+    <select id="valorisation-collab"></select>
+    <label>Rempli par (ton prénom)</label>
+    <input type="text" id="valorisation-remplipar">
+    <label>Date</label>
+    <input type="date" id="valorisation-date">
+
+    <details class="aide"><summary>Aide-mémoire — à éviter</summary><div class="aide-body">
+      <ul>
+        <li>constater les erreurs</li>
+        <li>parler de soi</li>
+        <li>complimenter sans conviction, sans regarder, sans écouter</li>
+        <li>couper la parole</li>
+        <li>parler d'objectifs</li>
+        <li>donner un conseil (connotation de reproche)</li>
+      </ul>
+    </div></details>
+    <details class="aide"><summary>Préparation (facultatif)</summary><div class="aide-body">
+      <div class="ta-wrap"><textarea id="valorisation-preparation" placeholder="Notes de préparation — non reprises dans le PDF envoyé au magasin"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('valorisation-preparation', this)">🎤</button></div>
+    </div></details>
+
+    <h3>Indicateurs</h3>
+    <div class="stats-grid" id="valorisation-stats"></div>
+    <div class="stats-hint" id="valorisation-stats-hint"></div>
+    <label>L'évolution de sa tâche</label>
+    <div class="ta-wrap"><textarea id="valorisation-evolution" class="ta-compact"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('valorisation-evolution', this)">🎤</button></div>
+
+    <h3>1. Faire raconter / demander des détails</h3>
+    <div class="step-hint">« Raconte-moi comment tu as réussi… Concrètement, comment ? »</div>
+    <div class="ta-wrap"><textarea id="valorisation-1"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('valorisation-1', this)">🎤</button></div>
+    <h3>2. Écouter / reformuler</h3>
+    <div class="step-hint">« Donc si j'ai bien compris… »</div>
+    <div class="ta-wrap"><textarea id="valorisation-2"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('valorisation-2', this)">🎤</button></div>
+    <h3>3. Valoriser l'action / la réussite</h3>
+    <div class="step-hint">Débriefing des ressources et talents utilisés. « Je trouve que ta réalisation est… (exceptionnelle, intelligente, hors norme, brillante…) »</div>
+    <div class="ta-wrap"><textarea id="valorisation-3"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('valorisation-3', this)">🎤</button></div>
+    <h3>4. Ce qui a fait la différence</h3>
+    <div class="step-hint">« Qu'est-ce qui a été déterminant dans ta réussite ? Comment peux-tu l'appliquer à d'autres objectifs ? »</div>
+    <div class="ta-wrap"><textarea id="valorisation-4"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('valorisation-4', this)">🎤</button></div>
+    <h3>5. Complimenter (et c'est tout !)</h3>
+    <div class="step-hint">« Je te félicite ! »</div>
+    <div class="ta-wrap"><textarea id="valorisation-5" class="ta-compact"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('valorisation-5', this)">🎤</button></div>
+
+    <div class="sig-block">
+      <h3>Signature du manager</h3>
+      <div class="sig-canvas-wrap"><canvas id="sig-valorisation-manager"></canvas></div>
+      <div class="sig-actions"><span class="sig-empty-hint">Signe avec le doigt / la souris</span><button type="button" onclick="clearSignature('sig-valorisation-manager')">Effacer</button></div>
+    </div>
+    <div class="sig-block">
+      <h3>Signature du collaborateur</h3>
+      <div class="sig-canvas-wrap"><canvas id="sig-valorisation-collab"></canvas></div>
+      <div class="sig-actions"><span class="sig-empty-hint">Signe avec le doigt / la souris</span><button type="button" onclick="clearSignature('sig-valorisation-collab')">Effacer</button></div>
+    </div>
+
+    <button class="btn-primary" onclick="previewValorisation()">Aperçu</button>
+  </section>
+
+  <!-- ============ ENTRETIEN DE REMOTIVATION (26/09) ============ -->
+  <section class="screen" id="screen-remotivation">
+    <div class="top-nav"><button onclick="goTo('screen-menu')">← Retour</button></div>
+    <h2>Entretien de remotivation</h2>
+    <div class="chip" id="remotivation-magasin-chip"></div>
+    <div class="hint">Objectif : remettre le collaborateur en phase de conquête.</div>
+
+    <label>Collaborateur</label>
+    <select id="remotivation-collab"></select>
+    <label>Rempli par (ton prénom)</label>
+    <input type="text" id="remotivation-remplipar">
+    <label>Date</label>
+    <input type="date" id="remotivation-date">
+
+    <div id="remotivation-reprise"></div>
+
+    <details class="aide"><summary>Aide-mémoire — rappel et préparation</summary><div class="aide-body">
+      <p><b>Rappel :</b> la motivation au travail est intimement liée au plaisir au travail, il faudra donc trouver ce qui a diminué ce plaisir.</p>
+      <p><b>La préparation de l'entretien :</b></p>
+      <ul>
+        <li>Valider s'il s'agit bien d'un problème de motivation et non pas un problème de compétences, de confiance en soi ou d'un manque de moyens (équation de la performance), et lister les points de compétence de la personne (avec les faits).</li>
+        <li>Lister les faits marquants relatifs à la problématique, ainsi que des arguments qui vont appuyer votre position. Avoir des exemples concrets recevables par votre interlocuteur.</li>
+        <li>Sélectionner le ou les points forts du collaborateur sur lesquels vous allez vous appuyer pour le remotiver.</li>
+      </ul>
+    </div></details>
+    <details class="aide"><summary>Préparation (facultatif)</summary><div class="aide-body">
+      <div class="ta-wrap"><textarea id="remotivation-preparation" placeholder="Notes de préparation — non reprises dans le PDF envoyé au magasin"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('remotivation-preparation', this)">🎤</button></div>
+    </div></details>
+
+    <h3>1. Niveau de motivation (de 1 à 10)</h3>
+    <div class="note-scale" id="remotivation-note"></div>
+
+    <h3>2. Comment le collaborateur vit son métier</h3>
+    <div class="step-hint">Les produits, l'ambiance au quotidien…</div>
+    <label>Comment ça se passe dans ton quotidien ?</label>
+    <div class="ta-wrap"><textarea id="remotivation-quotidien" class="ta-compact"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('remotivation-quotidien', this)">🎤</button></div>
+    <label>Qu'est-ce qui te plaît aujourd'hui ? Qu'est-ce qui est encore une source de plaisir ?</label>
+    <div class="ta-wrap"><textarea id="remotivation-plait" class="ta-compact"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('remotivation-plait', this)">🎤</button></div>
+    <label>Et au niveau perso, ça va ?</label>
+    <div class="step-hint">Contrôler que le problème ne vienne pas de la sphère privée.</div>
+    <div class="ta-wrap"><textarea id="remotivation-perso" class="ta-compact"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('remotivation-perso', this)">🎤</button></div>
+    <label>Qu'est-ce qui te plaît moins ? Qu'est-ce qui ne te convient pas, te paraît pénible ou difficile ?</label>
+    <div class="ta-wrap"><textarea id="remotivation-plaitmoins" class="ta-compact"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('remotivation-plaitmoins', this)">🎤</button></div>
+    <label>Qu'est-ce qui te manque pour revenir au niveau de motivation où tu étais ?</label>
+    <div class="ta-wrap"><textarea id="remotivation-manque" class="ta-compact"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('remotivation-manque', this)">🎤</button></div>
+
+    <h3>3. Écouter attentivement</h3>
+    <div class="step-hint">Vérifier les non-dits (zones d'évitement), les sur-dits (pour se redonner confiance), les pas-dits (ce dont il n'a pas conscience)… puis reformuler.</div>
+    <div class="ta-wrap"><textarea id="remotivation-ecoute"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('remotivation-ecoute', this)">🎤</button></div>
+
+    <h3>4. Mise en place de solutions</h3>
+    <div class="step-hint">« Trouve 2 ou 3 solutions, même les plus farfelues, qui te permettraient de commencer à résoudre ce problème. » Coche celle sur laquelle il s'engage.</div>
+    <div id="remotivation-solutions"></div>
+
+    <h3>5. Construire le plan d'action</h3>
+    <div class="step-hint">Les étapes : quoi, quand, avec qui ?</div>
+    <div id="remotivation-etapes"></div>
+    <button type="button" class="btn-secondary" onclick="ajouterEtapeRemotivation()">+ Ajouter une étape</button>
+    <label>Mon rôle d'accompagnement</label>
+    <div class="ta-wrap"><textarea id="remotivation-accompagnement" class="ta-compact"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('remotivation-accompagnement', this)">🎤</button></div>
+    <label>Mon rôle de contrôle</label>
+    <div class="ta-wrap"><textarea id="remotivation-controle" class="ta-compact"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('remotivation-controle', this)">🎤</button></div>
+    <label>Valoriser, recentrer sur son plaisir au travail, l'orienter vers le futur</label>
+    <div class="ta-wrap"><textarea id="remotivation-valoriser" class="ta-compact"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('remotivation-valoriser', this)">🎤</button></div>
+    <label>« De quelle façon je peux t'aider dans cette démarche ? »</label>
+    <div class="ta-wrap"><textarea id="remotivation-aide" class="ta-compact"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('remotivation-aide', this)">🎤</button></div>
+    <label>Date du prochain point <span class="required-star">*</span></label>
+    <input type="date" id="remotivation-prochain">
+
+    <div class="sig-block">
+      <h3>Signature du manager</h3>
+      <div class="sig-canvas-wrap"><canvas id="sig-remotivation-manager"></canvas></div>
+      <div class="sig-actions"><span class="sig-empty-hint">Signe avec le doigt / la souris</span><button type="button" onclick="clearSignature('sig-remotivation-manager')">Effacer</button></div>
+    </div>
+    <div class="sig-block">
+      <h3>Signature du collaborateur</h3>
+      <div class="sig-canvas-wrap"><canvas id="sig-remotivation-collab"></canvas></div>
+      <div class="sig-actions"><span class="sig-empty-hint">Signe avec le doigt / la souris</span><button type="button" onclick="clearSignature('sig-remotivation-collab')">Effacer</button></div>
+    </div>
+
+    <button class="btn-primary" onclick="previewRemotivation()">Aperçu</button>
   </section>
 
   <!-- ============ ENTRETIEN DE RECADRAGE ============ -->
@@ -441,7 +717,7 @@ select,input,textarea,button{font-family:inherit}
     <button class="btn-primary" onclick="previewLancement()">Aperçu</button>
   </section>
 
-  <!-- ============ APERÇU (commun aux 4 trames) ============ -->
+  <!-- ============ APERÇU (commun à toutes les trames) ============ -->
   <section class="screen" id="screen-preview">
     <div class="top-nav"><button onclick="backFromPreview()">← Modifier</button></div>
     <h2 id="preview-titre">Aperçu</h2>
@@ -477,8 +753,8 @@ select,input,textarea,button{font-family:inherit}
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.09.26-1'
-const SW_VERSION = '2026.09.26-1'
+const APP_VERSION = '2026.09.26-2'
+const SW_VERSION = '2026.09.26-2'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://raw.githubusercontent.com/olibaroukh/bilan-passage/main/magasins.csv'
@@ -602,9 +878,10 @@ function validateConfirmMagasin() {
   document.getElementById('modal-confirm-magasin').style.display = 'none'
   state.currentMagasin = m
   state.pendingMagasin = null
-  document.querySelectorAll('#menu-magasin-chip, #ecoute-magasin-chip, #pilotage-magasin-chip, #lancement-magasin-chip, #recadrage-magasin-chip')
+  document.querySelectorAll('#menu-magasin-chip, #efb-choix-magasin-chip, #ecoute-magasin-chip, #pilotage-magasin-chip, #lancement-magasin-chip, #recadrage-magasin-chip, #valorisation-magasin-chip, #remotivation-magasin-chip')
     .forEach(el => el.textContent = m.libelle)
   loadCollaborateurs(m.code)
+  loadSuivisMagasin()
   goTo('screen-menu')
 }
 
@@ -626,6 +903,8 @@ async function loadCollaborateurs(magasinCode) {
   document.getElementById('ecoute-collab').innerHTML = optsHtml
   document.getElementById('pilotage-collab').innerHTML = optsHtml
   document.getElementById('recadrage-collab').innerHTML = optsHtml
+  document.getElementById('valorisation-collab').innerHTML = optsHtml
+  document.getElementById('remotivation-collab').innerHTML = optsHtml
 
   document.getElementById('lancement-presents').innerHTML = state.collaborateurs.map(c =>
     `<label><input type="checkbox" value="${c.nom}"> ${c.nom}</label>`
@@ -633,39 +912,547 @@ async function loadCollaborateurs(magasinCode) {
 }
 
 // ============================================================================
-// ÉCOUTE & FEEDBACK — items de la trame (fidèle au document papier)
+// CATALOGUE DES INDICATEURS (26/09) — une seule définition par indicateur,
+// réutilisée par les trames Écoute & Feedback et Valorisation. `source` =
+// champ renvoyé par /collab-stats (dernier import PEDLV du collaborateur) ou
+// par /store-monthly-stats (ratios magasin : CA audio/CA mag, positionnement
+// annuel du dernier bilan de passage). source null = saisie manuelle (pas
+// dans l'import PEDLV à ce jour). Platinium retiré partout (26/09).
 // ============================================================================
-const ECOUTE_ITEMS = [
-  'Accueil VIP (rapide, sourire, dynamique, café)',
-  'Demande de l\'ordonnance, carte vitale et mutuelle',
-  'Découverte client — dans le questionnement',
-  'Découverte client — identification des besoins',
-  'Découverte client — nomme les verres correspondants',
-  'Découverte client — présente sa proposition d\'offre Unique ou Plaisir',
-  'Découverte client — a pu déterminer si on est dans un devis ou pas',
-  'Découverte client — si besoin, quel est votre budget',
-  'Fait 2 propositions (meilleur rapport Q/P et n+1)',
-  'Demande de choisir',
-  'Demande intervention du manager',
-  'Qu\'est-ce qui vous empêche de vous décider aujourd\'hui ?',
-  'Énonce le service : 3 fois sans frais',
-  'Énonce le service : TP et gestion de l\'administratif',
-  'Énonce le service : OC garantit les prix les plus bas',
-  'Énonce le service : si moins cher ailleurs = remboursement de la différence',
-  'Énonce le service : 3 mois de garantie adaptation',
-  'Prévient du rappel',
-]
-function renderEcouteItems() {
-  document.getElementById('ecoute-items').innerHTML = ECOUTE_ITEMS.map((label, i) => `
-    <div class="item-row">
-      <input type="checkbox" id="item-fait-${i}">
-      <span class="item-label">${label}</span>
+const STAT = {
+  pm:            { key: 'pm', label: 'PM', source: 'pmOpt', unit: '€' },
+  pmAudioVente:  { key: 'pm', label: 'PM/vente', source: 'pmAudio', unit: '€' },
+  pmProthese:    { key: 'pmProthese', label: 'PM/prothèse', source: null, unit: '€' },
+  nbVente:       { key: 'nbVente', label: 'Nbre de ventes', source: 'nbVenteOpt', unit: '' },
+  fform:         { key: 'fform', label: 'Fform', source: null, unit: '' },
+  posAnnuel:     { key: 'posAnnuel', label: 'Positionnement annuel', source: 'positionnementAnnuel', unit: '%' },
+  txc:           { key: 'txc', label: 'TXC', source: 'txConcretOpt', unit: '%' },
+  txcAudio:      { key: 'txc', label: 'TXC', source: 'txConcretAudio', unit: '%' },
+  sop:           { key: 'sop', label: 'SOP', source: 'sop', unit: '%' },
+  ap4:           { key: 'ap4', label: 'AP 4 ans', source: 'ap4', unit: '%' },
+  audioprev:     { key: 'audioprev', label: '% audioprev', source: 'ap4', unit: '%' },
+  venteAdd:      { key: 'venteAdd', label: '% vente add', source: null, unit: '%' },
+  txChargeur:    { key: 'txChargeur', label: 'Tx de chargeur', source: null, unit: '%' },
+  transitions:   { key: 'transitions', label: 'Transitions', source: null, unit: '' },
+  mdc:           { key: 'mdc', label: 'MDC', source: 'mdc', unit: '%' },
+  pc:            { key: 'pc', label: 'Pack Confort', source: null, unit: '', combo: ['packConfortPct', 'packConfortPm'], comboUnits: ['%', '€'] },
+  arMax:         { key: 'arMax', label: 'AR MAX', source: null, unit: '' },
+  ar3:           { key: 'ar3', label: 'AR 3', source: null, unit: '' },
+  pm1ere:        { key: 'pm1ere', label: 'PM 1ère paire', source: 'pm1erePaire', unit: '€' },
+  testAuditif:   { key: 'testAuditif', label: 'Tests auditifs/mois', source: 'pctTestAuditif', unit: '%' },
+}
+
+// Poste audio (17/09, repris tel quel) : Audioprothésiste / Technicien audio.
+function isPosteAudio(poste) {
+  const p = (poste || '').toLowerCase()
+  return p.includes('audioprothésiste') || p.includes('audioprothesiste') || p.includes('technicien audio')
+}
+
+// ============================================================================
+// ÉCOUTE & FEEDBACK — 4 trames au catalogue (26/09), fidèles aux documents
+// papier. Un seul type en base ('ecoute_fb'), le modèle part dans data.modele.
+// Les anciennes fiches sans modèle sont des « Taux de concrétisation ».
+// Niveau commercial : le 3ᵉ indicateur reste SOP (opticien) / AP 4 ans
+// (audio) plutôt que MQ — règle du 17/09 conservée, MQ n'est pas dans PEDLV.
+// ============================================================================
+const AIDE_FEEDBACK_GRILLE = `
+  <ul>
+    <li><b>Valoriser « ce qui va bien »</b> (accueil, vente, attitude…) : « Je te félicite pour… » (donner la liste des « + »).</li>
+    <li><b>Aborder les axes d'amélioration</b> : garder une posture accompagnatrice et assertive, rester factuel (que du constat, du mot à mot), utiliser le questionnement : « D'après toi, quels sont les effets sur le client lorsqu'il entend… ? », « Comment pourrais-tu aborder le sujet autrement avec ton client ? »</li>
+    <li><b>Apporter les apports pédagogiques</b> correspondants.</li>
+    <li><b>Valider</b> : « Peux-tu me faire une synthèse de ce que tu vas améliorer et comment tu vas t'y prendre ? »</li>
+  </ul>`
+const AIDE_FEEDBACK_VIERGE = `
+  <ul>
+    <li><b>Valoriser « ce qui va bien »</b> (accueil, vente, attitude…) : « Je te félicite pour… » (donner la liste des « + »).</li>
+    <li><b>Aborder les axes d'amélioration en rapport avec les stratégies OC</b> (stats, discours, gestuelle, mise en place de la dernière stratégie, de la dernière formation reçue) : « Nous venons de voir ce qui va bien… Maintenant, voici les points que tu peux améliorer… » (donner la liste des « − »).</li>
+    <li>Garder une posture accompagnatrice et assertive, rester factuel (que du constat, du mot à mot), utiliser le questionnement : « D'après toi, quels sont les effets sur le client lorsqu'il entend… ? », « Comment pourrais-tu exprimer ce point avec ton client ? », « Te rappelles-tu la stratégie concernant ce point ? »</li>
+    <li><b>Valider</b> : vérifier qu'il a bien compris ce que tu attends de lui et ressenti l'importance du résultat, qu'il a pu s'exprimer et être entendu, qu'il s'est engagé et a envie de réussir.</li>
+  </ul>`
+
+const EFB_MODELES = {
+  taux_concretisation: {
+    titre: 'Écoute & Feedback — Taux de concrétisation',
+    objectif: "Objectif : former son collaborateur à l'application de la stratégie n° 4, le taux de concrétisation.",
+    stats: (poste) => isPosteAudio(poste)
+      ? [STAT.pmAudioVente, STAT.txcAudio, STAT.ap4]
+      : [STAT.pm, STAT.txc, STAT.sop],
+    items: [
+      { groupe: null, label: 'Accueil VIP (rapide, sourire, dynamique, café)' },
+      { groupe: null, label: "Demande de l'ordonnance, carte vitale et mutuelle" },
+      { groupe: 'Découverte client détaillée', label: 'Dans le questionnement' },
+      { groupe: 'Découverte client détaillée', label: 'Identification des besoins' },
+      { groupe: 'Découverte client détaillée', label: 'Nomme les verres correspondants' },
+      { groupe: 'Découverte client détaillée', label: "Présente sa proposition d'offre Unique ou Plaisir" },
+      { groupe: 'Découverte client détaillée', label: 'A pu déterminer si on est dans un devis ou pas' },
+      { groupe: 'Découverte client détaillée', label: 'Si besoin, quel est votre budget' },
+      { groupe: null, label: 'Fait 2 propositions (meilleur rapport Q/P et n+1)' },
+      { groupe: null, label: 'Demande de choisir' },
+      { groupe: null, label: 'Demande intervention du manager' },
+      { groupe: null, label: "« Qu'est-ce qui vous empêche de vous décider aujourd'hui ? »" },
+      { groupe: 'Énonce les services OC', label: '3 fois sans frais' },
+      { groupe: 'Énonce les services OC', label: "TP et gestion de l'administratif" },
+      { groupe: 'Énonce les services OC', label: 'OC garantit les prix les plus bas' },
+      { groupe: 'Énonce les services OC', label: 'Si moins cher ailleurs = remboursement de la différence' },
+      { groupe: 'Énonce les services OC', label: '3 mois de garantie adaptation' },
+      { groupe: null, label: 'Prévient du rappel' },
+    ],
+  },
+  decouverte_optique: {
+    titre: 'Écoute & Feedback — Découverte client optique',
+    objectif: "Objectif : former son collaborateur à l'application de la stratégie accueil et mise en relation client (partie DC).",
+    stats: () => [STAT.pm, STAT.txc, STAT.sop],
+    items: [
+      { groupe: 'Accueil VIP', label: 'Bonjour' },
+      { groupe: 'Accueil VIP', label: "Propose de s'asseoir et offre une boisson" },
+      { groupe: 'Accueil VIP', label: "Demande l'ordonnance et l'explique" },
+      { groupe: 'Accueil VIP', label: 'Demande les cartes vitales et mutuelles' },
+      { groupe: null, label: 'Explication de la découverte et des étapes de vente' },
+      { groupe: 'Questions', label: 'Ancienne paire' },
+      { groupe: 'Questions', label: 'Activités professionnelles' },
+      { groupe: 'Questions', label: 'Loisirs' },
+      { groupe: 'Questions', label: "Conduite plus d'une heure par jour" },
+      { groupe: 'Questions', label: "Lecture sur tablette, écrans… plus d'une heure par jour" },
+      { groupe: 'Questions', label: 'Lentilles' },
+      { groupe: 'Questions', label: 'Allergies' },
+      { groupe: null, label: 'Adéquation immédiate avec les verres' },
+      { groupe: null, label: 'Récapitulatif' },
+      { groupe: null, label: "Présentation de l'offre appropriée" },
+      { groupe: null, label: 'Remplit l\'onglet « Découverte » dans Cosium' },
+    ],
+  },
+  decouverte_audio: {
+    titre: 'Écoute & Feedback — Découverte client audio',
+    objectif: "Objectif : former son collaborateur à l'application de la stratégie accueil et mise en relation client (partie DC).",
+    stats: () => [STAT.pmAudioVente, STAT.pmProthese, STAT.txcAudio, STAT.audioprev, STAT.venteAdd, STAT.txChargeur],
+    items: [
+      { groupe: 'Accueil VIP', label: 'Bonjour' },
+      { groupe: 'Accueil VIP', label: "Propose de s'asseoir" },
+      { groupe: 'Accueil VIP', label: "Propose un café / un verre d'eau" },
+      { groupe: 'Accueil VIP', label: "Demande la raison du RDV : « Qu'est-ce que je peux faire pour vous ? »" },
+      { groupe: 'Accueil VIP', label: "Demande l'ordonnance" },
+      { groupe: 'Accueil VIP', label: 'Demande les cartes vitales et mutuelles' },
+      { groupe: null, label: 'Explication de la découverte et des étapes de vente' },
+      { groupe: 'Questions', label: 'Ancien ACA' },
+      { groupe: 'Questions', label: 'Les gênes et besoins' },
+      { groupe: 'Questions', label: 'Acouphènes et vertiges' },
+      { groupe: 'Questions', label: 'Traitements et opérations' },
+      { groupe: 'Questions', label: 'Fréquence des bouchons de cérumen' },
+      { groupe: 'Questions', label: 'Connaissance du produit : connaissez-vous un peu les AA ? Idée du prix ?' },
+      { groupe: 'Questions', label: 'Exposition aux bruits' },
+      { groupe: null, label: 'Activités professionnelles' },
+      { groupe: null, label: 'Loisirs' },
+      { groupe: null, label: 'Allergies' },
+      { groupe: null, label: 'Médecin traitant' },
+      { groupe: null, label: 'Récapitulatif' },
+      { groupe: null, label: 'Explication de la suite du RDV (otoscopie, test, devis…)' },
+    ],
+  },
+  vierge: {
+    titre: 'Écoute & Feedback — Trame vierge',
+    objectif: "Objectif : former son collaborateur à l'application des stratégies OC (savoir-faire et savoir-être).",
+    stats: () => [STAT.pm, STAT.nbVente, STAT.fform, STAT.txc, STAT.sop, STAT.ar3, STAT.pc, STAT.mdc, STAT.transitions],
+    items: null, // écoute en 3 colonnes libres (+ / − / apports)
+  },
+}
+
+// ── Grille de stats générique (même rendu que Pilotage) ──
+function statPrefillValue(f, prefill) {
+  if (!prefill) return ''
+  if (f.combo) {
+    const parts = f.combo.map((src, i) => prefill[src] != null ? (prefill[src] + (f.comboUnits[i] || '')) : null).filter(Boolean)
+    return parts.join(' · ')
+  }
+  return f.source && prefill[f.source] != null ? prefill[f.source] : ''
+}
+function renderStatFields(containerId, fields, prefill) {
+  document.getElementById(containerId).innerHTML = fields.map(f => `
+    <div class="field">
+      <label>${f.label}${f.source || f.combo ? '' : ' <span style="opacity:.6">(saisie)</span>'}</label>
+      <div style="display:flex; align-items:baseline; gap:2px;">
+        <input type="text" id="stat-${containerId}-${f.key}" value="${statPrefillValue(f, prefill)}" style="flex:1;">
+        ${f.unit ? `<span style="font-size:11px; color:#888; flex-shrink:0;">${f.unit}</span>` : ''}
+      </div>
     </div>
-    <input type="text" id="item-plus-moins-${i}" placeholder="Les + / les -" style="margin-bottom:4px;">
-    <input type="text" id="item-apports-${i}" placeholder="Apports pédagogiques" style="margin-bottom:10px;">
   `).join('')
 }
-renderEcouteItems()
+function readStatFields(containerId, fields) {
+  return fields.map(f => ({
+    key: f.key, label: f.label, unit: f.unit || '',
+    val: (document.getElementById(`stat-${containerId}-${f.key}`) || {}).value || '',
+  }))
+}
+function statsLine(list) {
+  return (list || []).filter(s => s.val && String(s.val).trim() !== '').map(s => `${s.label}: ${s.val}${s.unit || ''}`).join(' · ') || '—'
+}
+
+// ── Pré-remplissage : stats collaborateur (dernier import PEDLV) + ratios
+// magasin (CA audio/CA mag, positionnement annuel du dernier bilan). Jamais
+// bloquant : en cas d'échec on renvoie ce qu'on a, la saisie reste libre.
+async function fetchPrefill(matricule) {
+  let stats = null, mag = null
+  if (matricule) {
+    try {
+      const res = await fetch(RELAY + '/collab-stats?matricules=' + encodeURIComponent(matricule), { headers: { 'X-Store-Token': STORE_TOKEN } })
+      const data = await res.json()
+      stats = data.collaborateurs && data.collaborateurs[matricule] || null
+    } catch (e) {}
+  }
+  if (state.currentMagasin) {
+    try {
+      const resMag = await fetch(RELAY + '/store-monthly-stats?magasin_code=' + encodeURIComponent(state.currentMagasin.code), { headers: { 'X-Store-Token': STORE_TOKEN } })
+      mag = await resMag.json()
+    } catch (e) {}
+  }
+  const prefill = { ...(stats || {}) }
+  if (mag && mag.caAudioMagPct != null) prefill.caAudioMag = mag.caAudioMagPct
+  if (mag && mag.positionnementAnnuel != null) prefill.positionnementAnnuel = mag.positionnementAnnuel
+  return { prefill, stats, mag }
+}
+function prefillHint(stats) {
+  return stats
+    ? `Stats pré-remplies (période ${stats.periode}) — modifiables. Les champs « (saisie) » ne sont pas dans l'import PEDLV.`
+    : 'Pas de stats PEDLV trouvées pour ce collaborateur — saisie libre.'
+}
+
+// ── Grille compacte des points de contrôle (26/09) : case Fait, choix + / −,
+// et une zone dépliable (remarque + apport pédagogique) seulement si besoin.
+function renderControlItems(containerId, items) {
+  let lastGroupe = null
+  document.getElementById(containerId).innerHTML = items.map((it, i) => {
+    const head = it.groupe && it.groupe !== lastGroupe ? `<div class="ctrl-group">${it.groupe}</div>` : ''
+    lastGroupe = it.groupe
+    return head + `
+    <div class="ctrl-item" data-idx="${i}">
+      <div class="ctrl-main">
+        <input type="checkbox" id="ctrl-fait-${i}" aria-label="Fait">
+        <label class="item-label" for="ctrl-fait-${i}" style="margin:0;font-weight:400;font-size:14px;">${it.label}</label>
+        <div class="seg">
+          <button type="button" id="ctrl-plus-${i}" onclick="toggleSigne(${i}, '+')">+</button>
+          <button type="button" id="ctrl-moins-${i}" onclick="toggleSigne(${i}, '-')">−</button>
+        </div>
+        <button type="button" class="btn-note" id="ctrl-notebtn-${i}" onclick="toggleCtrlNotes(${i})" aria-label="Remarque et apport">✎</button>
+      </div>
+      <div class="ctrl-notes" id="ctrl-notes-${i}">
+        <input type="text" id="ctrl-remarque-${i}" placeholder="Remarque (les + / les −)" oninput="refreshNoteBtn(${i})">
+        <input type="text" id="ctrl-apports-${i}" placeholder="Apport pédagogique" oninput="refreshNoteBtn(${i})">
+      </div>
+    </div>`
+  }).join('')
+}
+function toggleSigne(i, signe) {
+  const plus = document.getElementById('ctrl-plus-' + i), moins = document.getElementById('ctrl-moins-' + i)
+  const cur = plus.classList.contains('on-plus') ? '+' : moins.classList.contains('on-moins') ? '-' : ''
+  plus.classList.remove('on-plus'); moins.classList.remove('on-moins')
+  if (cur !== signe) (signe === '+' ? plus : moins).classList.add(signe === '+' ? 'on-plus' : 'on-moins')
+}
+function toggleCtrlNotes(i) {
+  const el = document.getElementById('ctrl-notes-' + i)
+  el.classList.toggle('open')
+  if (el.classList.contains('open')) document.getElementById('ctrl-remarque-' + i).focus()
+}
+function refreshNoteBtn(i) {
+  const has = document.getElementById('ctrl-remarque-' + i).value.trim() || document.getElementById('ctrl-apports-' + i).value.trim()
+  document.getElementById('ctrl-notebtn-' + i).classList.toggle('has-note', !!has)
+}
+function readControlItems(items) {
+  return items.map((it, i) => ({
+    label: it.groupe ? `${it.groupe} — ${it.label}` : it.label,
+    fait: document.getElementById('ctrl-fait-' + i).checked,
+    signe: document.getElementById('ctrl-plus-' + i).classList.contains('on-plus') ? '+'
+      : document.getElementById('ctrl-moins-' + i).classList.contains('on-moins') ? '-' : '',
+    remarque: document.getElementById('ctrl-remarque-' + i).value,
+    apports: document.getElementById('ctrl-apports-' + i).value,
+  }))
+}
+
+// ── Reprise des suivis du précédent entretien (26/09) — pour un même
+// collaborateur et un même type d'entretien, chaque suivi encore ouvert est
+// proposé en « Fait / Pas fait ». Sans réponse, il reste ouvert.
+async function loadReprise(containerId, type, matricule) {
+  const box = document.getElementById(containerId)
+  box.innerHTML = ''
+  box.dataset.suivis = '[]'
+  if (!matricule || !state.currentMagasin) return
+  try {
+    const url = RELAY + '/suivis-collaborateur?magasin_code=' + encodeURIComponent(state.currentMagasin.code) +
+      '&matricule=' + encodeURIComponent(matricule) + '&type=' + encodeURIComponent(type)
+    const res = await fetch(url, { headers: { 'X-Store-Token': STORE_TOKEN } })
+    const data = await res.json()
+    const suivis = data.suivis || []
+    if (!suivis.length) return
+    box.dataset.suivis = JSON.stringify(suivis)
+    const today = todayIso()
+    box.innerHTML = `<div class="reprise-box"><h3>🔁 Suivi du précédent entretien</h3>
+      <div class="step-hint">Ce qui avait été fixé : le collaborateur l'a-t-il fait ?</div>` +
+      suivis.map(sv => `
+        <div class="suivi-row${sv.echeance < today ? ' retard' : ''}">
+          <div class="suivi-txt">${escapeHtmlClient(sv.libelle)}<span class="suivi-meta">Échéance <span class="suivi-ech">${formatDateFr(sv.echeance)}</span></span></div>
+          <div class="seg">
+            <button type="button" id="rep-${containerId}-${sv.id}-fait" onclick="toggleReprise('${containerId}', ${sv.id}, 'fait')">Fait</button>
+            <button type="button" id="rep-${containerId}-${sv.id}-pas_fait" onclick="toggleReprise('${containerId}', ${sv.id}, 'pas_fait')">Pas fait</button>
+          </div>
+        </div>`).join('') + `</div>`
+  } catch (e) { /* reprise optionnelle, jamais bloquante */ }
+}
+function toggleReprise(containerId, id, statut) {
+  const fait = document.getElementById(`rep-${containerId}-${id}-fait`)
+  const pas = document.getElementById(`rep-${containerId}-${id}-pas_fait`)
+  const wasOn = (statut === 'fait' ? fait.classList.contains('on-fait') : pas.classList.contains('on-pasfait'))
+  fait.classList.remove('on-fait'); pas.classList.remove('on-pasfait')
+  if (!wasOn) (statut === 'fait' ? fait : pas).classList.add(statut === 'fait' ? 'on-fait' : 'on-pasfait')
+}
+function readReprises(containerId) {
+  const box = document.getElementById(containerId)
+  let suivis = []
+  try { suivis = JSON.parse(box.dataset.suivis || '[]') } catch (e) {}
+  return suivis.map(sv => {
+    const f = document.getElementById(`rep-${containerId}-${sv.id}-fait`)
+    const p = document.getElementById(`rep-${containerId}-${sv.id}-pas_fait`)
+    const statut = f && f.classList.contains('on-fait') ? 'fait' : p && p.classList.contains('on-pasfait') ? 'pas_fait' : null
+    return statut ? { id: sv.id, statut, libelle: sv.libelle, echeance: sv.echeance } : null
+  }).filter(Boolean)
+}
+function previewReprises(reprises) {
+  if (!reprises || !reprises.length) return ''
+  return `<div class="preview-block"><h3>Suivi du précédent entretien</h3>` +
+    reprises.map(r => `<div class="preview-item"><span class="${r.statut === 'fait' ? 'ok' : 'no'}">${r.statut === 'fait' ? '✓ Fait' : '✗ Pas fait'}</span> ${escapeHtmlClient(r.libelle)} (échéance ${formatDateFr(r.echeance)})</div>`).join('') +
+    `</div>`
+}
+
+function todayIso() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+function escapeHtmlClient(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]))
+}
+
+// ============================================================================
+// ÉCOUTE & FEEDBACK — écran générique
+// ============================================================================
+async function startEcoute(modele) {
+  const m = EFB_MODELES[modele]
+  state.currentType = 'ecoute_fb'
+  state.currentModele = modele
+  document.getElementById('ecoute-titre').textContent = m.titre
+  document.getElementById('ecoute-objectif').textContent = m.objectif
+  document.getElementById('ecoute-date').value = todayIso()
+  const isVierge = modele === 'vierge'
+  document.getElementById('ecoute-stats-titre').textContent = isVierge ? '1. Focus sur les stratégies à améliorer' : '1. Niveau commercial'
+  document.getElementById('ecoute-qualitatif-wrap').style.display = isVierge ? 'block' : 'none'
+  document.getElementById('ecoute-libre-wrap').style.display = isVierge ? 'block' : 'none'
+  document.getElementById('ecoute-items').style.display = isVierge ? 'none' : 'block'
+  document.getElementById('ecoute-smart-wrap').style.display = isVierge ? 'block' : 'none'
+  document.getElementById('ecoute-engagement-wrap').style.display = isVierge ? 'none' : 'block'
+  document.getElementById('ecoute-apports-label').textContent = isVierge ? '4. Apports pédagogiques' : 'Apports pédagogiques'
+  document.getElementById('ecoute-synthese-label').textContent = isVierge ? '7. Validation — synthèse du collaborateur' : 'Synthèse du collaborateur (validation)'
+  document.getElementById('ecoute-aide-feedback').innerHTML = isVierge ? AIDE_FEEDBACK_VIERGE : AIDE_FEEDBACK_GRILLE
+  if (!isVierge) renderControlItems('ecoute-items', m.items)
+  const collabSel = document.getElementById('ecoute-collab')
+  const opt = collabSel.selectedOptions[0]
+  renderStatFields('ecoute-stats', m.stats(opt && opt.dataset.poste), null)
+  if (isVierge) renderStatFields('ecoute-objectifs', m.stats(), null)
+  document.getElementById('ecoute-stats-hint').textContent = ''
+  document.getElementById('ecoute-reprise').innerHTML = ''
+  goTo('screen-ecoute-fb')
+  initSignaturePad('sig-ecoute-manager')
+  initSignaturePad('sig-ecoute-collab')
+  if (collabSel.value) onEcouteCollabChange()
+}
+
+async function onEcouteCollabChange() {
+  const sel = document.getElementById('ecoute-collab')
+  const matricule = sel.value
+  const opt = sel.selectedOptions[0]
+  const m = EFB_MODELES[state.currentModele]
+  if (!m) return
+  const fields = m.stats(opt && opt.dataset.poste)
+  renderStatFields('ecoute-stats', fields, null)
+  loadReprise('ecoute-reprise', 'ecoute_fb', matricule)
+  if (!matricule) { document.getElementById('ecoute-stats-hint').textContent = ''; return }
+  const { prefill, stats } = await fetchPrefill(matricule)
+  if (sel.value !== matricule) return // collaborateur changé entre-temps
+  renderStatFields('ecoute-stats', fields, prefill)
+  document.getElementById('ecoute-stats-hint').textContent = prefillHint(stats)
+}
+
+// ============================================================================
+// VALORISATION (26/09) — pas d'objectif chiffré (la trame dit « à éviter :
+// parler d'objectifs »), donc aucun suivi daté ni reprise.
+// ============================================================================
+const VALORISATION_STATS = [STAT.pm, STAT.nbVente, STAT.fform, STAT.posAnnuel, STAT.txc, STAT.sop, STAT.transitions,
+  STAT.mdc, STAT.pc, STAT.arMax, STAT.ar3, STAT.pm1ere, STAT.testAuditif]
+
+function startValorisation() {
+  state.currentType = 'valorisation'
+  document.getElementById('valorisation-date').value = todayIso()
+  renderStatFields('valorisation-stats', VALORISATION_STATS, null)
+  document.getElementById('valorisation-stats-hint').textContent = ''
+  goTo('screen-valorisation')
+  initSignaturePad('sig-valorisation-manager')
+  initSignaturePad('sig-valorisation-collab')
+  const sel = document.getElementById('valorisation-collab')
+  onValorisationCollabChange(sel.value)
+}
+async function onValorisationCollabChange(matricule) {
+  const { prefill, stats } = await fetchPrefill(matricule)
+  if (document.getElementById('valorisation-collab').value !== matricule) return
+  renderStatFields('valorisation-stats', VALORISATION_STATS, prefill)
+  document.getElementById('valorisation-stats-hint').textContent = matricule ? prefillHint(stats)
+    : (prefill.positionnementAnnuel != null ? 'Positionnement annuel repris du dernier bilan de passage.' : '')
+}
+
+// ============================================================================
+// REMOTIVATION (26/09) — note 1 à 10, solutions (celle retenue cochée), plan
+// d'action en étapes datées, prochain point obligatoire. Étapes et prochain
+// point deviennent des suivis datés (alertes + reprise au prochain entretien).
+// ============================================================================
+const AVEC_QUI = ['Seul', 'Avec le manager', 'Avec un collègue']
+
+function renderRemotivationNote(selected) {
+  document.getElementById('remotivation-note').innerHTML = Array.from({ length: 10 }, (_, i) => i + 1)
+    .map(n => `<button type="button" class="${n === selected ? 'on' : ''}" onclick="setRemotivationNote(${n})">${n}</button>`).join('')
+  state.remotivationNote = selected || null
+}
+function setRemotivationNote(n) { renderRemotivationNote(state.remotivationNote === n ? null : n) }
+
+function renderRemotivationSolutions() {
+  document.getElementById('remotivation-solutions').innerHTML = [0, 1, 2].map(i => `
+    <div class="solution-row">
+      <input type="radio" name="remotivation-retenue" id="remotivation-retenue-${i}" value="${i}" aria-label="Solution retenue">
+      <input type="text" id="remotivation-solution-${i}" placeholder="Solution ${i + 1}${i === 2 ? ' (facultative)' : ''}">
+    </div>`).join('') + '<div class="hint">Le bouton rond marque la solution sur laquelle il s\'engage.</div>'
+}
+
+let etapeSeq = 0
+function ajouterEtapeRemotivation() {
+  const id = ++etapeSeq
+  const div = document.createElement('div')
+  div.className = 'etape-row'
+  div.dataset.etapeId = id
+  div.innerHTML = `
+    <input type="text" id="etape-action-${id}" placeholder="Étape / action (comment ?)">
+    <div class="etape-line">
+      <input type="date" id="etape-echeance-${id}" aria-label="Échéance">
+      <select id="etape-avecqui-${id}">${AVEC_QUI.map(a => `<option>${a}</option>`).join('')}</select>
+      <button type="button" class="btn-suppr" onclick="this.closest('.etape-row').remove()">✕</button>
+    </div>`
+  document.getElementById('remotivation-etapes').appendChild(div)
+}
+function readEtapesRemotivation() {
+  return [...document.querySelectorAll('#remotivation-etapes .etape-row')].map(row => {
+    const id = row.dataset.etapeId
+    return {
+      action: document.getElementById('etape-action-' + id).value.trim(),
+      echeance: document.getElementById('etape-echeance-' + id).value,
+      avecQui: document.getElementById('etape-avecqui-' + id).value,
+    }
+  }).filter(e => e.action)
+}
+
+function startRemotivation() {
+  state.currentType = 'remotivation'
+  document.getElementById('remotivation-date').value = todayIso()
+  renderRemotivationNote(null)
+  renderRemotivationSolutions()
+  document.getElementById('remotivation-etapes').innerHTML = ''
+  ajouterEtapeRemotivation()
+  goTo('screen-remotivation')
+  initSignaturePad('sig-remotivation-manager')
+  initSignaturePad('sig-remotivation-collab')
+  loadReprise('remotivation-reprise', 'remotivation', document.getElementById('remotivation-collab').value)
+}
+
+// ============================================================================
+// BANDEAU « À SUIVRE » (26/09) — suivis ouverts du magasin : en retard (rouge)
+// ou à échéance dans les 7 jours (plus discret). Bouton « Fait » = clôture
+// horodatée et signée du prénom saisi.
+// ============================================================================
+const LIBELLES_TYPE_COURT = {
+  ecoute_fb: 'Écoute & Feedback', pilotage_optique: 'Pilotage Optique', pilotage_audio: 'Pilotage Audio',
+  valorisation: 'Valorisation', remotivation: 'Remotivation', recadrage: 'Recadrage',
+}
+
+async function loadSuivisMagasin() {
+  const el = document.getElementById('suivis-bandeau')
+  el.innerHTML = ''
+  if (!state.currentMagasin) return
+  const code = state.currentMagasin.code
+  try {
+    const res = await fetch(RELAY + '/suivis-magasin?magasin_code=' + encodeURIComponent(code), { headers: { 'X-Store-Token': STORE_TOKEN } })
+    const data = await res.json()
+    if (!state.currentMagasin || state.currentMagasin.code !== code) return
+    const suivis = data.suivis || []
+    state.suivisMagasin = suivis
+    if (!suivis.length) return
+    const today = data.today || todayIso()
+    const nbRetard = suivis.filter(s => s.echeance < today).length
+    el.innerHTML = `<div class="suivis-bandeau"><h3>📌 À suivre${nbRetard ? ` — ${nbRetard} en retard` : ''}</h3>` +
+      suivis.map(sv => {
+        const retard = sv.echeance < today
+        return `<div class="suivi-row ${retard ? 'retard' : 'bientot'}">
+          <div class="suivi-txt"><b>${escapeHtmlClient(sv.collaborateur_nom || '—')}</b> — ${escapeHtmlClient(sv.libelle)}
+            <span class="suivi-meta">${LIBELLES_TYPE_COURT[sv.type_entretien] || sv.type_entretien} · ${retard ? 'échéance dépassée' : 'échéance'} <span class="suivi-ech">${formatDateFr(sv.echeance)}</span></span></div>
+          <button type="button" class="btn-fait" onclick="ouvrirSuiviFait(${sv.id})">Fait</button>
+        </div>`
+      }).join('') + `</div>`
+  } catch (e) { /* bandeau optionnel */ }
+}
+
+function ouvrirSuiviFait(id) {
+  const sv = (state.suivisMagasin || []).find(x => x.id === id)
+  if (!sv) return
+  state.suiviFaitId = id
+  document.getElementById('suivi-fait-libelle').textContent = `${sv.collaborateur_nom || ''} — ${sv.libelle}`
+  let prenom = ''
+  try { prenom = localStorage.getItem('sm_prenom') || '' } catch (e) {}
+  document.getElementById('suivi-fait-par').value = prenom
+  document.getElementById('suivi-fait-error').textContent = ''
+  document.getElementById('modal-suivi-fait').style.display = 'flex'
+  setTimeout(() => document.getElementById('suivi-fait-par').focus(), 50)
+}
+function fermerSuiviFait() {
+  state.suiviFaitId = null
+  document.getElementById('modal-suivi-fait').style.display = 'none'
+}
+async function validerSuiviFait() {
+  const par = document.getElementById('suivi-fait-par').value.trim()
+  if (!par) { document.getElementById('suivi-fait-error').textContent = 'Indique ton prénom.'; return }
+  try { localStorage.setItem('sm_prenom', par) } catch (e) {}
+  try {
+    const res = await fetch(RELAY + '/suivi-cloture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Store-Token': STORE_TOKEN },
+      body: JSON.stringify({ id: state.suiviFaitId, magasinCode: state.currentMagasin.code, par }),
+    })
+    if (!res.ok) throw new Error('erreur serveur')
+    fermerSuiviFait()
+    showToast('Suivi soldé')
+    loadSuivisMagasin()
+  } catch (e) {
+    document.getElementById('suivi-fait-error').textContent = 'Échec — vérifie ta connexion.'
+  }
+}
+
+// ============================================================================
+// PILOTAGE — échéance par objectif (26/09). L'échéance « par défaut » est
+// reportée sur chaque objectif rempli, puis modifiable objectif par objectif.
+// ============================================================================
+function renderPilotageEcheances() {
+  const type = state.currentType
+  const fields = PILOTAGE_FIELDS[type] || []
+  const box = document.getElementById('pilotage-echeances')
+  const prev = {}
+  box.querySelectorAll('input[type=date]').forEach(el => { prev[el.dataset.key] = el.value })
+  const def = document.getElementById('pilotage-echeance').value
+  const remplis = fields.filter(f => {
+    const el = document.getElementById(`stat-pilotage-stats-objectif-${f.key}`)
+    return el && el.value.trim() !== ''
+  })
+  box.innerHTML = remplis.length ? '<div class="step-hint" style="margin-top:8px;">Échéance de chaque objectif :</div>' + remplis.map(f => `
+    <div class="ech-row"><span>${f.label}</span><input type="date" data-key="${f.key}" value="${prev[f.key] || def || ''}"></div>`).join('') : ''
+}
 
 // ============================================================================
 // PILOTAGE — champs stats (optique / audio) + pré-remplissage depuis /collab-stats
@@ -698,7 +1485,7 @@ const PILOTAGE_FIELDS = {
     { key: 'caAudioMag', label: 'CA audio/CA mag', source: 'caAudioMag', unit: '%' },
     { key: 'txConcret', label: 'Tx de concret', source: 'txConcretAudio', unit: '%' },
     { key: 'pmHygiene', label: 'PM produits d\'hygiène', source: null, unit: '€' },
-    { key: 'ap4', label: 'AP4 + Platinium', source: 'ap4', unit: '%' },
+    { key: 'ap4', label: 'AP4', source: 'ap4', unit: '%' },
     { key: 'testAuditif', label: 'Tests auditifs/mois', source: 'pctTestAuditif', unit: '%' },
   ],
 }
@@ -738,7 +1525,7 @@ function enforceObjectifsLimit(containerId, fields) {
       if (el.value.trim() === '') el.disabled = atLimit
     })
   }
-  inputs.forEach(el => el.addEventListener('input', apply))
+  inputs.forEach(el => el.addEventListener('input', () => { apply(); renderPilotageEcheances() }))
   apply()
 }
 
@@ -751,67 +1538,41 @@ async function startRecadrage() {
 }
 
 async function startEntretien(type) {
+  if (type === 'ecoute_fb') { goTo('screen-efb-choix'); return }
   state.currentType = type
-  if (type === 'ecoute_fb') {
-    document.getElementById('ecoute-date').value = new Date().toISOString().slice(0, 10)
-    goTo('screen-ecoute-fb')
-    initSignaturePad('sig-ecoute-manager')
-    initSignaturePad('sig-ecoute-collab')
-    return
-  }
   document.getElementById('pilotage-titre').textContent = type === 'pilotage_optique' ? 'Entretien de pilotage Optique' : 'Entretien de pilotage Audio'
   document.getElementById('pilotage-date').value = new Date().toISOString().slice(0, 10)
   renderPilotageStatsGrid('pilotage-stats-avant', type, null)
   renderPilotageStatsGrid('pilotage-stats-objectif', type, null)
+  document.getElementById('pilotage-echeances').innerHTML = ''
   document.getElementById('pilotage-stats-hint').textContent = ''
   goTo('screen-pilotage')
+  loadReprise('pilotage-reprise', type, document.getElementById('pilotage-collab').value)
   initSignaturePad('sig-pilotage-manager')
   initSignaturePad('sig-pilotage-collab')
 }
 
 // Récupère les stats collaborateur dès qu'un collaborateur est choisi dans l'écran Pilotage
+// (26/09 : pré-remplissage mutualisé dans fetchPrefill + reprise des suivis ouverts).
 document.getElementById('pilotage-collab').addEventListener('change', async (e) => {
   const matricule = e.target.value
+  loadReprise('pilotage-reprise', state.currentType, matricule)
   if (!matricule) return
-  try {
-    const res = await fetch(RELAY + '/collab-stats?matricules=' + encodeURIComponent(matricule), {
-      headers: { 'X-Store-Token': STORE_TOKEN }
-    })
-    const data = await res.json()
-    const stats = data.collaborateurs && data.collaborateurs[matricule]
-    // CA audio/CA mag (17/09) est un ratio magasin, pas collaborateur — vient
-    // de /store-monthly-stats (store_stats, alimentée par PEDLV), fusionné
-    // dans le même objet de pré-remplissage que les stats individuelles.
-    let statsAvecMagasin = stats
-    if (state.currentType === 'pilotage_audio' && state.currentMagasin) {
-      try {
-        const resMag = await fetch(RELAY + '/store-monthly-stats?magasin_code=' + encodeURIComponent(state.currentMagasin.code), {
-          headers: { 'X-Store-Token': STORE_TOKEN }
-        })
-        const dataMag = await resMag.json()
-        if (dataMag.caAudioMagPct != null) {
-          statsAvecMagasin = { ...(stats || {}), caAudioMag: dataMag.caAudioMagPct }
-        }
-      } catch (e) { /* ratio magasin optionnel, jamais bloquant */ }
-    }
-    renderPilotageStatsGrid('pilotage-stats-avant', state.currentType, statsAvecMagasin)
-    document.getElementById('pilotage-stats-hint').textContent = stats
-      ? `Stats pré-remplies (période ${stats.periode}) — modifiables.`
-      : 'Pas de stats trouvées pour ce collaborateur — saisie libre.'
-  } catch (e) {
-    document.getElementById('pilotage-stats-hint').textContent = 'Pré-remplissage indisponible — saisie libre.'
-  }
+  const { prefill, stats } = await fetchPrefill(matricule)
+  if (document.getElementById('pilotage-collab').value !== matricule) return
+  renderPilotageStatsGrid('pilotage-stats-avant', state.currentType, prefill)
+  document.getElementById('pilotage-stats-hint').textContent = stats
+    ? `Stats pré-remplies (période ${stats.periode}) — modifiables.`
+    : 'Pas de stats trouvées pour ce collaborateur — saisie libre.'
+})
+document.getElementById('pilotage-echeance').addEventListener('change', (e) => {
+  document.querySelectorAll('#pilotage-echeances input[type=date]').forEach(el => { el.value = e.target.value })
 })
 
-// Écoute & Feedback — le 3ᵉ indicateur du "Niveau commercial" dépend du poste
-// (17/09) : AP 4 ans (garantie audio 4 ans) pour Audioprothésiste/Technicien
-// audio, SOP pour tous les autres (opticiens). Jamais "MQ".
-document.getElementById('ecoute-collab').addEventListener('change', (e) => {
-  const opt = e.target.selectedOptions[0]
-  const poste = (opt && opt.dataset.poste || '').toLowerCase()
-  const isAudio = poste.includes('audioprothésiste') || poste.includes('technicien audio')
-  document.getElementById('ecoute-third-label').textContent = isAudio ? 'AP 4 ans' : 'SOP'
-})
+// Écoute & Feedback (26/09) — pré-remplissage + reprise au choix du collaborateur.
+document.getElementById('ecoute-collab').addEventListener('change', onEcouteCollabChange)
+document.getElementById('valorisation-collab').addEventListener('change', (e) => onValorisationCollabChange(e.target.value))
+document.getElementById('remotivation-collab').addEventListener('change', (e) => loadReprise('remotivation-reprise', 'remotivation', e.target.value))
 
 // ============================================================================
 // SIGNATURE — pad canvas tactile/souris, une paire (manager + collaborateur)
@@ -963,7 +1724,9 @@ function pdfSafe(str) {
     // (17/09) € retiré de la liste : jsPDF/Helvetica le rend correctement
     // (encodage WinAnsi), pas besoin de le convertir en "EUR".
     .replace(/🔁|🎤|📄|→|✓|✗/g, '')
-    .replace(/[^\x00-\xFF]/g, '?')
+    // 26/09 : € (U+20AC) épargné — la police Montserrat embarquée le rend,
+    // il sortait jusqu'ici en « ? » dès qu'il était tapé dans un texte.
+    .replace(/[^\x00-\xFF\u20AC]/g, '?')
 }
 
 // ============================================================================
@@ -1147,16 +1910,154 @@ function generateEntretienPdf(pending) {
     pilotage_optique: 'Entretien de pilotage Optique',
     pilotage_audio: 'Entretien de pilotage Audio',
     recadrage: 'Entretien de recadrage',
+    valorisation: 'Entretien de valorisation',
+    remotivation: 'Entretien de remotivation',
+  }
+  // 26/09 : sous-titre de la trame Écoute & Feedback choisie (fiches sans
+  // modèle = anciennes fiches « Taux de concrétisation »).
+  const SOUS_TITRES_EFB = {
+    taux_concretisation: 'Taux de concrétisation', decouverte_optique: 'Découverte client optique',
+    decouverte_audio: 'Découverte client audio', vierge: 'Trame vierge',
+  }
+  // Suivi du précédent entretien (26/09) — objectifs repris fait / pas fait.
+  function reprisesBlock(reprises) {
+    if (!reprises || !reprises.length) return
+    sectionLabel('Suivi du précédent entretien')
+    reprises.forEach(r => {
+      ensureSpace(6)
+      const ok = r.statut === 'fait'
+      doc.setFont('Montserrat', 'bold'); doc.setFontSize(8.5); doc.setTextColor(...(ok ? [46, 125, 79] : RED))
+      doc.text(ok ? 'FAIT' : 'PAS FAIT', mar, y)
+      doc.setFont('Montserrat', 'normal'); doc.setFontSize(9.5); doc.setTextColor(44, 44, 42)
+      const txt = pdfSafe(r.libelle) + '  (échéance ' + pdfSafe(formatDateFr(r.echeance)) + ')'
+      doc.text(fitOneLine(txt, W - 2 * mar - 20), mar + 20, y)
+      y += 5.5
+    })
+    y += 2
+  }
+  // Tableau simple (fond noir en tête, même style que les points de contrôle).
+  function simpleTable(head, body, columnStyles) {
+    if (!doc.autoTable || !body.length) return
+    doc.autoTable({
+      startY: y, margin: { left: mar, right: mar }, head: [head], body,
+      theme: 'grid', headStyles: { fillColor: NOIR, fontSize: 8, font: 'Montserrat', fontStyle: 'bold' },
+      styles: { fontSize: 8.5, cellPadding: 1.5, valign: 'top', font: 'Montserrat' },
+      columnStyles: columnStyles || {},
+    })
+    y = doc.lastAutoTable.finalY + 5
   }
   // 18/09 : magasinLibelle explicite (régénération depuis l'Historique, où le
   // magasin courant en mémoire ne correspond pas forcément à l'entretien).
   const magasinNom = pending.magasinLibelle || (state.currentMagasin ? state.currentMagasin.libelle : '')
-  y = pdfHeader(doc, W, mar, libelles[pending.type] || 'Entretien manager', magasinNom, pending.date)
-
-  infoRow(pending.collaborateurNom, pending.remplipar, pending.date)
-
   const data = pending.data
-  if (pending.type === 'ecoute_fb') {
+  const titrePdf = pending.type === 'ecoute_fb' && data.modele
+    ? 'Écoute & feedback — ' + (SOUS_TITRES_EFB[data.modele] || '')
+    : (libelles[pending.type] || 'Entretien manager')
+  y = pdfHeader(doc, W, mar, titrePdf, magasinNom, pending.date)
+
+  // 26/09 : date en jj/mm/aaaa dans la vignette (elle sortait en ISO).
+  infoRow(pending.collaborateurNom, pending.remplipar, formatDateFr(pending.date))
+  reprisesBlock(data.reprises)
+
+  if (pending.type === 'ecoute_fb' && data.modele) {
+    // ── Écoute & Feedback v2 (26/09) : 4 trames ──
+    const isVierge = data.modele === 'vierge'
+    sectionLabel(isVierge ? 'Focus sur les stratégies à améliorer' : 'Niveau commercial')
+    statGrid((data.stats || []).map(st => ({ label: st.label, val: st.val, unit: st.unit })), 6, false, false)
+    if (isVierge) {
+      if (data.qualitatif) bodyText('Qualitatif', data.qualitatif)
+      sectionLabel('Écoute de la vente')
+      bodyText('Les +', data.ecoutePlus)
+      bodyText('Les -', data.ecouteMoins)
+      bodyText('Apports pédagogiques correspondants', data.ecouteApports)
+    } else {
+      sectionLabel('Écoute de la vente - points de contrôle')
+      if (doc.autoTable) {
+        doc.autoTable({
+          startY: y, margin: { left: mar, right: mar },
+          head: [['Fait', 'Point de contrôle', '+ / -', 'Apports pédagogiques']],
+          body: (data.items || []).map(it => [it.fait ? '1' : '', pdfSafe(it.label),
+            pdfSafe([it.signe, it.remarque].filter(Boolean).join(' ')), pdfSafe(it.apports)]),
+          theme: 'grid', headStyles: { fillColor: NOIR, fontSize: 8, font: 'Montserrat', fontStyle: 'bold' },
+          styles: { fontSize: 8, cellPadding: 1.5, valign: 'top', font: 'Montserrat' },
+          columnStyles: { 0: { cellWidth: 12, halign: 'center' }, 1: { cellWidth: 78 } },
+          didParseCell: (d) => { if (d.column.index === 0 && d.cell.section === 'body') d.cell.text = [] },
+          didDrawCell: (d) => {
+            if (d.column.index === 0 && d.cell.section === 'body' && d.cell.raw === '1') {
+              const cx = d.cell.x + d.cell.width / 2, cy = d.cell.y + d.cell.height / 2
+              doc.setFillColor(...RED); doc.circle(cx, cy, 2.3, 'F')
+              doc.setFont('Montserrat', 'bold'); doc.setFontSize(8); doc.setTextColor(255, 255, 255)
+              doc.text('\u2713', cx, cy + 1, { align: 'center' })
+            }
+          },
+        })
+        y = doc.lastAutoTable.finalY + 6
+      }
+      // Même principe que la fiche historique : feedback sur une nouvelle page.
+      doc.addPage(); y = 16
+    }
+    sectionLabel('Feedback avec le collaborateur')
+    bodyText('Ce qui va bien', data.plus)
+    bodyText("Axes d'amélioration", data.axes)
+    bodyText('Apports pédagogiques', data.apports)
+    if (isVierge) {
+      ensureSpace(8)
+      doc.setFont('Montserrat', 'bold'); doc.setFontSize(10); doc.setTextColor(...RED)
+      doc.text('NOUVEL OBJECTIF SMART', mar, y)
+      if (data.echeance) {
+        const label = 'ECHEANCE : ' + pdfSafe(formatDateFr(data.echeance))
+        doc.setFont('Montserrat', 'bold'); doc.setFontSize(8)
+        const tw = doc.getTextWidth(label)
+        doc.setFillColor(...NOIR); doc.roundedRect(W - mar - tw - 6, y - 4, tw + 6, 5.5, 1.2, 1.2, 'F')
+        doc.setTextColor(255, 255, 255); doc.text(label, W - mar - tw - 3, y)
+      }
+      y += 5.5
+      statGrid((data.objectifs || []).map(o => ({ label: o.label, val: o.val, unit: o.unit })), 6, true, true)
+      if (data.objectifQualitatif) bodyText('Qualitatif', data.objectifQualitatif)
+      bodyText("Rôle d'accompagnement et de contrôle", data.roleAccompagnement)
+    }
+    bodyText('Synthèse du collaborateur', data.synthese)
+    if (!isVierge) {
+      bodyText('Engagement', data.engagement || '-')
+      bodyText('Prochaine écoute de vente', formatDateFr(data.prochaineEcoute))
+    }
+  } else if (pending.type === 'valorisation') {
+    sectionLabel('Indicateurs')
+    statGrid((data.stats || []).map(st => ({ label: st.label, val: st.val, unit: st.unit })), 6, false, false)
+    if (data.evolution) bodyText("L'évolution de sa tâche", data.evolution)
+    bodyText('1. Faire raconter / demander des détails', data.etape1)
+    bodyText('2. Écouter / reformuler', data.etape2)
+    bodyText("3. Valorisation de l'action / de la réussite", data.etape3)
+    bodyText('4. Ce qui a fait la différence', data.etape4)
+    bodyText("5. Complimenter (et c'est tout !)", data.etape5)
+  } else if (pending.type === 'remotivation') {
+    statGrid([{ label: 'NIVEAU DE MOTIVATION', val: data.noteMotivation ? data.noteMotivation + ' / 10' : '' }], 3, false, false)
+    sectionLabel('Comment il vit son métier')
+    bodyText('Son quotidien', data.quotidien)
+    bodyText('Ce qui lui plaît, source de plaisir', data.plait)
+    bodyText('Au niveau perso', data.perso)
+    bodyText('Ce qui lui plaît moins, pénible ou difficile', data.plaitMoins)
+    bodyText('Ce qui lui manque', data.manque)
+    bodyText('Écoute et reformulation', data.ecoute)
+    sectionLabel('Solutions')
+    ;(data.solutions || []).forEach(x => {
+      ensureSpace(6)
+      doc.setFont('Montserrat', x.retenue ? 'bold' : 'normal'); doc.setFontSize(9.5)
+      doc.setTextColor(...(x.retenue ? RED : [44, 44, 42]))
+      const lines = doc.splitTextToSize(pdfSafe((x.retenue ? 'RETENUE : ' : '- ') + x.texte), W - 2 * mar)
+      lines.forEach(l => { ensureSpace(5); doc.text(l, mar, y); y += 5 })
+    })
+    y += 2
+    sectionLabel("Plan d'action")
+    simpleTable(['Étape', 'Échéance', 'Avec qui'],
+      (data.etapes || []).map(e => [pdfSafe(e.action), pdfSafe(formatDateFr(e.echeance)), pdfSafe(e.avecQui)]),
+      { 1: { cellWidth: 24 }, 2: { cellWidth: 34 } })
+    bodyText("Mon rôle d'accompagnement", data.roleAccompagnement)
+    bodyText('Mon rôle de contrôle', data.roleControle)
+    bodyText('Valoriser, orienter vers le futur', data.valoriser)
+    bodyText("De quelle façon je peux t'aider", data.aide)
+    bodyText('Prochain point', formatDateFr(data.prochainPoint))
+  } else if (pending.type === 'ecoute_fb') {
     if (data.niveauCommercial) {
       sectionLabel('Niveau commercial')
       statGrid([
@@ -1214,8 +2115,13 @@ function generateEntretienPdf(pending) {
     ensureSpace(8)
     doc.setFont('Montserrat', 'bold'); doc.setFontSize(10); doc.setTextColor(...RED)
     doc.text('NOUVEAUX OBJECTIFS', mar, y)
-    if (data.echeance) {
-      const label = 'ECHEANCE : ' + pdfSafe(formatDateFr(data.echeance))
+    // 26/09 : échéance par objectif. Badge unique si toutes identiques,
+    // sinon ligne « Échéances » sous la grille.
+    const echObj = data.echeancesObjectifs || {}
+    const echDistinctes = [...new Set(Object.values(echObj).filter(Boolean))]
+    const echeanceUnique = echDistinctes.length === 1 ? echDistinctes[0] : (echDistinctes.length ? null : data.echeance)
+    if (echeanceUnique) {
+      const label = 'ECHEANCE : ' + pdfSafe(formatDateFr(echeanceUnique))
       doc.setFont('Montserrat', 'bold'); doc.setFontSize(8)
       const tw = doc.getTextWidth(label)
       doc.setFillColor(...NOIR)
@@ -1225,6 +2131,12 @@ function generateEntretienPdf(pending) {
     }
     y += 5.5
     statGrid(toItems(data.nouveauxObjectifs || {}), 6, true, true)
+    if (echDistinctes.length > 1) {
+      const txt = fields.filter(f => echObj[f.key] && (data.nouveauxObjectifs || {})[f.key])
+        .map(f => f.label + ' : ' + formatDateFr(echObj[f.key])).join('   ')
+      doc.setFont('Montserrat', 'bold'); doc.setFontSize(8); doc.setTextColor(...GRIS)
+      doc.text(fitOneLine(pdfSafe('Échéances - ' + txt), W - 2 * mar), mar, y); y += 5
+    }
 
     bodyText("5. Apport en formation / plan d'action", data.etape5, 2)
     bodyText("6. Rôle d'accompagnement et de contrôle", data.etape6, 2)
@@ -1400,7 +2312,7 @@ function previewPdfDoc() {
 }
 
 // ============================================================================
-// APERÇU — commun aux 4 trames. On construit le payload complet (sans
+// APERÇU — commun à toutes les trames. On construit le payload complet (sans
 // l'envoyer), on le stocke dans state.pending, et on affiche un résumé
 // lisible avant confirmation — même esprit que le rapport PEDLV ouvert dans
 // un nouvel onglet avant impression, ou l'aperçu PDF de Bilan de Passage.
@@ -1413,26 +2325,29 @@ function previewSigBlock(label, dataUrl) {
     `</div>`
 }
 
+function collabFromSelect(selectId) {
+  const sel = document.getElementById(selectId)
+  const matricule = sel.value
+  return { matricule, collaborateurNom: matricule ? sel.options[sel.selectedIndex].text : '' }
+}
+
+// Écoute & Feedback (26/09) — 4 trames. Trames à grille : engagement + date
+// de la prochaine écoute (obligatoire) ; trame vierge : objectif SMART +
+// échéance (obligatoire dès qu'un objectif est fixé). Chacun devient un suivi daté.
 function previewEntretien(type) {
-  const collabSelect = document.getElementById('ecoute-collab')
+  const modele = state.currentModele || 'taux_concretisation'
+  const m = EFB_MODELES[modele]
+  const isVierge = modele === 'vierge'
   const remplipar = document.getElementById('ecoute-remplipar').value
   const date = document.getElementById('ecoute-date').value
   if (!remplipar || !date) { showToast('Merci de renseigner ton prénom et la date'); return }
+  const { matricule, collaborateurNom } = collabFromSelect('ecoute-collab')
+  const opt = document.getElementById('ecoute-collab').selectedOptions[0]
+  const statFields = m.stats(opt && opt.dataset.poste)
 
-  const items = ECOUTE_ITEMS.map((label, i) => ({
-    label,
-    fait: document.getElementById('item-fait-' + i).checked,
-    plusMoins: document.getElementById('item-plus-moins-' + i).value,
-    apports: document.getElementById('item-apports-' + i).value,
-  }))
   const data = {
-    niveauCommercial: {
-      pm: document.getElementById('ecoute-pm').value,
-      txc: document.getElementById('ecoute-txc').value,
-      thirdLabel: document.getElementById('ecoute-third-label').textContent,
-      thirdVal: document.getElementById('ecoute-third').value,
-    },
-    items,
+    modele,
+    stats: readStatFields('ecoute-stats', statFields),
     plus: document.getElementById('ecoute-plus').value,
     axes: document.getElementById('ecoute-axes').value,
     apports: document.getElementById('ecoute-apports').value,
@@ -1440,28 +2355,70 @@ function previewEntretien(type) {
     signatureManager: getSignatureDataURL('sig-ecoute-manager'),
     signatureCollaborateur: getSignatureDataURL('sig-ecoute-collab'),
   }
-  const matricule = collabSelect.value
-  const collaborateurNom = matricule ? collabSelect.options[collabSelect.selectedIndex].text : ''
+  const suivis = []
+  if (isVierge) {
+    data.qualitatif = document.getElementById('ecoute-qualitatif').value
+    data.ecoutePlus = document.getElementById('ecoute-libre-plus').value
+    data.ecouteMoins = document.getElementById('ecoute-libre-moins').value
+    data.ecouteApports = document.getElementById('ecoute-libre-apports').value
+    data.objectifs = readStatFields('ecoute-objectifs', m.stats()).filter(o => o.val.trim() !== '')
+    data.objectifQualitatif = document.getElementById('ecoute-objectif-qualitatif').value
+    data.echeance = document.getElementById('ecoute-echeance').value
+    data.roleAccompagnement = document.getElementById('ecoute-role').value
+    const aObjectif = data.objectifs.length || data.objectifQualitatif.trim()
+    if (aObjectif && !data.echeance) { showToast("Merci d'indiquer l'échéance de l'objectif"); return }
+    if (aObjectif) {
+      const quanti = data.objectifs.map(o => `${o.label} ${o.val}${o.unit}`).join(' · ')
+      const libelle = 'Objectif SMART : ' + [quanti, data.objectifQualitatif.trim()].filter(Boolean).join(' — ')
+      suivis.push({ libelle, echeance: data.echeance })
+    }
+  } else {
+    data.items = readControlItems(m.items)
+    data.engagement = document.getElementById('ecoute-engagement').value.trim()
+    data.prochaineEcoute = document.getElementById('ecoute-prochaine').value
+    if (!data.prochaineEcoute) { showToast('Merci de fixer la date de la prochaine écoute'); return }
+    suivis.push({ libelle: data.engagement ? 'Engagement : ' + data.engagement : 'Prochaine écoute de vente', echeance: data.prochaineEcoute })
+  }
+  const reprises = readReprises('ecoute-reprise')
+  data.reprises = reprises
 
-  state.pending = { kind: 'entretien', type, remplipar, date, matricule, collaborateurNom, data, returnScreen: 'screen-ecoute-fb' }
+  state.pending = { kind: 'entretien', type: 'ecoute_fb', remplipar, date, matricule, collaborateurNom, data, suivis, reprises, returnScreen: 'screen-ecoute-fb' }
 
-  document.getElementById('preview-titre').textContent = 'Aperçu — Écoute & Feedback de vente'
-  document.getElementById('preview-content').innerHTML =
+  let html =
     previewRow('Magasin', state.currentMagasin ? state.currentMagasin.libelle : '') +
     previewRow('Collaborateur', collaborateurNom) +
     previewRow('Rempli par', remplipar) +
     previewRow('Date', formatDateFr(date)) +
-    previewRow('PM / TXC / ' + data.niveauCommercial.thirdLabel, `${data.niveauCommercial.pm || '—'} / ${data.niveauCommercial.txc || '—'} / ${data.niveauCommercial.thirdVal || '—'}`) +
-    `<div class="preview-block"><h3>Points de contrôle</h3>` +
-    items.map(it => `<div class="preview-item"><span class="${it.fait ? 'ok' : 'no'}">${it.fait ? '✓' : '✗'}</span> ${it.label}${it.plusMoins ? ' — ' + it.plusMoins : ''}${it.apports ? ' (' + it.apports + ')' : ''}</div>`).join('') +
-    `</div>` +
-    previewText('Ce qui va bien', data.plus) +
+    previewReprises(reprises) +
+    previewText(isVierge ? 'Focus sur les stratégies à améliorer' : 'Niveau commercial', statsLine(data.stats))
+  if (isVierge) {
+    html += previewText('Qualitatif', data.qualitatif) +
+      previewText('Écoute — les +', data.ecoutePlus) +
+      previewText('Écoute — les −', data.ecouteMoins) +
+      previewText('Écoute — apports pédagogiques', data.ecouteApports)
+  } else {
+    html += `<div class="preview-block"><h3>Points de contrôle</h3>` +
+      data.items.map(it => `<div class="preview-item"><span class="${it.fait ? 'ok' : 'no'}">${it.fait ? '✓' : '✗'}</span>${it.signe ? ` <b>${it.signe === '+' ? '+' : '−'}</b>` : ''} ${escapeHtmlClient(it.label)}${it.remarque ? ' — ' + escapeHtmlClient(it.remarque) : ''}${it.apports ? ' (' + escapeHtmlClient(it.apports) + ')' : ''}</div>`).join('') +
+      `</div>`
+  }
+  html += previewText('Ce qui va bien', data.plus) +
     previewText("Axes d'amélioration", data.axes) +
-    previewText('Apports pédagogiques', data.apports) +
-    previewText('Synthèse du collaborateur', data.synthese) +
-    previewSigBlock('Signature du manager', data.signatureManager) +
+    previewText('Apports pédagogiques', data.apports)
+  if (isVierge) {
+    html += previewText('Nouvel objectif SMART', statsLine(data.objectifs)) +
+      previewText('Objectif qualitatif', data.objectifQualitatif) +
+      previewRow("Échéance de l'objectif", formatDateFr(data.echeance)) +
+      previewText("Rôle d'accompagnement et de contrôle", data.roleAccompagnement)
+  }
+  html += previewText('Synthèse du collaborateur', data.synthese)
+  if (!isVierge) {
+    html += previewText('Engagement', data.engagement) + previewRow('Prochaine écoute', formatDateFr(data.prochaineEcoute))
+  }
+  html += previewSigBlock('Signature du manager', data.signatureManager) +
     previewSigBlock('Signature du collaborateur', data.signatureCollaborateur)
 
+  document.getElementById('preview-titre').textContent = 'Aperçu — ' + m.titre
+  document.getElementById('preview-content').innerHTML = html
   goTo('screen-preview')
 }
 
@@ -1483,6 +2440,14 @@ function previewPilotage() {
   const nbObjectifsRemplis = Object.values(nouveauxObjectifsRaw).filter(v => v.trim() !== '').length
   if (nbObjectifsRemplis > 4) { showToast('4 nouveaux objectifs maximum'); return }
   const echeance = document.getElementById('pilotage-echeance').value
+  // Échéance par objectif (26/09) — obligatoire pour chaque objectif rempli.
+  renderPilotageEcheances()
+  const echeancesObjectifs = {}
+  document.querySelectorAll('#pilotage-echeances input[type=date]').forEach(el => { echeancesObjectifs[el.dataset.key] = el.value })
+  const objectifsRemplis = fields.filter(f => (nouveauxObjectifsRaw[f.key] || '').trim() !== '')
+  if (objectifsRemplis.some(f => !echeancesObjectifs[f.key])) { showToast('Chaque nouvel objectif doit avoir une échéance'); return }
+  const suivis = objectifsRemplis.map(f => ({ libelle: `Objectif ${f.label} : ${nouveauxObjectifsRaw[f.key]}${f.unit || ''}`, echeance: echeancesObjectifs[f.key] }))
+  const reprises = readReprises('pilotage-reprise')
   const data = {
     statsActuelles,
     etape1: document.getElementById('pilotage-1').value,
@@ -1490,6 +2455,8 @@ function previewPilotage() {
     etape3: document.getElementById('pilotage-3').value,
     nouveauxObjectifs: nouveauxObjectifsRaw,
     echeance,
+    echeancesObjectifs,
+    reprises,
     etape5: document.getElementById('pilotage-5').value,
     etape6: document.getElementById('pilotage-6').value,
     etape7: document.getElementById('pilotage-7').value,
@@ -1499,7 +2466,7 @@ function previewPilotage() {
   const matricule = collabSelect.value
   const collaborateurNom = matricule ? collabSelect.options[collabSelect.selectedIndex].text : ''
 
-  state.pending = { kind: 'entretien', type, remplipar, date, matricule, collaborateurNom, data, returnScreen: 'screen-pilotage' }
+  state.pending = { kind: 'entretien', type, remplipar, date, matricule, collaborateurNom, data, suivis, reprises, returnScreen: 'screen-pilotage' }
 
   // N'affiche que les champs remplis (indicateurs "actuels" comme "objectifs")
   // — un champ vide n'a pas de sens à montrer, et c'est ce qui permet aux
@@ -1514,18 +2481,120 @@ function previewPilotage() {
     previewRow('Collaborateur', collaborateurNom) +
     previewRow('Rempli par', remplipar) +
     previewRow('Date', formatDateFr(date)) +
+    previewReprises(reprises) +
     previewText('Indicateurs actuels', gridLine(statsActuelles)) +
     previewText('1. Valoriser ce qui va bien', data.etape1) +
     previewText('2. Points à améliorer', data.etape2) +
     previewText('3. Recherche des causes', data.etape3) +
-    previewRow('Échéance des nouveaux objectifs', formatDateFr(echeance)) +
-    previewText('4. Nouveaux objectifs', gridLine(nouveauxObjectifsRaw)) +
+    previewText('4. Nouveaux objectifs', objectifsRemplis.map(f => `${f.label}: ${nouveauxObjectifsRaw[f.key]}${f.unit || ''} (échéance ${formatDateFr(echeancesObjectifs[f.key])})`).join(' · ') || '—') +
     previewText('5. Apport en formation / plan d\'action', data.etape5) +
     previewText('6. Rôle d\'accompagnement et de contrôle', data.etape6) +
     previewText('7. Validation', data.etape7) +
     previewSigBlock('Signature du manager', data.signatureManager) +
     previewSigBlock('Signature du collaborateur', data.signatureCollaborateur)
 
+  goTo('screen-preview')
+}
+
+// Valorisation (26/09) — aucun suivi daté (pas d'objectif par principe).
+// La préparation reste dans data (historique) mais n'est pas reprise dans le
+// PDF ni dans l'aperçu : ce sont les notes du manager, pas le compte-rendu.
+function previewValorisation() {
+  const remplipar = document.getElementById('valorisation-remplipar').value
+  const date = document.getElementById('valorisation-date').value
+  if (!remplipar || !date) { showToast('Merci de renseigner ton prénom et la date'); return }
+  const { matricule, collaborateurNom } = collabFromSelect('valorisation-collab')
+  const data = {
+    stats: readStatFields('valorisation-stats', VALORISATION_STATS),
+    evolution: document.getElementById('valorisation-evolution').value,
+    preparation: document.getElementById('valorisation-preparation').value,
+    etape1: document.getElementById('valorisation-1').value,
+    etape2: document.getElementById('valorisation-2').value,
+    etape3: document.getElementById('valorisation-3').value,
+    etape4: document.getElementById('valorisation-4').value,
+    etape5: document.getElementById('valorisation-5').value,
+    signatureManager: getSignatureDataURL('sig-valorisation-manager'),
+    signatureCollaborateur: getSignatureDataURL('sig-valorisation-collab'),
+  }
+  state.pending = { kind: 'entretien', type: 'valorisation', remplipar, date, matricule, collaborateurNom, data, suivis: [], reprises: [], returnScreen: 'screen-valorisation' }
+  document.getElementById('preview-titre').textContent = 'Aperçu — Entretien de valorisation'
+  document.getElementById('preview-content').innerHTML =
+    previewRow('Magasin', state.currentMagasin ? state.currentMagasin.libelle : '') +
+    previewRow('Collaborateur', collaborateurNom) +
+    previewRow('Rempli par', remplipar) +
+    previewRow('Date', formatDateFr(date)) +
+    previewText('Indicateurs', statsLine(data.stats)) +
+    previewText("L'évolution de sa tâche", data.evolution) +
+    previewText('1. Faire raconter', data.etape1) +
+    previewText('2. Écouter / reformuler', data.etape2) +
+    previewText("3. Valorisation de l'action / réussite", data.etape3) +
+    previewText('4. Ce qui a fait la différence', data.etape4) +
+    previewText('5. Complimenter', data.etape5) +
+    previewSigBlock('Signature du manager', data.signatureManager) +
+    previewSigBlock('Signature du collaborateur', data.signatureCollaborateur)
+  goTo('screen-preview')
+}
+
+function previewRemotivation() {
+  const remplipar = document.getElementById('remotivation-remplipar').value
+  const date = document.getElementById('remotivation-date').value
+  if (!remplipar || !date) { showToast('Merci de renseigner ton prénom et la date'); return }
+  const prochainPoint = document.getElementById('remotivation-prochain').value
+  if (!prochainPoint) { showToast('Merci de fixer la date du prochain point'); return }
+  const etapes = readEtapesRemotivation()
+  if (etapes.some(e => !e.echeance)) { showToast('Chaque étape du plan doit avoir une échéance'); return }
+  const { matricule, collaborateurNom } = collabFromSelect('remotivation-collab')
+  const retenueEl = document.querySelector('input[name="remotivation-retenue"]:checked')
+  const retenue = retenueEl ? Number(retenueEl.value) : null
+  const solutions = [0, 1, 2].map(i => ({
+    texte: document.getElementById('remotivation-solution-' + i).value.trim(), retenue: retenue === i,
+  })).filter(x => x.texte)
+  const reprises = readReprises('remotivation-reprise')
+  const data = {
+    preparation: document.getElementById('remotivation-preparation').value,
+    noteMotivation: state.remotivationNote,
+    quotidien: document.getElementById('remotivation-quotidien').value,
+    plait: document.getElementById('remotivation-plait').value,
+    perso: document.getElementById('remotivation-perso').value,
+    plaitMoins: document.getElementById('remotivation-plaitmoins').value,
+    manque: document.getElementById('remotivation-manque').value,
+    ecoute: document.getElementById('remotivation-ecoute').value,
+    solutions, etapes,
+    roleAccompagnement: document.getElementById('remotivation-accompagnement').value,
+    roleControle: document.getElementById('remotivation-controle').value,
+    valoriser: document.getElementById('remotivation-valoriser').value,
+    aide: document.getElementById('remotivation-aide').value,
+    prochainPoint, reprises,
+    signatureManager: getSignatureDataURL('sig-remotivation-manager'),
+    signatureCollaborateur: getSignatureDataURL('sig-remotivation-collab'),
+  }
+  const suivis = etapes.map(e => ({ libelle: `Étape : ${e.action} (${e.avecQui.toLowerCase()})`, echeance: e.echeance }))
+  suivis.push({ libelle: 'Prochain point de remotivation', echeance: prochainPoint })
+
+  state.pending = { kind: 'entretien', type: 'remotivation', remplipar, date, matricule, collaborateurNom, data, suivis, reprises, returnScreen: 'screen-remotivation' }
+  document.getElementById('preview-titre').textContent = 'Aperçu — Entretien de remotivation'
+  document.getElementById('preview-content').innerHTML =
+    previewRow('Magasin', state.currentMagasin ? state.currentMagasin.libelle : '') +
+    previewRow('Collaborateur', collaborateurNom) +
+    previewRow('Rempli par', remplipar) +
+    previewRow('Date', formatDateFr(date)) +
+    previewReprises(reprises) +
+    previewRow('Niveau de motivation', data.noteMotivation ? data.noteMotivation + ' / 10' : '') +
+    previewText('Son quotidien', data.quotidien) +
+    previewText('Ce qui lui plaît', data.plait) +
+    previewText('Au niveau perso', data.perso) +
+    previewText('Ce qui lui plaît moins', data.plaitMoins) +
+    previewText('Ce qui lui manque', data.manque) +
+    previewText('Écoute et reformulation', data.ecoute) +
+    (solutions.length ? `<div class="preview-block"><h3>Solutions envisagées</h3>` + solutions.map(x => `<div class="preview-item">${x.retenue ? '<span class="ok">✓ Retenue</span> ' : ''}${escapeHtmlClient(x.texte)}</div>`).join('') + `</div>` : '') +
+    (etapes.length ? `<div class="preview-block"><h3>Plan d'action</h3>` + etapes.map(e => `<div class="preview-item">${escapeHtmlClient(e.action)} — <b>${formatDateFr(e.echeance)}</b> — ${e.avecQui}</div>`).join('') + `</div>` : '') +
+    previewText("Mon rôle d'accompagnement", data.roleAccompagnement) +
+    previewText('Mon rôle de contrôle', data.roleControle) +
+    previewText('Valoriser, orienter vers le futur', data.valoriser) +
+    previewText('Comment je peux t\'aider', data.aide) +
+    previewRow('Prochain point', formatDateFr(prochainPoint)) +
+    previewSigBlock('Signature du manager', data.signatureManager) +
+    previewSigBlock('Signature du collaborateur', data.signatureCollaborateur)
   goTo('screen-preview')
 }
 
@@ -1699,12 +2768,14 @@ async function confirmSend() {
           type: pending.type, magasinCode: state.currentMagasin.code,
           collaborateurMatricule: pending.matricule || null, collaborateurNom: pending.collaborateurNom,
           remplipar: pending.remplipar, date: pending.date, data: pending.data,
+          suivis: pending.suivis || [], reprises: (pending.reprises || []).map(r => ({ id: r.id, statut: r.statut })),
           pdfBase64, pdfFilename,
         }),
       })
       if (!res.ok) throw new Error('erreur serveur')
       showToast('Envoyé — mail parti au magasin')
       state.pending = null
+      loadSuivisMagasin()
       goTo('screen-menu')
     } catch (e) {
       showToast('Échec de l\'envoi — vérifie ta connexion')
@@ -1812,6 +2883,15 @@ async function loadHistorique() {
   }
 }
 
+// 26/09 : libellé lisible (type + trame Écoute & Feedback) plutôt que le code brut.
+function libelleHistorique(e) {
+  const base = LIBELLES_TYPE_COURT[e.type] || e.type
+  if (e.type !== 'ecoute_fb') return base
+  const modele = (e.data_json && e.data_json.modele) || 'taux_concretisation'
+  const court = { taux_concretisation: 'Taux de concrét.', decouverte_optique: 'Découverte optique', decouverte_audio: 'Découverte audio', vierge: 'Vierge' }
+  return base + ' — ' + (court[modele] || modele)
+}
+
 // Recherche par magasin (17/09) — filtre côté client sur les données déjà
 // chargées (pas de nouvel appel réseau à chaque frappe), insensible à la
 // casse et aux accents.
@@ -1823,7 +2903,7 @@ function renderHistoriqueFiltered() {
   const lancements = (state.historiqueLancements || []).filter(l => matches(l.magasin_libelle))
 
   const entretiensHtml = renderGrouped(groupByYearMonth(entretiens), e =>
-    `<div class="search-item hist-item"><div><b>${e.type}</b> — ${e.magasin_libelle || ''} — ${e.collaborateur_nom || ''} — ${formatDateFr(e.date)} (${e.rempli_par})</div>` +
+    `<div class="search-item hist-item"><div><b>${libelleHistorique(e)}</b> — ${e.magasin_libelle || ''} — ${e.collaborateur_nom || ''} — ${formatDateFr(e.date)} (${e.rempli_par})</div>` +
     `<button type="button" class="btn-hist-pdf" onclick="event.stopPropagation(); regenerateHistoriquePdf('entretien', ${e.id})">📄 Voir le PDF</button></div>`
   )
   const lancementsHtml = renderGrouped(groupByYearMonth(lancements), l =>
