@@ -753,8 +753,8 @@ select,input,textarea,button{font-family:inherit}
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.09.26-2'
-const SW_VERSION = '2026.09.26-2'
+const APP_VERSION = '2026.09.27-1'
+const SW_VERSION = '2026.09.27-1'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://raw.githubusercontent.com/olibaroukh/bilan-passage/main/magasins.csv'
@@ -876,6 +876,10 @@ function validateConfirmMagasin() {
     return
   }
   document.getElementById('modal-confirm-magasin').style.display = 'none'
+  enterMagasin(m)
+}
+
+function enterMagasin(m) {
   state.currentMagasin = m
   state.pendingMagasin = null
   document.querySelectorAll('#menu-magasin-chip, #efb-choix-magasin-chip, #ecoute-magasin-chip, #pilotage-magasin-chip, #lancement-magasin-chip, #recadrage-magasin-chip, #valorisation-magasin-chip, #remotivation-magasin-chip')
@@ -2808,7 +2812,20 @@ async function confirmSend() {
 // ============================================================================
 // HISTORIQUE (login AR, réutilise /ar-login comme Bilan de Passage)
 // ============================================================================
-function openHistorique() { goTo('screen-historique') }
+function openHistorique() {
+  goTo('screen-historique')
+  // 27/09 : session AR reprise du dashboard -> pas de reconnexion.
+  if (state.arSession && document.getElementById('historique-liste').style.display === 'none') {
+    document.getElementById('historique-login').style.display = 'none'
+    document.getElementById('historique-liste').style.display = 'block'
+    loadHistorique().then(() => {
+      if (state.currentMagasin && state.arSession) {
+        document.getElementById('historique-search').value = state.currentMagasin.libelle
+        renderHistoriqueFiltered()
+      }
+    })
+  }
+}
 // 18/09 : l'Historique est accessible sans magasin sélectionné — le retour
 // va au menu du magasin si un magasin est en cours, sinon directement à
 // l'écran de sélection.
@@ -2873,6 +2890,14 @@ async function loadHistorique() {
     const res = await fetch(RELAY + '/historique-managers', {
       headers: { 'X-Store-Token': STORE_TOKEN, 'X-AR-Session': state.arSession }
     })
+    if (res.status === 401) {
+      // Session expirée (ex. reprise du dashboard) : retour au formulaire de connexion.
+      state.arSession = null
+      document.getElementById('historique-liste').style.display = 'none'
+      document.getElementById('historique-login').style.display = 'block'
+      showToast('Session expirée, reconnecte-toi')
+      return
+    }
     const data = await res.json()
     state.historiqueEntretiens = data.entretiens || []
     state.historiqueLancements = data.lancements || []
@@ -2917,7 +2942,39 @@ function renderHistoriqueFiltered() {
 // ============================================================================
 // INIT
 // ============================================================================
-loadMagasins()
+// 27/09 : ouverture depuis la fiche magasin du Dashboard réseau
+// (…/suivi-managers/?magasin=CODE). Le paramètre est lu une seule fois puis
+// retiré de l'adresse. Si la session AR du dashboard est valide (même domaine,
+// même jeton /ar-login) et couvre ce magasin, on entre directement dans le
+// magasin sans ressaisir le code site, et l'Historique ne redemande pas de
+// connexion. Sinon, la confirmation par code site s'affiche comme d'habitude.
+const DEEP_LINK_MAGASIN = (() => {
+  try {
+    const code = (new URLSearchParams(location.search).get('magasin') || '').trim()
+    if (code) history.replaceState(null, '', location.pathname)
+    return code || null
+  } catch (e) { return null }
+})()
+
+function dashboardSession() {
+  try {
+    const s = JSON.parse(localStorage.getItem('bilan_ar_session') || 'null')
+    return (s && s.token && s.ar && s.exp > Date.now()) ? s : null
+  } catch (e) { return null }
+}
+
+async function openDeepLinkMagasin() {
+  await loadMagasins()
+  if (!DEEP_LINK_MAGASIN) return
+  const m = state.magasins.find(x => String(x.code) === DEEP_LINK_MAGASIN)
+  if (!m) { showToast('Magasin ' + DEEP_LINK_MAGASIN + ' introuvable'); return }
+  const s = dashboardSession()
+  if (s) state.arSession = s.token
+  if (s && (s.ar === 'ALL' || s.ar === m.animateur)) enterMagasin(m)
+  else selectMagasin(m.code)
+}
+
+openDeepLinkMagasin()
 document.getElementById('lancement-date').value = new Date().toISOString().slice(0, 10)
 
 if ('serviceWorker' in navigator) {
