@@ -128,6 +128,14 @@
     border-radius:6px; padding:6px 10px; font-size:12px; font-weight:600;
   }
   .btn-hist-pdf:active{ border-color:var(--rouge); }
+  /* 29/09 : suppression (Olivier uniquement) + repérage des doublons probables */
+  .hist-btns{ display:flex; gap:6px; flex-shrink:0; }
+  .btn-hist-del{
+    flex-shrink:0; background:transparent; color:var(--rouge); border:1px solid var(--rouge);
+    border-radius:6px; padding:6px 10px; font-size:12px; font-weight:600;
+  }
+  .btn-hist-del:disabled{ opacity:.5; }
+  .hist-doublon{ display:inline-block; margin-left:6px; padding:1px 7px; border-radius:9px; font-size:11px; font-weight:700; background:#FCEBEA; color:var(--rouge); }
   .hint{ font-size:12px; color:var(--text-dim); margin-top:4px; }
   /* 18/09 : modal de confirmation du code site (type Kaizen) */
   .modal-overlay{
@@ -753,8 +761,8 @@ select,input,textarea,button{font-family:inherit}
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.09.27-1'
-const SW_VERSION = '2026.09.27-1'
+const APP_VERSION = '2026.09.29-1'
+const SW_VERSION = '2026.09.29-1'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://raw.githubusercontent.com/olibaroukh/bilan-passage/main/magasins.csv'
@@ -2843,6 +2851,7 @@ async function historiqueLogin() {
     const data = await res.json()
     if (!res.ok || !data.sessionToken) throw new Error('login refusé')
     state.arSession = data.sessionToken
+    state.arName = data.ar || null
     document.getElementById('historique-login').style.display = 'none'
     document.getElementById('historique-liste').style.display = 'block'
     await loadHistorique()
@@ -2893,6 +2902,7 @@ async function loadHistorique() {
     if (res.status === 401) {
       // Session expirée (ex. reprise du dashboard) : retour au formulaire de connexion.
       state.arSession = null
+      state.arName = null
       document.getElementById('historique-liste').style.display = 'none'
       document.getElementById('historique-login').style.display = 'block'
       showToast('Session expirée, reconnecte-toi')
@@ -2927,16 +2937,59 @@ function renderHistoriqueFiltered() {
   const entretiens = (state.historiqueEntretiens || []).filter(e => matches(e.magasin_libelle))
   const lancements = (state.historiqueLancements || []).filter(l => matches(l.magasin_libelle))
 
+  // 29/09 : doublons probables = même magasin + même date (+ même type et même
+  // collaborateur pour un entretien). Repérés sur tout l'historique chargé.
+  const cleE = e => [e.magasin_code || e.magasin_libelle, e.date, e.type, e.collaborateur_matricule || e.collaborateur_nom].join('|')
+  const cleL = l => [l.magasin_code || l.magasin_libelle, l.date].join('|')
+  const compte = (list, cle) => list.reduce((m, x) => { const k = cle(x); m[k] = (m[k] || 0) + 1; return m }, {})
+  const nbE = compte(state.historiqueEntretiens || [], cleE)
+  const nbL = compte(state.historiqueLancements || [], cleL)
+  const badge = n => n > 1 ? '<span class="hist-doublon">doublon probable</span>' : ''
+  const estAdmin = state.arName === 'ALL'
+  const boutons = (kind, id) =>
+    `<div class="hist-btns"><button type="button" class="btn-hist-pdf" onclick="event.stopPropagation(); regenerateHistoriquePdf('${kind}', ${id})">📄 Voir le PDF</button>` +
+    (estAdmin ? `<button type="button" class="btn-hist-del" onclick="event.stopPropagation(); supprimerHistorique('${kind}', ${id}, this)">🗑 Supprimer</button>` : '') + '</div>'
+
   const entretiensHtml = renderGrouped(groupByYearMonth(entretiens), e =>
-    `<div class="search-item hist-item"><div><b>${libelleHistorique(e)}</b> — ${e.magasin_libelle || ''} — ${e.collaborateur_nom || ''} — ${formatDateFr(e.date)} (${e.rempli_par})</div>` +
-    `<button type="button" class="btn-hist-pdf" onclick="event.stopPropagation(); regenerateHistoriquePdf('entretien', ${e.id})">📄 Voir le PDF</button></div>`
+    `<div class="search-item hist-item"><div><b>${libelleHistorique(e)}</b> — ${e.magasin_libelle || ''} — ${e.collaborateur_nom || ''} — ${formatDateFr(e.date)} (${e.rempli_par})${badge(nbE[cleE(e)])}</div>` +
+    boutons('entretien', e.id) + '</div>'
   )
   const lancementsHtml = renderGrouped(groupByYearMonth(lancements), l =>
-    `<div class="search-item hist-item"><div><b>Lancement</b> — ${l.magasin_libelle || ''} — ${formatDateFr(l.date)} (${l.rempli_par})</div>` +
-    `<button type="button" class="btn-hist-pdf" onclick="event.stopPropagation(); regenerateHistoriquePdf('lancement', ${l.id})">📄 Voir le PDF</button></div>`
+    `<div class="search-item hist-item"><div><b>Lancement</b> — ${l.magasin_libelle || ''} — ${formatDateFr(l.date)} (${l.rempli_par})${badge(nbL[cleL(l)])}</div>` +
+    boutons('lancement', l.id) + '</div>'
   )
   document.getElementById('historique-content').innerHTML =
     '<h3>Entretiens</h3>' + entretiensHtml + '<h3>Lancements de journée</h3>' + lancementsHtml
+}
+
+// Suppression (29/09) — réservée à Olivier (le Worker le vérifie aussi) : pour
+// retirer un doublon. Un entretien supprimé emporte les suivis datés qu'il avait créés.
+async function supprimerHistorique(kind, id, btn) {
+  const list = kind === 'entretien' ? state.historiqueEntretiens : state.historiqueLancements
+  const item = (list || []).find(x => x.id === id)
+  if (!item) return
+  const desc = kind === 'entretien'
+    ? `l'entretien « ${libelleHistorique(item)} » de ${item.collaborateur_nom || '—'} (${item.magasin_libelle || ''}, ${formatDateFr(item.date)})`
+    : `le lancement de journée de ${item.magasin_libelle || ''} du ${formatDateFr(item.date)}`
+  const detail = kind === 'entretien' ? '\n\nLes objectifs datés fixés dans cet entretien seront aussi supprimés.' : ''
+  if (!confirm(`Supprimer définitivement ${desc} ?${detail}\n\nCette action est irréversible.`)) return
+  if (btn) btn.disabled = true
+  try {
+    const res = await fetch(RELAY + '/historique-managers-supprimer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Store-Token': STORE_TOKEN, 'X-AR-Session': state.arSession },
+      body: JSON.stringify({ kind, id }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || !data.ok) throw new Error(data.error || ('Erreur ' + res.status))
+    if (kind === 'entretien') state.historiqueEntretiens = state.historiqueEntretiens.filter(x => x.id !== id)
+    else state.historiqueLancements = state.historiqueLancements.filter(x => x.id !== id)
+    renderHistoriqueFiltered()
+    showToast(kind === 'entretien' ? 'Entretien supprimé' : 'Lancement supprimé')
+  } catch (e) {
+    if (btn) btn.disabled = false
+    showToast('Suppression impossible : ' + e.message)
+  }
 }
 
 // ============================================================================
@@ -2969,7 +3022,7 @@ async function openDeepLinkMagasin() {
   const m = state.magasins.find(x => String(x.code) === DEEP_LINK_MAGASIN)
   if (!m) { showToast('Magasin ' + DEEP_LINK_MAGASIN + ' introuvable'); return }
   const s = dashboardSession()
-  if (s) state.arSession = s.token
+  if (s) { state.arSession = s.token; state.arName = s.ar }
   if (s && (s.ar === 'ALL' || s.ar === m.animateur)) enterMagasin(m)
   else selectMagasin(m.code)
 }
