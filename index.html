@@ -761,8 +761,8 @@ select,input,textarea,button{font-family:inherit}
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.09.29-1'
-const SW_VERSION = '2026.09.29-1'
+const APP_VERSION = '2026.10.02-1'
+const SW_VERSION = '2026.10.02-1'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://raw.githubusercontent.com/olibaroukh/bilan-passage/main/magasins.csv'
@@ -786,6 +786,7 @@ let state = {
 function goTo(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
   document.getElementById(id).classList.add('active')
+  majVeilleEcran(id)
 }
 function showToast(msg) {
   const t = document.getElementById('toast')
@@ -892,7 +893,7 @@ function enterMagasin(m) {
   state.pendingMagasin = null
   document.querySelectorAll('#menu-magasin-chip, #efb-choix-magasin-chip, #ecoute-magasin-chip, #pilotage-magasin-chip, #lancement-magasin-chip, #recadrage-magasin-chip, #valorisation-magasin-chip, #remotivation-magasin-chip')
     .forEach(el => el.textContent = m.libelle)
-  loadCollaborateurs(m.code)
+  state.collabPromise = loadCollaborateurs(m.code)
   loadSuivisMagasin()
   goTo('screen-menu')
 }
@@ -1566,17 +1567,19 @@ async function startEntretien(type) {
 
 // Récupère les stats collaborateur dès qu'un collaborateur est choisi dans l'écran Pilotage
 // (26/09 : pré-remplissage mutualisé dans fetchPrefill + reprise des suivis ouverts).
-document.getElementById('pilotage-collab').addEventListener('change', async (e) => {
-  const matricule = e.target.value
-  loadReprise('pilotage-reprise', state.currentType, matricule)
-  if (!matricule) return
+async function onPilotageCollabChange() {
+  const matricule = document.getElementById('pilotage-collab').value
+  const reprise = loadReprise('pilotage-reprise', state.currentType, matricule)
+  if (!matricule) return reprise
   const { prefill, stats } = await fetchPrefill(matricule)
   if (document.getElementById('pilotage-collab').value !== matricule) return
   renderPilotageStatsGrid('pilotage-stats-avant', state.currentType, prefill)
   document.getElementById('pilotage-stats-hint').textContent = stats
     ? `Stats pré-remplies (période ${stats.periode}) — modifiables.`
     : 'Pas de stats trouvées pour ce collaborateur — saisie libre.'
-})
+  await reprise
+}
+document.getElementById('pilotage-collab').addEventListener('change', onPilotageCollabChange)
 document.getElementById('pilotage-echeance').addEventListener('change', (e) => {
   document.querySelectorAll('#pilotage-echeances input[type=date]').forEach(el => { el.value = e.target.value })
 })
@@ -2786,6 +2789,7 @@ async function confirmSend() {
       })
       if (!res.ok) throw new Error('erreur serveur')
       showToast('Envoyé — mail parti au magasin')
+      supprimerBrouillon()
       state.pending = null
       loadSuivisMagasin()
       goTo('screen-menu')
@@ -2809,6 +2813,7 @@ async function confirmSend() {
       })
       if (!res.ok) throw new Error('erreur serveur')
       showToast('Envoyé — mail parti au magasin')
+      supprimerBrouillon()
       state.pending = null
       goTo('screen-menu')
     } catch (e) {
@@ -2993,6 +2998,263 @@ async function supprimerHistorique(kind, id, btn) {
 }
 
 // ============================================================================
+// BROUILLON AUTOMATIQUE + ÉCRAN ALLUMÉ (02/10) — retour terrain : une Écoute &
+// Feedback peut être longue, et si la tablette ou l'ordinateur se met en
+// veille, le navigateur peut recharger la page et la saisie était perdue.
+// 1) Tant qu'une trame est ouverte, l'écran est maintenu allumé (Wake Lock,
+//    si le navigateur le permet).
+// 2) Chaque saisie est enregistrée sur l'appareil (localStorage) : champs,
+//    boutons +/−, Fait/Pas fait, étapes, présents, signatures. Au retour, un
+//    bandeau propose de reprendre. Le brouillon est effacé après l'envoi.
+// Un seul brouillon à la fois, conservé 7 jours, jamais envoyé au serveur.
+// ============================================================================
+const BROUILLON_KEY = 'sm_brouillon'
+const BROUILLON_TTL_MS = 7 * 24 * 3600 * 1000
+const ECRANS_SAISIE = {
+  'screen-ecoute-fb': 'Écoute & Feedback',
+  'screen-pilotage': 'Pilotage',
+  'screen-valorisation': 'Valorisation',
+  'screen-remotivation': 'Remotivation',
+  'screen-recadrage': 'Recadrage',
+  'screen-lancement': 'Lancement de journée',
+}
+const CLASSES_ETAT = ['on-plus', 'on-moins', 'on-fait', 'on-pasfait']
+let brouillonTimer = null
+let restaurationEnCours = false
+
+function ecranActif() {
+  const el = document.querySelector('.screen.active')
+  return el ? el.id : null
+}
+
+function capturerBrouillon() {
+  const screenId = ecranActif()
+  if (!ECRANS_SAISIE[screenId] || !state.currentMagasin) return null
+  const screen = document.getElementById(screenId)
+  const champs = {}, parCle = {}, classes = [], ouverts = [], signatures = {}
+  screen.querySelectorAll('input, select, textarea').forEach(el => {
+    if (el.type === 'file' || el.type === 'button') return
+    const val = (el.type === 'checkbox' || el.type === 'radio') ? el.checked : el.value
+    if (el.id) {
+      if (/^etape-/.test(el.id) || el.closest('#lancement-presents')) return
+      champs[el.id] = val
+    } else if (el.dataset.key) {
+      const parent = el.parentElement && el.parentElement.closest('[id]')
+      if (parent) parCle[parent.id + '|' + el.dataset.key] = val
+    }
+  })
+  screen.querySelectorAll('button[id]').forEach(b => {
+    const on = CLASSES_ETAT.filter(c => b.classList.contains(c))
+    if (on.length) classes.push([b.id, on])
+  })
+  screen.querySelectorAll('.ctrl-notes.open[id]').forEach(el => ouverts.push(el.id))
+  screen.querySelectorAll('canvas[id]').forEach(c => {
+    const pad = sigPads[c.id]
+    if (pad && pad.hasInk) { try { signatures[c.id] = c.toDataURL('image/png') } catch (e) {} }
+  })
+  const etapes = screenId === 'screen-remotivation'
+    ? [...document.querySelectorAll('#remotivation-etapes .etape-row')].map(row => {
+        const id = row.dataset.etapeId
+        return {
+          action: document.getElementById('etape-action-' + id).value,
+          echeance: document.getElementById('etape-echeance-' + id).value,
+          avecQui: document.getElementById('etape-avecqui-' + id).value,
+        }
+      }) : null
+  const presents = screenId === 'screen-lancement'
+    ? [...document.querySelectorAll('#lancement-presents input[type=checkbox]')].map(cb => ({ nom: cb.value, coche: cb.checked }))
+    : null
+  const collabSel = screen.querySelector('select[id$="-collab"]')
+  const collabNom = collabSel && collabSel.value && collabSel.selectedOptions[0] ? collabSel.selectedOptions[0].textContent : ''
+  return {
+    v: 1, savedAt: Date.now(), screenId, type: state.currentType || null, modele: state.currentModele || null,
+    magasinCode: state.currentMagasin.code, magasinLibelle: state.currentMagasin.libelle, collabNom,
+    champs, parCle, classes, ouverts, signatures, etapes, presents,
+    remotivationNote: screenId === 'screen-remotivation' ? (state.remotivationNote || null) : null,
+  }
+}
+
+function enregistrerBrouillon() {
+  clearTimeout(brouillonTimer)
+  if (restaurationEnCours) return
+  const d = capturerBrouillon()
+  if (!d) return
+  try { localStorage.setItem(BROUILLON_KEY, JSON.stringify(d)) }
+  catch (e) {
+    // Quota dépassé (signatures lourdes) : on garde au moins le texte saisi.
+    try { d.signatures = {}; localStorage.setItem(BROUILLON_KEY, JSON.stringify(d)) } catch (e2) {}
+  }
+}
+function planifierBrouillon() {
+  if (restaurationEnCours || !ECRANS_SAISIE[ecranActif()]) return
+  clearTimeout(brouillonTimer)
+  brouillonTimer = setTimeout(enregistrerBrouillon, 600)
+}
+function lireBrouillon() {
+  try {
+    const d = JSON.parse(localStorage.getItem(BROUILLON_KEY) || 'null')
+    if (!d || !d.savedAt || Date.now() - d.savedAt > BROUILLON_TTL_MS) return null
+    return d
+  } catch (e) { return null }
+}
+function supprimerBrouillon() {
+  clearTimeout(brouillonTimer)
+  try { localStorage.removeItem(BROUILLON_KEY) } catch (e) {}
+  const b = document.getElementById('brouillon-bandeau')
+  if (b) b.remove()
+}
+
+document.addEventListener('input', planifierBrouillon, true)
+document.addEventListener('change', planifierBrouillon, true)
+document.addEventListener('click', () => setTimeout(planifierBrouillon, 0), true)
+document.addEventListener('mouseup', planifierBrouillon, true)
+document.addEventListener('touchend', planifierBrouillon, true)
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') enregistrerBrouillon()
+  else majVeilleEcran(ecranActif())
+})
+window.addEventListener('pagehide', enregistrerBrouillon)
+
+function appliquerValeurs(screen, d) {
+  for (const [id, val] of Object.entries(d.champs || {})) {
+    const el = document.getElementById(id)
+    if (!el || !screen.contains(el)) continue
+    if (el.type === 'checkbox' || el.type === 'radio') el.checked = !!val
+    else el.value = val
+  }
+  for (const [cle, val] of Object.entries(d.parCle || {})) {
+    const [parentId, key] = cle.split('|')
+    const parent = document.getElementById(parentId)
+    const el = parent && [...parent.querySelectorAll('[data-key]')].find(x => x.dataset.key === key && /INPUT|SELECT|TEXTAREA/.test(x.tagName))
+    if (!el) continue
+    if (el.type === 'checkbox' || el.type === 'radio') el.checked = !!val
+    else el.value = val
+  }
+}
+
+function dessinerSignature(canvasId, dataUrl) {
+  return new Promise(resolve => {
+    const canvas = document.getElementById(canvasId)
+    const pad = sigPads[canvasId]
+    if (!canvas || !pad) return resolve()
+    const img = new Image()
+    img.onload = () => {
+      const r = canvas.getBoundingClientRect()
+      pad.ctx.drawImage(img, 0, 0, r.width, r.height)
+      pad.hasInk = true
+      resolve()
+    }
+    img.onerror = () => resolve()
+    img.src = dataUrl
+  })
+}
+
+async function reprendreBrouillon() {
+  const d = lireBrouillon()
+  const bandeau = document.getElementById('brouillon-bandeau')
+  if (bandeau) bandeau.remove()
+  if (!d) return
+  const m = state.magasins.find(x => String(x.code) === String(d.magasinCode))
+  if (!m) { showToast('Magasin du brouillon introuvable'); return }
+  restaurationEnCours = true
+  try {
+    if (!state.currentMagasin || String(state.currentMagasin.code) !== String(d.magasinCode)) enterMagasin(m)
+    if (state.collabPromise) await state.collabPromise
+    const collabVal = (d.champs || {})[{ 'screen-ecoute-fb': 'ecoute-collab', 'screen-pilotage': 'pilotage-collab',
+      'screen-valorisation': 'valorisation-collab', 'screen-remotivation': 'remotivation-collab', 'screen-recadrage': 'recadrage-collab' }[d.screenId]]
+    const setCollab = (id) => { const sel = document.getElementById(id); if (sel && collabVal != null) sel.value = collabVal; return sel ? sel.value : '' }
+    if (d.screenId === 'screen-ecoute-fb') {
+      await startEcoute(d.modele || 'vierge')
+      setCollab('ecoute-collab'); await onEcouteCollabChange()
+    } else if (d.screenId === 'screen-pilotage') {
+      await startEntretien(d.type || 'pilotage_optique')
+      setCollab('pilotage-collab'); await onPilotageCollabChange()
+    } else if (d.screenId === 'screen-valorisation') {
+      startValorisation()
+      const v = setCollab('valorisation-collab'); await onValorisationCollabChange(v)
+    } else if (d.screenId === 'screen-remotivation') {
+      startRemotivation()
+      const v = setCollab('remotivation-collab'); await loadReprise('remotivation-reprise', 'remotivation', v)
+      renderRemotivationNote(d.remotivationNote || null)
+      if (d.etapes && d.etapes.length) {
+        document.getElementById('remotivation-etapes').innerHTML = ''
+        d.etapes.forEach(e => {
+          ajouterEtapeRemotivation()
+          const id = etapeSeq
+          document.getElementById('etape-action-' + id).value = e.action || ''
+          document.getElementById('etape-echeance-' + id).value = e.echeance || ''
+          document.getElementById('etape-avecqui-' + id).value = e.avecQui || AVEC_QUI[0]
+        })
+      }
+    } else if (d.screenId === 'screen-recadrage') {
+      await startRecadrage()
+    } else if (d.screenId === 'screen-lancement') {
+      await startLancement()
+      const box = document.getElementById('lancement-presents')
+      ;(d.presents || []).forEach(p => {
+        let cb = [...box.querySelectorAll('input[type=checkbox]')].find(x => x.value === p.nom)
+        if (!cb && p.coche) {
+          document.getElementById('lancement-presents-libre').value = p.nom
+          ajouterPresentLibre()
+          cb = [...box.querySelectorAll('input[type=checkbox]')].find(x => x.value === p.nom)
+        }
+        if (cb) cb.checked = !!p.coche
+      })
+    } else return
+    const screen = document.getElementById(d.screenId)
+    appliquerValeurs(screen, d)
+    if (d.screenId === 'screen-pilotage') renderPilotageEcheances()
+    appliquerValeurs(screen, d) // 2e passe : champs créés à partir des premières valeurs (échéances)
+    for (const [id, cls] of d.classes || []) {
+      const b = document.getElementById(id)
+      if (b) cls.forEach(c => b.classList.add(c))
+    }
+    for (const id of d.ouverts || []) { const el = document.getElementById(id); if (el) el.classList.add('open') }
+    screen.querySelectorAll('[id^="ctrl-notebtn-"]').forEach(b => refreshNoteBtn(b.id.replace('ctrl-notebtn-', '')))
+    for (const [id, url] of Object.entries(d.signatures || {})) await dessinerSignature(id, url)
+    showToast('Saisie reprise — vérifie avant d\'envoyer')
+  } catch (e) {
+    console.warn('Reprise du brouillon impossible', e)
+    showToast('Reprise impossible — le brouillon est conservé')
+  } finally {
+    restaurationEnCours = false
+    enregistrerBrouillon()
+  }
+}
+
+function proposerBrouillon() {
+  const d = lireBrouillon()
+  if (!d || document.getElementById('brouillon-bandeau')) return
+  const quand = new Date(d.savedAt)
+  const heure = quand.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' à ' + quand.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+  const div = document.createElement('div')
+  div.id = 'brouillon-bandeau'
+  div.style.cssText = 'position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));z-index:200;max-width:520px;margin:0 auto;' +
+    'background:#1b1b1b;border:1px solid var(--rouge);border-radius:14px;padding:14px 16px;box-shadow:0 12px 30px rgba(0,0,0,.6);font-size:14px;line-height:1.45'
+  div.innerHTML = '<div style="font-weight:700;margin-bottom:4px">Saisie non envoyée retrouvée</div>' +
+    '<div style="color:#bbb;font-size:13px">' + escapeHtmlClient(ECRANS_SAISIE[d.screenId] || 'Trame') + ' · ' + escapeHtmlClient(d.magasinLibelle || '') +
+    (d.collabNom ? ' · ' + escapeHtmlClient(d.collabNom) : '') + '<br>Dernière modification le ' + heure + '</div>' +
+    '<div style="display:flex;gap:8px;margin-top:12px">' +
+    '<button type="button" class="btn-secondary" style="margin:0;flex:1" onclick="if(confirm(\'Supprimer définitivement cette saisie ?\')) supprimerBrouillon()">Supprimer</button>' +
+    '<button type="button" class="btn-primary" style="margin:0;flex:1" onclick="reprendreBrouillon()">Reprendre</button></div>'
+  document.body.appendChild(div)
+}
+
+// Écran maintenu allumé pendant une trame (Safari 16.4+, Chrome, Edge).
+let verrouVeille = null
+async function majVeilleEcran(screenId) {
+  const veut = !!ECRANS_SAISIE[screenId] && document.visibilityState === 'visible'
+  try {
+    if (veut && !verrouVeille && 'wakeLock' in navigator) {
+      verrouVeille = await navigator.wakeLock.request('screen')
+      verrouVeille.addEventListener('release', () => { verrouVeille = null })
+    } else if (!veut && verrouVeille) {
+      const v = verrouVeille; verrouVeille = null; await v.release()
+    }
+  } catch (e) { verrouVeille = null }
+}
+
+// ============================================================================
 // INIT
 // ============================================================================
 // 27/09 : ouverture depuis la fiche magasin du Dashboard réseau
@@ -3027,7 +3289,7 @@ async function openDeepLinkMagasin() {
   else selectMagasin(m.code)
 }
 
-openDeepLinkMagasin()
+openDeepLinkMagasin().then(proposerBrouillon)
 document.getElementById('lancement-date').value = new Date().toISOString().slice(0, 10)
 
 if ('serviceWorker' in navigator) {
