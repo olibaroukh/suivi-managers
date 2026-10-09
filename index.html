@@ -731,7 +731,7 @@ select,input,textarea,button{font-family:inherit}
     <h2 id="preview-titre">Aperçu</h2>
     <div id="preview-content"></div>
     <button class="btn-secondary" onclick="previewPdfDoc()">📄 Prévisualiser le PDF</button>
-    <button class="btn-primary" onclick="confirmSend()">Confirmer l'envoi</button>
+    <button class="btn-primary" id="btn-confirm-send" onclick="confirmSend()">Confirmer l'envoi</button>
   </section>
 
   <!-- ============ HISTORIQUE (login AR) ============ -->
@@ -761,8 +761,8 @@ select,input,textarea,button{font-family:inherit}
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.10.02-1'
-const SW_VERSION = '2026.10.02-1'
+const APP_VERSION = '2026.10.09-1'
+const SW_VERSION = '2026.10.09-1'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://raw.githubusercontent.com/olibaroukh/bilan-passage/main/magasins.csv'
@@ -2757,7 +2757,20 @@ function backFromPreview() {
 // ============================================================================
 // ENVOI — appelé uniquement depuis l'écran d'aperçu, après confirmation
 // ============================================================================
+// 09/10 (anti-doublons) : le bouton est bloqué pendant tout l'envoi (PDF +
+// mail = plusieurs secondes) — un 2e appui créait un 2e enregistrement.
+let envoiEnCours = false
+function setEnvoiEnCours(actif) {
+  envoiEnCours = actif
+  const b = document.getElementById('btn-confirm-send')
+  if (b) { b.disabled = actif; b.textContent = actif ? 'Envoi en cours…' : 'Confirmer l\'envoi' }
+}
 async function confirmSend() {
+  if (envoiEnCours) return
+  setEnvoiEnCours(true)
+  try { await confirmSendInterne() } finally { setEnvoiEnCours(false) }
+}
+async function confirmSendInterne() {
   const pending = state.pending
   if (!pending) { goTo('screen-menu'); return }
 
@@ -2788,7 +2801,8 @@ async function confirmSend() {
         }),
       })
       if (!res.ok) throw new Error('erreur serveur')
-      showToast('Envoyé — mail parti au magasin')
+      const rep = await res.json().catch(() => ({}))
+      showToast(rep.deja ? 'Déjà enregistré aujourd\'hui pour ce collaborateur — aucun doublon créé' : 'Envoyé — mail parti au magasin')
       supprimerBrouillon()
       state.pending = null
       loadSuivisMagasin()
@@ -2812,7 +2826,8 @@ async function confirmSend() {
         }),
       })
       if (!res.ok) throw new Error('erreur serveur')
-      showToast('Envoyé — mail parti au magasin')
+      const rep = await res.json().catch(() => ({}))
+      showToast(rep.deja ? 'Lancement déjà enregistré aujourd\'hui pour ce magasin — aucun doublon créé' : 'Envoyé — mail parti au magasin')
       supprimerBrouillon()
       state.pending = null
       goTo('screen-menu')
