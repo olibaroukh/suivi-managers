@@ -231,6 +231,45 @@
   .reprise-box, .suivis-bandeau{ background:var(--card); border:1px solid var(--card-border); border-left:3px solid var(--rouge); border-radius:8px; padding:10px 12px; margin:12px 0; }
   .reprise-box h3, .suivis-bandeau h3{ margin:0 0 6px; color:var(--rouge); font-size:15px; }
   .suivi-row{ display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid var(--card-border); font-size:13px; }
+  /* 13/10 : score santé du magasin, consultable par le manager. */
+  .btn-menu.score-teaser{ border-left:3px solid var(--rouge); }
+  .btn-menu.score-teaser b{ color:var(--creme); }
+  .score-tabs{ display:flex; gap:0; margin:4px 0 14px; }
+  .score-tabs button{ flex:1; margin:0; padding:9px 10px; font-size:14px; background:var(--card); color:var(--text-dim); border:1px solid var(--card-border); border-radius:0; }
+  .score-tabs button:first-child{ border-radius:8px 0 0 8px; }
+  .score-tabs button:last-child{ border-radius:0 8px 8px 0; border-left:none; }
+  .score-tabs button.on{ background:var(--rouge); color:#fff; border-color:var(--rouge); }
+  .score-hero{ background:var(--card); border:1px solid var(--card-border); border-radius:12px; padding:16px; margin-bottom:12px; }
+  .score-hero .sh-top{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .score-hero .sh-val{ font-size:44px; font-weight:800; line-height:1; }
+  .score-hero .sh-val small{ font-size:16px; font-weight:600; color:var(--text-dim); }
+  .score-hero .sh-lib{ font-size:13px; color:var(--text-dim); margin-top:6px; }
+  .score-hero .sh-delta{ font-size:13px; font-weight:700; text-align:right; }
+  .score-hist{ display:flex; align-items:flex-end; gap:4px; height:64px; margin-top:14px; }
+  .score-hist .sb{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; min-width:0; }
+  .score-hist .sb i{ display:block; width:100%; border-radius:3px 3px 0 0; background:#3A3A38; }
+  .score-hist .sb.cur i{ background:var(--rouge); }
+  .score-hist .sb span{ font-size:9px; color:var(--text-dim); margin-top:3px; white-space:nowrap; overflow:hidden; max-width:100%; }
+  .score-hist .sb em{ font-style:normal; font-size:9px; color:var(--creme); margin-bottom:2px; }
+  .score-mois-sel{ margin:0 0 12px; }
+  .dim-card{ background:var(--card); border:1px solid var(--card-border); border-radius:10px; padding:12px; margin-bottom:8px; }
+  .dim-card .dc-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .dim-card .dc-nom{ font-weight:700; font-size:14px; }
+  .dim-card .dc-gain{ flex-shrink:0; font-size:12px; font-weight:800; color:#fff; background:var(--rouge); border-radius:20px; padding:3px 9px; }
+  .dim-card .dc-gain.zero{ background:#2E7D4F; }
+  .dim-card .dc-bar{ height:6px; background:#2C2C2A; border-radius:3px; margin:8px 0 4px; overflow:hidden; }
+  .dim-card .dc-bar i{ display:block; height:100%; border-radius:3px; }
+  .dim-card .dc-meta{ font-size:11px; color:var(--text-dim); }
+  .dim-card .dc-constat{ font-size:13px; margin-top:8px; }
+  .dim-card .dc-conseil{ font-size:13px; margin-top:6px; padding:8px 10px; background:rgba(226,35,26,0.08); border-left:3px solid var(--rouge); border-radius:0 6px 6px 0; }
+  .dim-card .dc-liste{ margin:6px 0 0; padding-left:18px; font-size:12px; color:var(--text-dim); }
+  .dim-card.hors{ opacity:.7; }
+  .score-section-title{ font-size:12px; font-weight:700; color:var(--text-dim); text-transform:uppercase; letter-spacing:.05em; margin:16px 0 8px; }
+  details.score-calcul{ background:var(--card); border:1px solid var(--card-border); border-radius:10px; padding:10px 12px; margin-top:14px; font-size:13px; }
+  details.score-calcul summary{ cursor:pointer; font-weight:700; color:var(--rouge); }
+  details.score-calcul table{ width:100%; border-collapse:collapse; margin-top:8px; font-size:12px; }
+  details.score-calcul td{ padding:4px 0; border-bottom:1px solid var(--card-border); }
+  details.score-calcul td:last-child{ text-align:right; font-weight:700; }
   .suivi-row:last-child{ border-bottom:none; }
   .suivi-row .suivi-txt{ flex:1; }
   .suivi-row .suivi-meta{ display:block; font-size:11px; color:var(--text-dim); margin-top:2px; }
@@ -320,6 +359,7 @@ select,input,textarea,button{font-family:inherit}
     <!-- 26/09 : bandeau « À suivre » — objectifs d'entretien en retard ou à
          échéance dans les 7 jours, chargé à chaque sélection du magasin. -->
     <div id="suivis-bandeau"></div>
+    <button class="btn-menu score-teaser" onclick="openScoreMagasin()">📈 Score santé du magasin<span id="score-teaser-sub">Chargement…</span></button>
     <h2>Que veux-tu réaliser ?</h2>
     <button class="btn-menu" onclick="goTo('screen-efb-choix')">Écoute &amp; Feedback de vente<span>4 trames : taux de concrétisation, découverte optique / audio, vierge</span></button>
     <button class="btn-menu" onclick="startEntretien('pilotage_optique')">Pilotage Optique<span>Entretien de pilotage, 7 étapes</span></button>
@@ -735,6 +775,18 @@ select,input,textarea,button{font-family:inherit}
   </section>
 
   <!-- ============ HISTORIQUE (login AR) ============ -->
+  <!-- ============ SCORE SANTÉ DU MAGASIN (13/10) ============ -->
+  <section class="screen" id="screen-score">
+    <div class="top-nav"><button onclick="goTo('screen-menu')">← Retour au menu</button></div>
+    <div class="chip" id="score-magasin-chip"></div>
+    <h2>Score santé du magasin</h2>
+    <div class="score-tabs">
+      <button type="button" id="score-tab-hebdo" class="on" onclick="setScoreMode('hebdo')">Semaine</button>
+      <button type="button" id="score-tab-mensuel" onclick="setScoreMode('mensuel')">Mois</button>
+    </div>
+    <div id="score-content"><p class="hint">Chargement…</p></div>
+  </section>
+
   <section class="screen" id="screen-historique">
     <div class="top-nav"><button onclick="backFromHistorique()">← Retour</button></div>
     <h2>Historique</h2>
@@ -761,7 +813,7 @@ select,input,textarea,button{font-family:inherit}
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.10.09-1'
+const APP_VERSION = '2026.10.13-1'
 const SW_VERSION = '2026.10.09-1'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
@@ -895,6 +947,7 @@ function enterMagasin(m) {
     .forEach(el => el.textContent = m.libelle)
   state.collabPromise = loadCollaborateurs(m.code)
   loadSuivisMagasin()
+  loadScoreMagasin()
   goTo('screen-menu')
 }
 
@@ -1385,6 +1438,343 @@ function startRemotivation() {
 const LIBELLES_TYPE_COURT = {
   ecoute_fb: 'Écoute & Feedback', pilotage_optique: 'Pilotage Optique', pilotage_audio: 'Pilotage Audio',
   valorisation: 'Valorisation', remotivation: 'Remotivation', recadrage: 'Recadrage',
+}
+
+// ============================================================================
+// SCORE SANTÉ DU MAGASIN (13/10) — consultable par le manager. Hebdo (même
+// calcul que le dashboard des AR) et mensuel (score « primes » : mois en cours
+// en aperçu, mois calculés tels qu'enregistrés). Pour chaque dimension : ce
+// qu'elle rapporte, combien de points sont encore à gagner, et comment.
+// Pas de contrôle d'accès pour le moment (décision d'Olivier).
+// ============================================================================
+const SCORE_DIMS = {
+  actions:        'Actions du bilan de passage',
+  effectif:       'Effectif',
+  absenteisme:    'Absentéisme',
+  positionnement: 'Positionnement CA annuel',
+  pedlv:          'Indicateurs PEDLV',
+  avis:           'Avis Google',
+  equipe:         'Niveau équipe',
+  kaizen:         'Kaizen (audit 5S)',
+  entretiens:     'Entretiens individuels',
+  lancements:     'Lancements de journée',
+}
+const SCORE_PEDLV_LABELS = {
+  pm: 'Panier moyen optique', tc: '% Concrétisation', sop: '% SOP', mdc: '% MdC',
+  pack: '% Pack Confort', pmpc: 'PM Pack Confort', ta: '% Test auditif', tva: '% Vente add. audio',
+}
+const SCORE_PEDLV_UNITES = { pm: ' €', pmpc: ' €' }
+const MOIS_NOMS_SCORE = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre']
+
+function scoreFmt(n, dec = 0) {
+  if (n === null || n === undefined || !isFinite(Number(n))) return '—'
+  const f = Math.pow(10, dec)
+  return String(Math.round(Number(n) * f) / f).replace('.', ',')
+}
+function scoreCouleur(s) {
+  if (s === null || s === undefined) return 'var(--text-dim)'
+  return s >= 75 ? '#3FAE6A' : (s >= 50 ? '#E8A33D' : 'var(--rouge)')
+}
+function scoreMoisLabel(mois) {
+  const [y, m] = String(mois || '').split('-')
+  return (MOIS_NOMS_SCORE[parseInt(m, 10) - 1] || mois) + ' ' + (y || '')
+}
+
+async function loadScoreMagasin() {
+  const sub = document.getElementById('score-teaser-sub')
+  state.scoreMagasin = null
+  if (sub) sub.textContent = 'Chargement…'
+  if (!state.currentMagasin) return
+  const code = state.currentMagasin.code
+  try {
+    const res = await fetch(RELAY + '/score-magasin?magasin_code=' + encodeURIComponent(code), { headers: { 'X-Store-Token': STORE_TOKEN } })
+    const data = await res.json()
+    if (!state.currentMagasin || state.currentMagasin.code !== code) return
+    if (!res.ok || !data.ok) throw new Error(data.error || ('Erreur ' + res.status))
+    state.scoreMagasin = data
+    const h = data.hebdo && data.hebdo.score
+    const m = data.mensuel && data.mensuel.enCours && data.mensuel.enCours.score
+    if (sub) sub.innerHTML = `Semaine : <b>${h === null || h === undefined ? '—' : h + '/100'}</b> · Mois en cours : <b>${m === null || m === undefined ? '—' : m + '/100'}</b> — voir où gagner des points`
+    if (document.getElementById('screen-score').classList.contains('active')) renderScoreMagasin()
+  } catch (e) {
+    if (sub) sub.textContent = 'Score indisponible pour le moment'
+    if (document.getElementById('screen-score').classList.contains('active')) {
+      document.getElementById('score-content').innerHTML = '<p class="hint">Score indisponible pour le moment (réseau ou serveur). Réessaie dans quelques instants.</p>'
+    }
+  }
+}
+
+function openScoreMagasin() {
+  if (!state.currentMagasin) return
+  document.getElementById('score-magasin-chip').textContent = state.currentMagasin.libelle
+  state.scoreMode = state.scoreMode || 'hebdo'
+  goTo('screen-score')
+  window.scrollTo(0, 0)
+  if (state.scoreMagasin) renderScoreMagasin()
+  else { document.getElementById('score-content').innerHTML = '<p class="hint">Chargement…</p>'; loadScoreMagasin() }
+}
+
+function setScoreMode(mode) {
+  state.scoreMode = mode
+  renderScoreMagasin()
+}
+function setScoreMois(mois) {
+  state.scoreMois = mois
+  renderScoreMagasin()
+}
+
+// Points de score gagnés si la dimension montait à 100, compte tenu des
+// dimensions effectivement comptées (même formule que le calcul du score).
+function scoreLignes(sous, poids, horsCalcul) {
+  const comptees = Object.keys(SCORE_DIMS).filter(d => !horsCalcul[d] && sous[d] !== null && sous[d] !== undefined && Number(poids[d]) > 0)
+  const possible = comptees.reduce((s, d) => s + Number(poids[d]), 0)
+  return Object.keys(SCORE_DIMS).map(d => {
+    const p = Number(poids[d]) || 0
+    const compte = comptees.includes(d)
+    const v = compte ? Number(sous[d]) : null
+    return {
+      d, poids: p, sous: v, compte, hors: horsCalcul[d] || null,
+      apporte: compte && possible ? v * p / possible : 0,
+      max: compte && possible ? 100 * p / possible : 0,
+      gain: compte && possible ? (100 - v) * p / possible : 0,
+    }
+  })
+}
+
+// Constat (ce que disent les données) et conseil (comment gagner des points),
+// à partir des détails hebdo ou des entrées du mois.
+function scoreExplication(d, mode, ctx, ligne) {
+  const H = mode === 'hebdo' ? (ctx.details || {}) : null
+  const E = mode === 'mensuel' ? (ctx.entrees || {}) : null
+  const pedlvHebdo = (state.scoreMagasin && state.scoreMagasin.hebdo && state.scoreMagasin.hebdo.details && state.scoreMagasin.hebdo.details.pedlv) || null
+  const out = { constat: '', conseil: '', liste: [] }
+  const gainDim = (pts) => ligne.compte && ligne.poids ? scoreFmt(pts * ligne.max / 100, 1) : null
+  switch (d) {
+    case 'actions': {
+      const a = H ? H.actions : (E.bilan ? { reportees: E.bilan.actionsReportees, aFaire: E.bilan.actionsAFaire } : null)
+      if (!a) {
+        out.constat = mode === 'hebdo' ? 'Aucun bilan de passage enregistré pour le magasin.' : (ctx.enCours ? 'Pas encore de bilan de passage ce mois-ci : la dimension vaut 0 pour l\'instant.' : 'Aucun bilan de passage ce mois-ci : la dimension vaut 0 (elle peut être neutralisée si ton animateur n\'a pas pu passer).')
+        out.conseil = 'Elle se remplit au prochain passage de ton animateur réseau.'
+        break
+      }
+      const enCours = (a.reportees || 0) - (a.aFaire || 0)
+      out.constat = a.reportees
+        ? `${a.reportees} action(s) du bilan précédent reportée(s) : ${a.aFaire || 0} pas commencée(s), ${enCours} en cours.`
+        : 'Aucune action du bilan précédent reportée : dimension au maximum.'
+      if (a.reportees) out.conseil = `Chaque action reportée coûte 25 pts sur cette dimension si elle n'est pas commencée, 15 si elle est en cours (soit jusqu'à +${gainDim(25)} pt sur le score par action). Solde les actions du dernier bilan avant le prochain passage.`
+      if (H && H.actions && H.actions.items) out.liste = H.actions.items.slice(0, 6).map(x => x.text + (x.status === 'todo' ? ' (pas commencée)' : ''))
+      if (H && H.dernierBilan) out.constat += ` Dernier bilan le ${formatDateFr(H.dernierBilan)}.`
+      break
+    }
+    case 'effectif': {
+      const e = H ? H.effectif : E.effectif
+      const theo = H ? null : E.effTheo
+      if (!e) { out.constat = 'Pas de donnée d\'effectif.'; break }
+      const delta = e.delta
+      out.constat = H ? `Effectif : ${e.label || '—'}.` : `Effectif ${scoreFmt(e.effectif, 1)} pour ${scoreFmt(theo, 1)} théorique (${e.source === 'bilan' ? 'saisi au bilan de passage' : 'import RH'}).`
+      if (delta > 0) out.conseil = `Sur-effectif de ${scoreFmt(delta, 1)} : −25 pts sur cette dimension par personne au-dessus du théorique.`
+      else if ((H && H.effectifRH && H.effectifRH.soutenu) || (E && e.sousEffectifSoutenu)) out.conseil = 'Sous-effectif depuis 3 mois consécutifs : −25 pts par personne manquante en moyenne.'
+      else out.conseil = 'Effectif conforme au théorique.'
+      out.conseil += ' Dimension liée au recrutement et au planning : à voir avec ton animateur réseau.'
+      break
+    }
+    case 'absenteisme': {
+      const taux = H ? (H.absenteisme && H.absenteisme.score !== null && H.absenteisme.score !== undefined ? 100 - H.absenteisme.score : null) : (E.absenteisme ? E.absenteisme.tauxPct : null)
+      if (taux === null) { out.constat = 'Pas de donnée RH.'; break }
+      out.constat = `Taux d'absentéisme : ${scoreFmt(taux, 1)} %` + (H && H.absenteisme ? ` (moyenne sur ${H.absenteisme.moisCount} mois d'import RH).` : (E.absenteisme.indicatif ? ` (dernier import RH disponible, ${scoreMoisLabel(E.absenteisme.rhMois)} — indicatif).` : '.'))
+      out.conseil = 'La dimension vaut 100 moins le taux d\'absentéisme : chaque point d\'absentéisme en moins rapporte 1 pt sur la dimension.'
+      break
+    }
+    case 'positionnement': {
+      const pos = H ? H.positionnementAnnuel : (E.bilan ? E.bilan.positionnementAnnuel : null)
+      if (pos === null || pos === undefined) {
+        out.constat = mode === 'hebdo' ? 'Pas de positionnement annuel connu.' : (ctx.enCours ? 'Pas encore de bilan de passage ce mois-ci, donc pas de positionnement : la dimension vaut 0 pour l\'instant.' : 'Pas de bilan de passage ce mois-ci, donc pas de positionnement : la dimension vaut 0.')
+        out.conseil = 'Il est repris du positionnement CA annuel saisi au bilan de passage.'
+        break
+      }
+      out.constat = `Positionnement CA annuel : ${scoreFmt(pos, 1)} % (repris du ${mode === 'hebdo' ? 'dernier' : ''} bilan de passage${mode === 'mensuel' ? ' du mois' : ''}).`
+      out.conseil = pos >= 100 ? 'Au maximum : la dimension est plafonnée à 100 %.' : `1 pt sur la dimension par point de positionnement, plafonné à 100 % (encore ${scoreFmt(100 - pos, 1)} points de positionnement à aller chercher).`
+      break
+    }
+    case 'pedlv': {
+      const ped = H ? H.pedlv : (E.pedlv ? { rouge: E.pedlv.rouges, total: E.pedlv.total } : null)
+      if (!ped || !ped.total) {
+        out.constat = mode === 'hebdo' ? 'Aucun envoi PEDLV cette semaine : la dimension vaut 0.' : 'Aucun envoi PEDLV pour ce mois : la dimension vaut 0.'
+        out.conseil = 'Importe tes stats dans « Pour être dans le vert » chaque semaine : l\'envoi est automatique à l\'ouverture du rapport.'
+        break
+      }
+      out.constat = `${ped.rouge}/${ped.total} indicateurs dans le rouge (moins de 70 % de l'objectif réseau).`
+      if (ped.rouge) out.conseil = `Chaque indicateur sorti du rouge rapporte ${scoreFmt(100 / ped.total, 1)} pts sur la dimension, soit +${gainDim(100 / ped.total)} pt sur le score. Il suffit de dépasser 70 % de l'objectif pour sortir du rouge.`
+      else out.conseil = 'Aucun indicateur dans le rouge : continue d\'importer tes stats chaque semaine.'
+      const indic = (ped.indicateurs || (pedlvHebdo && pedlvHebdo.indicateurs) || []).filter(x => x.statut === 'rouge')
+      out.liste = indic.map(x => {
+        const u = SCORE_PEDLV_UNITES[x.cle] || ' %'
+        const seuil = x.objectif ? x.objectif * 0.7 : null
+        return `${SCORE_PEDLV_LABELS[x.cle] || x.cle} : ${scoreFmt(x.valeur, 1)}${u} (objectif ${scoreFmt(x.objectif)}${u}, sortie du rouge à ${scoreFmt(seuil, 1)}${u})`
+      })
+      if (mode === 'mensuel' && out.liste.length) out.liste.unshift('Indicateurs rouges au dernier envoi PEDLV :')
+      break
+    }
+    case 'avis': {
+      const a = H ? H.avis : E.avis
+      if (!a || !a.rating) { out.constat = 'Pas de note Google disponible.'; break }
+      const nb = a.reviewsCount != null ? a.reviewsCount : a.reviews
+      out.constat = `Note Google : ${scoreFmt(a.rating, 1)}/5${nb ? ` (${nb} avis)` : ''}.`
+      out.conseil = `La dimension vaut la note sur 5 ramenée à 100 : +0,1 de note = +2 pts sur la dimension. Propose aux clients satisfaits de laisser un avis.`
+      break
+    }
+    case 'equipe': {
+      const n = H ? H.equipe.niveau : (E.equipe ? E.equipe.niveau : null)
+      if (n === null || n === undefined) { out.constat = 'Aucune évaluation équipe : la dimension vaut 0.'; out.conseil = 'Elle se remplit lors des contrôles de tâches de ton animateur (Évaluation équipe).'; break }
+      out.constat = `Niveau équipe : ${scoreFmt(n, 1)}/10` + (H && H.equipe.objectif ? ` (objectif ${H.equipe.objectif}).` : '.')
+      out.conseil = 'Moyenne des 3 meilleures notes de chaque tâche contrôlée : +1 de niveau = +10 pts sur la dimension. Travaille en priorité les tâches les moins bien notées avant le prochain contrôle.'
+      break
+    }
+    case 'kaizen': {
+      if (H) {
+        const k = H.kaizen
+        if (k.dernierScore === null || k.dernierScore === undefined || !k.dernierMax) { out.constat = 'Aucun mois Kaizen clôturé : la dimension vaut 0.'; out.conseil = 'Elle se remplit à la clôture du premier mois d\'audit.'; break }
+        out.constat = `Dernier mois clôturé (${scoreMoisLabel(k.dernierCloture)}) : ${k.dernierScore}/${k.dernierMax}.` + (k.moisEnCours !== null && k.moisEnCours !== undefined ? ` Mois en cours : ${k.moisEnCours}/50.` : '')
+        out.conseil = `Le score de la semaine reprend le dernier mois clôturé. Chaque point d'audit = ${scoreFmt(100 / k.dernierMax, 1)} pts sur la dimension : corrige les points non conformes de l'audit en cours.`
+      } else {
+        const k = E.kaizen
+        if (!k) { out.constat = 'Pas d\'audit Kaizen ce mois-ci : la dimension vaut 0.'; out.conseil = 'Fais l\'audit Kaizen du mois.'; break }
+        out.constat = `Audit du mois : ${k.score}/${k.scoreMax}${k.cloture ? ' (clôturé)' : ' (en cours)'}.`
+        out.conseil = `Chaque point d'audit = ${scoreFmt(100 / k.scoreMax, 1)} pts sur la dimension : corrige les points non conformes avant la clôture.`
+      }
+      break
+    }
+    case 'entretiens': {
+      let vus, att
+      if (H) { const el = H.entretiensLancements || {}; vus = el.nbVus; att = el.nbEligibles }
+      else if (E.entretiens) { vus = E.entretiens.vus; att = E.entretiens.eligibles }
+      if (!att) { out.constat = 'Pas de collaborateur attendu en entretien ce mois (ou pas d\'import RH).'; break }
+      const reste = Math.max(0, att - (vus || 0))
+      out.constat = `${vus || 0} collaborateur(s) vu(s) en entretien sur ${att} attendu(s) ce mois.`
+      out.conseil = reste
+        ? `Il en reste ${reste} à voir : chacun rapporte ${scoreFmt(100 / att, 1)} pts sur la dimension (+${gainDim(100 / att)} pt sur le score). Comptent les entretiens de pilotage, valorisation, remotivation et recadrage (pas l'Écoute & Feedback).`
+        : 'Tous les collaborateurs attendus ont eu leur entretien ce mois.'
+      break
+    }
+    case 'lancements': {
+      let l, o
+      if (H) { const el = H.entretiensLancements || {}; l = el.joursLances; o = el.joursOuverts }
+      else if (E.lancements) { l = E.lancements.joursLances; o = E.lancements.joursOuverts }
+      if (!o) { out.constat = 'Pas de jour d\'ouverture compté pour l\'instant.'; break }
+      out.constat = `${l || 0} jour(s) lancé(s) sur ${o} jour(s) d'ouverture ${mode === 'mensuel' && ctx.enCours ? 'écoulés ' : ''}ce mois.`
+      out.conseil = (l || 0) >= o ? 'Lancement fait chaque jour : continue.' : `Chaque jour lancé rapporte ${scoreFmt(100 / o, 1)} pts sur la dimension. Fais le lancement de journée chaque jour d'ouverture dans cette appli.`
+      break
+    }
+  }
+  return out
+}
+
+function renderScoreMagasin() {
+  const box = document.getElementById('score-content')
+  const data = state.scoreMagasin
+  const mode = state.scoreMode || 'hebdo'
+  document.getElementById('score-tab-hebdo').classList.toggle('on', mode === 'hebdo')
+  document.getElementById('score-tab-mensuel').classList.toggle('on', mode === 'mensuel')
+  if (!data) { box.innerHTML = '<p class="hint">Chargement…</p>'; return }
+
+  let score, sous, poids, horsCalcul = {}, ctx, libelle, histo = [], couverture = null, intro = ''
+  let selectHtml = ''
+  if (mode === 'hebdo') {
+    const h = data.hebdo
+    if (!h) { box.innerHTML = '<p class="hint">Score de la semaine indisponible.</p>'; return }
+    score = h.score; sous = h.sous || {}; poids = data.poids || {}; ctx = h
+    Object.keys(SCORE_DIMS).forEach(d => { if (sous[d] === null || sous[d] === undefined) horsCalcul[d] = 'Pas de donnée — dimension non comptée' })
+    libelle = 'Score de la semaine (calculé en direct)'
+    histo = (h.historique || []).slice(-8).map(x => ({ lib: formatDateFr(x.periode).slice(0, 5), score: x.score }))
+    intro = 'Le score de la semaine est celui que voit ton animateur réseau dans ses outils.'
+  } else {
+    const m = data.mensuel || {}
+    const options = []
+    if (m.enCours) options.push({ mois: m.enCours.mois, lib: scoreMoisLabel(m.enCours.mois) + ' (en cours)', obj: { ...m.enCours, enCours: true } })
+    ;(m.historique || []).forEach(x => options.push({ mois: x.mois, lib: scoreMoisLabel(x.mois) + (x.statut === 'valide' ? ' (validé)' : ' (provisoire)'), obj: x }))
+    if (!options.length) { box.innerHTML = '<p class="hint">Score mensuel indisponible.</p>'; return }
+    if (!state.scoreMois || !options.some(o => o.mois === state.scoreMois)) state.scoreMois = options[0].mois
+    const sel = options.find(o => o.mois === state.scoreMois).obj
+    selectHtml = `<select class="score-mois-sel" onchange="setScoreMois(this.value)">${options.map(o => `<option value="${o.mois}"${o.mois === state.scoreMois ? ' selected' : ''}>${escapeHtmlClient(o.lib)}</option>`).join('')}</select>`
+    score = sel.score; sous = sel.sous || {}; poids = sel.poids && Object.keys(sel.poids).length ? sel.poids : (data.poids || {}); ctx = sel
+    couverture = sel.couverture
+    Object.keys(SCORE_DIMS).forEach(d => {
+      const n = sel.neutralisations && sel.neutralisations[d]
+      if (n) horsCalcul[d] = 'Neutralisée' + (n.motif ? ' : ' + n.motif : '')
+      else if (sel.exclusions && sel.exclusions[d]) horsCalcul[d] = 'Non comptée : ' + sel.exclusions[d]
+      else if (sous[d] === null || sous[d] === undefined) horsCalcul[d] = 'Pas de donnée — dimension non comptée'
+    })
+    libelle = sel.enCours ? `${scoreMoisLabel(sel.mois)} — en cours, provisoire` : `${scoreMoisLabel(sel.mois)} — ${sel.statut === 'valide' ? 'validé' : 'provisoire'}`
+    const tous = [...(m.historique || [])].reverse().map(x => ({ lib: scoreMoisLabel(x.mois).slice(0, 4), score: x.score, mois: x.mois }))
+    if (m.enCours) tous.push({ lib: scoreMoisLabel(m.enCours.mois).slice(0, 4), score: m.enCours.score, mois: m.enCours.mois })
+    histo = tous.slice(-7).map(x => ({ ...x, cur: x.mois === state.scoreMois }))
+    intro = sel.enCours
+      ? 'Le score du mois en cours est une estimation : il se complète jusqu\'à la fin du mois, puis il est calculé le 1er et validé par Olivier. C\'est ce score qui sert aux primes.'
+      : 'Score mensuel enregistré — c\'est celui qui sert aux primes.'
+  }
+
+  const lignes = scoreLignes(sous, poids, horsCalcul)
+  // Écart avec le relevé précédent
+  let deltaHtml = ''
+  const prec = mode === 'hebdo'
+    ? [...(data.hebdo.historique || [])].reverse().find(x => x.score !== null && x.score !== undefined)
+    : (() => { const h = histo.filter(x => x.score !== null && x.score !== undefined); const i = h.findIndex(x => x.mois === state.scoreMois); return i > 0 ? h[i - 1] : null })()
+  if (prec && score !== null && score !== undefined && prec.score !== null) {
+    const diff = score - prec.score
+    const lib = mode === 'hebdo' ? `vs relevé du ${formatDateFr(prec.periode)}` : `vs ${scoreMoisLabel(prec.mois)}`
+    deltaHtml = `<div class="sh-delta" style="color:${diff > 0 ? '#3FAE6A' : (diff < 0 ? 'var(--rouge)' : 'var(--text-dim)')}">${diff > 0 ? '▲ +' : (diff < 0 ? '▼ ' : '= ')}${diff !== 0 ? diff : ''} pt${Math.abs(diff) > 1 ? 's' : ''}<br><span style="font-weight:400;color:var(--text-dim)">${lib}</span></div>`
+  }
+  const maxH = 100
+  const histoHtml = histo.length > 1 ? `<div class="score-hist">${histo.map((x, i) => {
+    const v = x.score === null || x.score === undefined ? 0 : x.score
+    const cur = mode === 'hebdo' ? false : x.cur
+    return `<div class="sb${cur ? ' cur' : ''}"><em>${x.score === null || x.score === undefined ? '—' : x.score}</em><i style="height:${Math.max(4, v / maxH * 44)}px"></i><span>${escapeHtmlClient(x.lib)}</span></div>`
+  }).join('')}${mode === 'hebdo' ? `<div class="sb cur"><em>${score === null || score === undefined ? '—' : score}</em><i style="height:${Math.max(4, (score || 0) / maxH * 44)}px"></i><span>auj.</span></div>` : ''}</div>` : ''
+
+  const totalGain = lignes.reduce((s, l) => s + l.gain, 0)
+  const hero = `<div class="score-hero">
+    <div class="sh-top">
+      <div><div class="sh-val" style="color:${scoreCouleur(score)}">${score === null || score === undefined ? '—' : score}<small>/100</small></div>
+      <div class="sh-lib">${escapeHtmlClient(libelle)}${couverture !== null && couverture !== undefined && couverture < 100 ? ` · ${scoreFmt(couverture)} % des dimensions comptées` : ''}</div></div>
+      ${deltaHtml}
+    </div>
+    ${histoHtml}
+  </div>
+  <p class="hint" style="margin:0 0 4px">${escapeHtmlClient(intro)}</p>
+  ${score === null || score === undefined ? '<p class="hint">Pas assez de données pour calculer un score (moins de la moitié des dimensions renseignées).</p>' : ''}`
+
+  const aGagner = lignes.filter(l => l.compte && l.gain >= 0.05).sort((a, b) => b.gain - a.gain)
+  const auMax = lignes.filter(l => l.compte && l.gain < 0.05)
+  const hors = lignes.filter(l => !l.compte && l.poids > 0)
+  const carte = (l) => {
+    const ex = scoreExplication(l.d, mode, ctx, l)
+    const pct = l.sous === null ? 0 : Math.max(0, Math.min(100, l.sous))
+    const gainTxt = l.compte ? (l.gain >= 0.05 ? `+${scoreFmt(l.gain, 1)} pt${l.gain >= 1.95 ? 's' : ''} possibles` : 'Au max') : ''
+    return `<div class="dim-card${l.compte ? '' : ' hors'}">
+      <div class="dc-head"><span class="dc-nom">${escapeHtmlClient(SCORE_DIMS[l.d])}</span>${gainTxt ? `<span class="dc-gain${l.gain < 0.05 ? ' zero' : ''}">${gainTxt}</span>` : ''}</div>
+      ${l.compte ? `<div class="dc-bar"><i style="width:${pct}%;background:${scoreCouleur(l.sous)}"></i></div>
+      <div class="dc-meta">${scoreFmt(l.sous)}/100 sur la dimension · poids ${scoreFmt(l.poids)} · rapporte ${scoreFmt(l.apporte, 1)} pt${l.apporte >= 1.95 ? 's' : ''} sur ${scoreFmt(l.max, 1)} possibles</div>`
+        : `<div class="dc-meta" style="margin-top:6px">${escapeHtmlClient(l.hors || 'Non comptée')} · poids ${scoreFmt(l.poids)}</div>`}
+      ${ex.constat ? `<div class="dc-constat">${escapeHtmlClient(ex.constat)}</div>` : ''}
+      ${ex.liste && ex.liste.length ? `<ul class="dc-liste">${ex.liste.map(t => `<li>${escapeHtmlClient(t)}</li>`).join('')}</ul>` : ''}
+      ${l.compte && l.gain >= 0.05 && ex.conseil ? `<div class="dc-conseil">💡 ${escapeHtmlClient(ex.conseil)}</div>` : (ex.conseil && !l.compte ? '' : '')}
+    </div>`
+  }
+  let corps = ''
+  if (aGagner.length) corps += `<div class="score-section-title">Où gagner des points${totalGain >= 0.5 ? ` — jusqu'à +${scoreFmt(totalGain)} pts au total` : ''}</div>` + aGagner.map(carte).join('')
+  if (auMax.length) corps += `<div class="score-section-title">Au maximum</div>` + auMax.map(carte).join('')
+  if (hors.length) corps += `<div class="score-section-title">Non comptées dans ce score</div>` + hors.map(carte).join('')
+
+  const poidsTotal = Object.keys(SCORE_DIMS).reduce((s, d) => s + (Number(poids[d]) || 0), 0)
+  const calcul = `<details class="score-calcul"><summary>Comment le score est-il calculé ?</summary>
+    <p>Chaque dimension est notée de 0 à 100. Le score est la moyenne de ces notes, pondérée par les poids ci-dessous, sur les dimensions comptées. Une dimension sans donnée qui dépend du magasin (bilan, PEDLV, Kaizen, équipe, entretiens, lancements) vaut 0 ; une dimension qui dépend d'un import réseau (effectif, absentéisme, avis Google) est simplement retirée du calcul. Si moins de la moitié du poids total est couverte, il n'y a pas de score.</p>
+    ${mode === 'hebdo'
+      ? '<p><b>Semaine</b> : calcul en direct avec les dernières données connues (dernier bilan de passage, dernier mois Kaizen clôturé, envoi PEDLV de la semaine, mois en cours pour les entretiens et lancements).</p>'
+      : '<p><b>Mois</b> : uniquement les données du mois (bilan de passage du mois, envoi PEDLV du mois, audit Kaizen du mois…). Une dimension peut être neutralisée par Olivier si le magasin n\'y est pour rien (par exemple animateur absent tout le mois). Ce score sert aux primes.</p>'}
+    <table>${Object.keys(SCORE_DIMS).map(d => `<tr><td>${escapeHtmlClient(SCORE_DIMS[d])}</td><td>${scoreFmt(poids[d])}${poidsTotal ? ` <span style="font-weight:400;color:var(--text-dim)">(${scoreFmt((Number(poids[d]) || 0) / poidsTotal * 100)} %)</span>` : ''}</td></tr>`).join('')}</table>
+  </details>`
+
+  box.innerHTML = selectHtml + hero + corps + calcul
 }
 
 async function loadSuivisMagasin() {
