@@ -231,6 +231,33 @@
   .reprise-box, .suivis-bandeau{ background:var(--card); border:1px solid var(--card-border); border-left:3px solid var(--rouge); border-radius:8px; padding:10px 12px; margin:12px 0; }
   .reprise-box h3, .suivis-bandeau h3{ margin:0 0 6px; color:var(--rouge); font-size:15px; }
   .suivi-row{ display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid var(--card-border); font-size:13px; }
+  /* 14/10 : réunion mensuelle, brouillons serveur, sujets imposés. */
+  .point-reunion{ background:var(--card); border:1px solid var(--card-border); border-radius:8px; padding:10px 12px; margin-bottom:10px; }
+  .point-reunion.impose{ border-left:3px solid var(--rouge); }
+  .point-reunion .pt-tete{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:4px; }
+  .pt-badge{ font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:var(--rouge); }
+  .pt-badge.libre{ color:var(--text-dim); }
+  .pt-titre-fixe{ font-weight:700; color:var(--creme); margin:2px 0 4px; }
+  .pt-detail-fixe{ font-size:13px; color:var(--text-dim); white-space:pre-wrap; margin-bottom:6px; }
+  .point-reunion .pt-ligne{ display:flex; gap:8px; }
+  .point-reunion .pt-ligne > div:first-child{ flex:2; }
+  .point-reunion .pt-ligne > div:last-child{ flex:1; }
+  .point-reunion .btn-suppr{ margin:0; flex:0 0 auto; padding:4px 10px; background:none; color:var(--rouge); border:1px solid var(--card-border); font-size:13px; width:auto; }
+  .sig-presence{ background:var(--card); border:1px solid var(--card-border); border-radius:8px; padding:10px 12px; margin-bottom:12px; }
+  .sig-presence .sig-nom{ display:flex; justify-content:space-between; align-items:center; font-weight:700; color:var(--creme); }
+  .sig-presence .sig-nom small{ font-weight:400; color:var(--text-dim); }
+  .sig-presence .btn-absent{ margin:0; width:auto; padding:4px 10px; font-size:12px; background:none; color:var(--text-dim); border:1px solid var(--card-border); border-radius:6px; }
+  .brouillons-box{ background:var(--card); border:1px solid var(--card-border); border-left:3px solid var(--creme); border-radius:8px; padding:10px 12px; margin:12px 0; }
+  .brouillons-box h3{ margin:0 0 6px; color:var(--creme); font-size:15px; }
+  .brouillon-row{ display:flex; align-items:center; gap:8px; padding:7px 0; border-bottom:1px solid var(--card-border); font-size:13px; }
+  .brouillon-row:last-child{ border-bottom:none; }
+  .brouillon-row .br-txt{ flex:1; }
+  .brouillon-row .br-meta{ display:block; font-size:11px; color:var(--text-dim); margin-top:2px; }
+  .brouillon-row button{ margin:0; width:auto; padding:6px 10px; font-size:12px; border-radius:6px; flex-shrink:0; }
+  .sujet-row{ background:var(--card); border:1px solid var(--card-border); border-radius:8px; padding:10px 12px; margin-bottom:8px; font-size:13px; }
+  .sujet-row .sujet-meta{ font-size:11px; color:var(--text-dim); margin-top:4px; }
+  .sujet-row .sujet-btns{ display:flex; gap:6px; margin-top:8px; }
+  .sujet-row .sujet-btns button{ margin:0; width:auto; padding:5px 10px; font-size:12px; }
   /* 13/10 : score santé du magasin, consultable par le manager. */
   .btn-menu.score-teaser{ border-left:3px solid var(--rouge); }
   .btn-menu.score-teaser b{ color:var(--creme); }
@@ -321,6 +348,7 @@ select,input,textarea,button{font-family:inherit}
          AR/Olivier + filtrage par périmètre), donc pas de raison d'en
          imposer un avant. -->
     <button type="button" class="btn-secondary" style="margin-top:18px;" onclick="openHistorique()">📖 Accéder à l'historique</button>
+    <button type="button" class="btn-secondary" onclick="openSujets()">🗂 Sujets imposés des réunions (AR / réseau)</button>
   </section>
 
   <!-- ============ CONFIRMATION CODE SITE (type Kaizen) ============ -->
@@ -359,6 +387,8 @@ select,input,textarea,button{font-family:inherit}
     <!-- 26/09 : bandeau « À suivre » — objectifs d'entretien en retard ou à
          échéance dans les 7 jours, chargé à chaque sélection du magasin. -->
     <div id="suivis-bandeau"></div>
+    <!-- 14/10 : brouillons enregistrés sur le serveur (préparation à l'avance). -->
+    <div id="brouillons-serveur"></div>
     <button class="btn-menu score-teaser" onclick="openScoreMagasin()">📈 Score santé du magasin<span id="score-teaser-sub">Chargement…</span></button>
     <h2>Que veux-tu réaliser ?</h2>
     <button class="btn-menu" onclick="goTo('screen-efb-choix')">Écoute &amp; Feedback de vente<span>4 trames : taux de concrétisation, découverte optique / audio, vierge</span></button>
@@ -368,6 +398,7 @@ select,input,textarea,button{font-family:inherit}
     <button class="btn-menu" onclick="startRemotivation()">Entretien de remotivation<span>Remettre le collaborateur en phase de conquête</span></button>
     <button class="btn-menu" onclick="startRecadrage()">Entretien de recadrage<span>Méthode relationnelle / professionnelle</span></button>
     <button class="btn-menu" onclick="startLancement()">Lancement de journée<span>Présents, objectifs, note libre</span></button>
+    <button class="btn-menu" onclick="startReunion()">Réunion mensuelle<span>Bilan du mois ou débrief, sujets imposés, signatures — vaut lancement de journée</span></button>
     <button class="btn-menu" onclick="openHistorique()">Historique<span>Accès animateurs réseau / réseau complet</span></button>
   </section>
 
@@ -468,6 +499,7 @@ select,input,textarea,button{font-family:inherit}
       <div class="sig-actions"><span class="sig-empty-hint">Signe avec le doigt / la souris</span><button type="button" onclick="clearSignature('sig-ecoute-collab')">Effacer</button></div>
     </div>
 
+    <button class="btn-secondary" onclick="enregistrerBrouillonServeur()">💾 Enregistrer en brouillon</button>
     <button class="btn-primary" onclick="previewEntretien('ecoute_fb')">Aperçu</button>
   </section>
 
@@ -524,6 +556,7 @@ select,input,textarea,button{font-family:inherit}
       <div class="sig-actions"><span class="sig-empty-hint">Signe avec le doigt / la souris</span><button type="button" onclick="clearSignature('sig-pilotage-collab')">Effacer</button></div>
     </div>
 
+    <button class="btn-secondary" onclick="enregistrerBrouillonServeur()">💾 Enregistrer en brouillon</button>
     <button class="btn-primary" onclick="previewPilotage()">Aperçu</button>
   </section>
 
@@ -588,6 +621,7 @@ select,input,textarea,button{font-family:inherit}
       <div class="sig-actions"><span class="sig-empty-hint">Signe avec le doigt / la souris</span><button type="button" onclick="clearSignature('sig-valorisation-collab')">Effacer</button></div>
     </div>
 
+    <button class="btn-secondary" onclick="enregistrerBrouillonServeur()">💾 Enregistrer en brouillon</button>
     <button class="btn-primary" onclick="previewValorisation()">Aperçu</button>
   </section>
 
@@ -671,6 +705,7 @@ select,input,textarea,button{font-family:inherit}
       <div class="sig-actions"><span class="sig-empty-hint">Signe avec le doigt / la souris</span><button type="button" onclick="clearSignature('sig-remotivation-collab')">Effacer</button></div>
     </div>
 
+    <button class="btn-secondary" onclick="enregistrerBrouillonServeur()">💾 Enregistrer en brouillon</button>
     <button class="btn-primary" onclick="previewRemotivation()">Aperçu</button>
   </section>
 
@@ -730,6 +765,7 @@ select,input,textarea,button{font-family:inherit}
       <div class="sig-actions"><span class="sig-empty-hint">Signe avec le doigt / la souris</span><button type="button" onclick="clearSignature('sig-recadrage-collab')">Effacer</button></div>
     </div>
 
+    <button class="btn-secondary" onclick="enregistrerBrouillonServeur()">💾 Enregistrer en brouillon</button>
     <button class="btn-primary" onclick="previewRecadrage()">Aperçu</button>
   </section>
 
@@ -762,7 +798,98 @@ select,input,textarea,button{font-family:inherit}
     <label>Note libre</label>
     <div class="ta-wrap"><textarea id="lancement-note"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('lancement-note', this)">🎤</button></div>
 
+    <button class="btn-secondary" onclick="enregistrerBrouillonServeur()">💾 Enregistrer en brouillon</button>
     <button class="btn-primary" onclick="previewLancement()">Aperçu</button>
+  </section>
+
+  <!-- ============ RÉUNION MENSUELLE (14/10) ============ -->
+  <section class="screen" id="screen-reunion">
+    <div class="top-nav"><button onclick="goTo('screen-menu')">← Retour</button></div>
+    <h2>Réunion mensuelle</h2>
+    <div class="chip" id="reunion-magasin-chip"></div>
+    <div class="hint">Prépare ta réunion à l'avance et enregistre-la en brouillon : tu la reprendras depuis le menu du magasin, sur n'importe quel appareil.</div>
+
+    <label>Ton prénom</label>
+    <input type="text" id="reunion-remplipar">
+    <label>Ton poste</label>
+    <input type="text" id="reunion-poste">
+    <label>Date de la réunion</label>
+    <input type="date" id="reunion-date" onchange="onReunionDateChange()">
+    <label>Type de réunion</label>
+    <select id="reunion-type" onchange="majReunionType()">
+      <option value="bilan_mois">Bilan du mois précédent</option>
+      <option value="debrief">Débrief d'une réunion groupe</option>
+    </select>
+    <div id="reunion-debrief-bloc" style="display:none;">
+      <label>Quelle réunion ?</label>
+      <select id="reunion-soustype" onchange="majReunionType()">
+        <option value="managers">Réunion managers</option>
+        <option value="produit">Réunion produit</option>
+        <option value="annuelle">Réunion annuelle</option>
+        <option value="autre">Autre</option>
+      </select>
+      <div id="reunion-intitule-bloc" style="display:none;">
+        <label>Intitulé</label>
+        <input type="text" id="reunion-intitule" placeholder="Ex. réunion lancement collection">
+      </div>
+    </div>
+
+    <h3>Qui est présent</h3>
+    <div class="presents-list" id="reunion-presents"></div>
+    <div style="display:flex; gap:8px; margin-top:8px;">
+      <input type="text" id="reunion-presents-libre" placeholder="Ajouter une personne (nom, fonction)...">
+      <button type="button" class="btn-secondary" style="margin:0; width:auto; padding:10px 16px;" onclick="ajouterPresentReunion()">Ajouter</button>
+    </div>
+
+    <h3>Sujets imposés</h3>
+    <div class="hint" id="reunion-sujets-hint"></div>
+    <div id="reunion-points-imposes"></div>
+
+    <h3>Points de la réunion</h3>
+    <div id="reunion-points"></div>
+    <button type="button" class="btn-secondary" onclick="ajouterPointReunion()">+ Ajouter un point</button>
+
+    <button class="btn-secondary" onclick="enregistrerBrouillonServeur()">💾 Enregistrer en brouillon</button>
+    <button class="btn-primary" onclick="allerSignaturesReunion()">Passer aux signatures</button>
+  </section>
+
+  <section class="screen" id="screen-reunion-sig">
+    <div class="top-nav"><button onclick="goTo('screen-reunion')">← Modifier la réunion</button></div>
+    <h2>Signatures des présents</h2>
+    <div class="chip" id="reunion-sig-magasin-chip"></div>
+    <div class="hint">Chaque personne présente signe pour attester de sa présence et de la bonne réception des informations. Une personne finalement absente : touche « Absent ».</div>
+    <div style="height:12px"></div>
+    <div id="reunion-signatures"></div>
+    <button class="btn-primary" onclick="previewReunion()">Aperçu</button>
+  </section>
+
+  <!-- ============ SUJETS IMPOSÉS (AR / réseau) — 14/10 ============ -->
+  <section class="screen" id="screen-sujets">
+    <div class="top-nav"><button onclick="goTo(state.currentMagasin ? 'screen-menu' : 'screen-select')">← Retour</button></div>
+    <h2>Sujets imposés des réunions</h2>
+    <div id="sujets-login">
+      <form autocomplete="on" onsubmit="event.preventDefault(); sujetsLogin();">
+        <label for="sujets-user">Identifiant Zimbra</label>
+        <input type="text" id="sujets-user" name="username" autocomplete="username">
+        <label for="sujets-pass">Mot de passe</label>
+        <input type="password" id="sujets-pass" name="password" autocomplete="current-password">
+        <button type="submit" class="btn-primary">Se connecter</button>
+      </form>
+    </div>
+    <div id="sujets-contenu" style="display:none;">
+      <div class="hint" id="sujets-portee"></div>
+      <h3 id="sujet-form-titre">Nouveau sujet</h3>
+      <label for="sujet-mois">Mois de la réunion</label>
+      <select id="sujet-mois"></select>
+      <label for="sujet-titre">Sujet</label>
+      <input type="text" id="sujet-titre" maxlength="200">
+      <label for="sujet-detail">Détail (explication)</label>
+      <div class="ta-wrap"><textarea id="sujet-detail"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('sujet-detail', this)">🎤</button></div>
+      <button type="button" class="btn-primary" id="btn-sujet-save" onclick="enregistrerSujet()">Ajouter le sujet</button>
+      <button type="button" class="btn-secondary" id="btn-sujet-annuler" style="display:none;" onclick="resetFormSujet()">Annuler la modification</button>
+      <h3>Sujets à venir</h3>
+      <div id="sujets-liste"></div>
+    </div>
   </section>
 
   <!-- ============ APERÇU (commun à toutes les trames) ============ -->
@@ -813,8 +940,8 @@ select,input,textarea,button{font-family:inherit}
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.10.13-1'
-const SW_VERSION = '2026.10.09-1'
+const APP_VERSION = '2026.10.14-1'
+const SW_VERSION = '2026.10.14-1'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://raw.githubusercontent.com/olibaroukh/bilan-passage/main/magasins.csv'
@@ -836,9 +963,13 @@ let state = {
 }
 
 function goTo(id) {
+  if (id === 'screen-menu' || id === 'screen-select') state.brouillonServeurId = null
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'))
   document.getElementById(id).classList.add('active')
   majVeilleEcran(id)
+  // 14/10 : liste des brouillons serveur rafraîchie à chaque retour au menu
+  // (un brouillon vient peut-être d'être enregistré depuis une tuile).
+  if (id === 'screen-menu' && state.currentMagasin && typeof loadBrouillonsServeur === 'function') loadBrouillonsServeur()
 }
 function showToast(msg) {
   const t = document.getElementById('toast')
@@ -943,7 +1074,7 @@ function validateConfirmMagasin() {
 function enterMagasin(m) {
   state.currentMagasin = m
   state.pendingMagasin = null
-  document.querySelectorAll('#menu-magasin-chip, #efb-choix-magasin-chip, #ecoute-magasin-chip, #pilotage-magasin-chip, #lancement-magasin-chip, #recadrage-magasin-chip, #valorisation-magasin-chip, #remotivation-magasin-chip')
+  document.querySelectorAll('#menu-magasin-chip, #efb-choix-magasin-chip, #ecoute-magasin-chip, #pilotage-magasin-chip, #lancement-magasin-chip, #recadrage-magasin-chip, #valorisation-magasin-chip, #remotivation-magasin-chip, #reunion-magasin-chip, #reunion-sig-magasin-chip')
     .forEach(el => el.textContent = m.libelle)
   state.collabPromise = loadCollaborateurs(m.code)
   loadSuivisMagasin()
@@ -1438,6 +1569,7 @@ function startRemotivation() {
 const LIBELLES_TYPE_COURT = {
   ecoute_fb: 'Écoute & Feedback', pilotage_optique: 'Pilotage Optique', pilotage_audio: 'Pilotage Audio',
   valorisation: 'Valorisation', remotivation: 'Remotivation', recadrage: 'Recadrage',
+  reunion_mensuelle: 'Réunion mensuelle',
 }
 
 // ============================================================================
@@ -2660,6 +2792,7 @@ function generateLancementPdf(pending) {
 }
 
 function generatePendingPdf(pending) {
+  if (pending.kind === 'reunion') return generateReunionPdf(pending)
   return pending.kind === 'lancement' ? generateLancementPdf(pending) : generateEntretienPdf(pending)
 }
 
@@ -2667,7 +2800,27 @@ function generatePendingPdf(pending) {
 // à part le JSON structuré (data_json, qui inclut les signatures en base64),
 // donc on reconstruit le même objet "pending" que celui utilisé au moment de
 // l'envoi et on repasse par generatePendingPdf, à l'identique du PDF envoyé.
-function regenerateHistoriquePdf(kind, id) {
+async function regenerateHistoriquePdf(kind, id) {
+  if (kind === 'reunion') {
+    // Une fenêtre ouverte avant l'appel réseau (sinon Safari bloque la popup).
+    const win = window.open('', '_blank')
+    try {
+      const res = await fetch(RELAY + '/reunion-get?id=' + id, { headers: { 'X-Store-Token': STORE_TOKEN, 'X-AR-Session': state.arSession } })
+      const data = await res.json()
+      if (!res.ok || !data.ok) throw new Error(data.error || 'erreur')
+      const r = data.reunion
+      const bytes = generateReunionPdf({
+        kind: 'reunion', remplipar: r.rempli_par, poste: r.poste_rempli_par, date: r.date, libelle: r.libelle,
+        presents: r.presents || [], absents: r.absents || [], points: r.points || [], magasinLibelle: r.magasin_libelle,
+      })
+      const url = URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }))
+      if (win) win.location.href = url; else window.open(url, '_blank')
+    } catch (e) {
+      if (win) win.close()
+      showToast('Impossible de régénérer le PDF : ' + e.message)
+    }
+    return
+  }
   try {
     let pending
     if (kind === 'entretien') {
@@ -3163,6 +3316,8 @@ async function confirmSend() {
 async function confirmSendInterne() {
   const pending = state.pending
   if (!pending) { goTo('screen-menu'); return }
+  const brouillonServeurId = state.brouillonServeurId
+  const apresEnvoi = () => { if (brouillonServeurId) supprimerBrouillonServeur(brouillonServeurId, false).then(loadBrouillonsServeur) }
 
   // Génération du PDF (mêmes données que l'aperçu écran, mise en forme imprimée)
   // — jamais bloquant : un échec de génération n'empêche pas l'envoi, l'email
@@ -3172,7 +3327,7 @@ async function confirmSendInterne() {
     const bytes = generatePendingPdf(pending)
     pdfBase64 = arrayBufferToBase64(bytes)
     const magLabel = (state.currentMagasin ? state.currentMagasin.libelle : 'magasin').replace(/[^a-zA-Z0-9]+/g, '_')
-    pdfFilename = (pending.kind === 'lancement' ? 'Lancement' : 'Entretien') + '_' + magLabel + '_' + pending.date + '.pdf'
+    pdfFilename = ({ lancement: 'Lancement', reunion: 'Reunion' }[pending.kind] || 'Entretien') + '_' + magLabel + '_' + pending.date + '.pdf'
   } catch (e) {
     console.warn('Génération PDF échouée, envoi sans pièce jointe:', e)
   }
@@ -3194,6 +3349,7 @@ async function confirmSendInterne() {
       const rep = await res.json().catch(() => ({}))
       showToast(rep.deja ? 'Déjà enregistré aujourd\'hui pour ce collaborateur — aucun doublon créé' : 'Envoyé — mail parti au magasin')
       supprimerBrouillon()
+      apresEnvoi()
       state.pending = null
       loadSuivisMagasin()
       goTo('screen-menu')
@@ -3219,10 +3375,38 @@ async function confirmSendInterne() {
       const rep = await res.json().catch(() => ({}))
       showToast(rep.deja ? 'Lancement déjà enregistré aujourd\'hui pour ce magasin — aucun doublon créé' : 'Envoyé — mail parti au magasin')
       supprimerBrouillon()
+      apresEnvoi()
       state.pending = null
       goTo('screen-menu')
     } catch (e) {
       showToast('Échec de l\'envoi — vérifie ta connexion')
+    }
+    return
+  }
+
+  if (pending.kind === 'reunion') {
+    try {
+      const res = await fetch(RELAY + '/reunion-mensuelle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Store-Token': STORE_TOKEN },
+        body: JSON.stringify({
+          magasinCode: state.currentMagasin.code, typeReunion: pending.typeReunion, sousType: pending.sousType, intitule: pending.intitule,
+          remplipar: pending.remplipar, poste: pending.poste, date: pending.date,
+          presents: pending.presents, absents: pending.absents, points: pending.points,
+          pdfBase64, pdfFilename,
+        }),
+      })
+      const rep = await res.json().catch(() => ({}))
+      if (!res.ok || !rep.ok) throw new Error(rep.error || 'erreur serveur')
+      showToast(rep.deja ? 'Réunion déjà enregistrée ce jour — aucun doublon créé' : 'Réunion enregistrée — PDF envoyé au magasin et à l\'AR')
+      supprimerBrouillon()
+      apresEnvoi()
+      state.pending = null
+      state.reunionForm = null
+      loadSuivisMagasin()
+      goTo('screen-menu')
+    } catch (e) {
+      showToast('Échec de l\'envoi : ' + e.message)
     }
   }
 }
@@ -3321,6 +3505,7 @@ async function loadHistorique() {
     const data = await res.json()
     state.historiqueEntretiens = data.entretiens || []
     state.historiqueLancements = data.lancements || []
+    state.historiqueReunions = data.reunions || []
     document.getElementById('historique-search').value = ''
     renderHistoriqueFiltered()
   } catch (e) {
@@ -3346,11 +3531,12 @@ function renderHistoriqueFiltered() {
 
   const entretiens = (state.historiqueEntretiens || []).filter(e => matches(e.magasin_libelle))
   const lancements = (state.historiqueLancements || []).filter(l => matches(l.magasin_libelle))
+  const reunions = (state.historiqueReunions || []).filter(r => matches(r.magasin_libelle))
 
   // 29/09 : doublons probables = même magasin + même date (+ même type et même
   // collaborateur pour un entretien). Repérés sur tout l'historique chargé.
   const cleE = e => [e.magasin_code || e.magasin_libelle, e.date, e.type, e.collaborateur_matricule || e.collaborateur_nom].join('|')
-  const cleL = l => [l.magasin_code || l.magasin_libelle, l.date].join('|')
+  const cleL = l => [l.magasin_code || l.magasin_libelle, l.date, l.reunion_id ? 'r' + l.reunion_id : ''].join('|')
   const compte = (list, cle) => list.reduce((m, x) => { const k = cle(x); m[k] = (m[k] || 0) + 1; return m }, {})
   const nbE = compte(state.historiqueEntretiens || [], cleE)
   const nbL = compte(state.historiqueLancements || [], cleL)
@@ -3365,23 +3551,32 @@ function renderHistoriqueFiltered() {
     boutons('entretien', e.id) + '</div>'
   )
   const lancementsHtml = renderGrouped(groupByYearMonth(lancements), l =>
-    `<div class="search-item hist-item"><div><b>Lancement</b> — ${l.magasin_libelle || ''} — ${formatDateFr(l.date)} (${l.rempli_par})${badge(nbL[cleL(l)])}</div>` +
-    boutons('lancement', l.id) + '</div>'
+    l.reunion_id
+      ? `<div class="search-item hist-item"><div><b>Lancement</b> (réunion mensuelle) — ${l.magasin_libelle || ''} — ${formatDateFr(l.date)} (${l.rempli_par})</div></div>`
+      : `<div class="search-item hist-item"><div><b>Lancement</b> — ${l.magasin_libelle || ''} — ${formatDateFr(l.date)} (${l.rempli_par})${badge(nbL[cleL(l)])}</div>` +
+        boutons('lancement', l.id) + '</div>'
+  )
+  const reunionsHtml = renderGrouped(groupByYearMonth(reunions), r =>
+    `<div class="search-item hist-item"><div><b>${escapeHtmlClient(r.libelle)}</b> — ${r.magasin_libelle || ''} — ${formatDateFr(r.date)} (${r.rempli_par}) — ${r.nb_presents} présent(s), ${r.nb_points} point(s)</div>` +
+    boutons('reunion', r.id) + '</div>'
   )
   document.getElementById('historique-content').innerHTML =
-    '<h3>Entretiens</h3>' + entretiensHtml + '<h3>Lancements de journée</h3>' + lancementsHtml
+    '<h3>Réunions mensuelles</h3>' + reunionsHtml + '<h3>Entretiens</h3>' + entretiensHtml + '<h3>Lancements de journée</h3>' + lancementsHtml
 }
 
 // Suppression (29/09) — réservée à Olivier (le Worker le vérifie aussi) : pour
 // retirer un doublon. Un entretien supprimé emporte les suivis datés qu'il avait créés.
 async function supprimerHistorique(kind, id, btn) {
-  const list = kind === 'entretien' ? state.historiqueEntretiens : state.historiqueLancements
+  const list = { entretien: state.historiqueEntretiens, lancement: state.historiqueLancements, reunion: state.historiqueReunions }[kind]
   const item = (list || []).find(x => x.id === id)
   if (!item) return
   const desc = kind === 'entretien'
     ? `l'entretien « ${libelleHistorique(item)} » de ${item.collaborateur_nom || '—'} (${item.magasin_libelle || ''}, ${formatDateFr(item.date)})`
-    : `le lancement de journée de ${item.magasin_libelle || ''} du ${formatDateFr(item.date)}`
-  const detail = kind === 'entretien' ? '\n\nLes objectifs datés fixés dans cet entretien seront aussi supprimés.' : ''
+    : kind === 'reunion'
+      ? `la réunion « ${item.libelle} » de ${item.magasin_libelle || ''} du ${formatDateFr(item.date)}`
+      : `le lancement de journée de ${item.magasin_libelle || ''} du ${formatDateFr(item.date)}`
+  const detail = kind === 'entretien' ? '\n\nLes objectifs datés fixés dans cet entretien seront aussi supprimés.'
+    : kind === 'reunion' ? '\n\nSon lancement de journée, ses objectifs datés et ses signatures seront aussi supprimés ; ses sujets imposés redeviendront à traiter.' : ''
   if (!confirm(`Supprimer définitivement ${desc} ?${detail}\n\nCette action est irréversible.`)) return
   if (btn) btn.disabled = true
   try {
@@ -3393,9 +3588,10 @@ async function supprimerHistorique(kind, id, btn) {
     const data = await res.json().catch(() => ({}))
     if (!res.ok || !data.ok) throw new Error(data.error || ('Erreur ' + res.status))
     if (kind === 'entretien') state.historiqueEntretiens = state.historiqueEntretiens.filter(x => x.id !== id)
+    else if (kind === 'reunion') { state.historiqueReunions = state.historiqueReunions.filter(x => x.id !== id); state.historiqueLancements = (state.historiqueLancements || []).filter(x => x.reunion_id !== id) }
     else state.historiqueLancements = state.historiqueLancements.filter(x => x.id !== id)
     renderHistoriqueFiltered()
-    showToast(kind === 'entretien' ? 'Entretien supprimé' : 'Lancement supprimé')
+    showToast({ entretien: 'Entretien supprimé', reunion: 'Réunion supprimée' }[kind] || 'Lancement supprimé')
   } catch (e) {
     if (btn) btn.disabled = false
     showToast('Suppression impossible : ' + e.message)
@@ -3422,6 +3618,7 @@ const ECRANS_SAISIE = {
   'screen-remotivation': 'Remotivation',
   'screen-recadrage': 'Recadrage',
   'screen-lancement': 'Lancement de journée',
+  'screen-reunion': 'Réunion mensuelle',
 }
 const CLASSES_ETAT = ['on-plus', 'on-moins', 'on-fait', 'on-pasfait']
 let brouillonTimer = null
@@ -3441,7 +3638,7 @@ function capturerBrouillon() {
     if (el.type === 'file' || el.type === 'button') return
     const val = (el.type === 'checkbox' || el.type === 'radio') ? el.checked : el.value
     if (el.id) {
-      if (/^etape-/.test(el.id) || el.closest('#lancement-presents')) return
+      if (/^etape-/.test(el.id) || el.closest('#lancement-presents') || el.closest('#reunion-presents') || el.closest('.point-reunion')) return
       champs[el.id] = val
     } else if (el.dataset.key) {
       const parent = el.parentElement && el.parentElement.closest('[id]')
@@ -3476,6 +3673,8 @@ function capturerBrouillon() {
     magasinCode: state.currentMagasin.code, magasinLibelle: state.currentMagasin.libelle, collabNom,
     champs, parCle, classes, ouverts, signatures, etapes, presents,
     remotivationNote: screenId === 'screen-remotivation' ? (state.remotivationNote || null) : null,
+    reunion: screenId === 'screen-reunion' ? lireReunionForm() : null,
+    serveurId: state.brouillonServeurId || null,
   }
 }
 
@@ -3554,8 +3753,8 @@ function dessinerSignature(canvasId, dataUrl) {
   })
 }
 
-async function reprendreBrouillon() {
-  const d = lireBrouillon()
+async function reprendreBrouillon(dServeur) {
+  const d = dServeur || lireBrouillon()
   const bandeau = document.getElementById('brouillon-bandeau')
   if (bandeau) bandeau.remove()
   if (!d) return
@@ -3593,6 +3792,9 @@ async function reprendreBrouillon() {
       }
     } else if (d.screenId === 'screen-recadrage') {
       await startRecadrage()
+    } else if (d.screenId === 'screen-reunion') {
+      await startReunion()
+      await remplirReunionForm(d.reunion)
     } else if (d.screenId === 'screen-lancement') {
       await startLancement()
       const box = document.getElementById('lancement-presents')
@@ -3617,7 +3819,8 @@ async function reprendreBrouillon() {
     for (const id of d.ouverts || []) { const el = document.getElementById(id); if (el) el.classList.add('open') }
     screen.querySelectorAll('[id^="ctrl-notebtn-"]').forEach(b => refreshNoteBtn(b.id.replace('ctrl-notebtn-', '')))
     for (const [id, url] of Object.entries(d.signatures || {})) await dessinerSignature(id, url)
-    showToast('Saisie reprise — vérifie avant d\'envoyer')
+    state.brouillonServeurId = d.serveurId || null
+    showToast(dServeur ? 'Brouillon repris — il sera supprimé à l\'envoi' : 'Saisie reprise — vérifie avant d\'envoyer')
   } catch (e) {
     console.warn('Reprise du brouillon impossible', e)
     showToast('Reprise impossible — le brouillon est conservé')
@@ -3648,7 +3851,7 @@ function proposerBrouillon() {
 // Écran maintenu allumé pendant une trame (Safari 16.4+, Chrome, Edge).
 let verrouVeille = null
 async function majVeilleEcran(screenId) {
-  const veut = !!ECRANS_SAISIE[screenId] && document.visibilityState === 'visible'
+  const veut = (!!ECRANS_SAISIE[screenId] || screenId === 'screen-reunion-sig') && document.visibilityState === 'visible'
   try {
     if (veut && !verrouVeille && 'wakeLock' in navigator) {
       verrouVeille = await navigator.wakeLock.request('screen')
@@ -3657,6 +3860,570 @@ async function majVeilleEcran(screenId) {
       const v = verrouVeille; verrouVeille = null; await v.release()
     }
   } catch (e) { verrouVeille = null }
+}
+
+// ============================================================================
+// RÉUNION MENSUELLE (14/10) — demandée par un animateur réseau. Bilan du mois
+// précédent ou débrief d'une réunion groupe. Présents (import RH + ajouts),
+// sujets imposés par Olivier (réseau) ou l'AR (ses magasins) pour le mois de
+// la réunion — titre et détail verrouillés, mise en place obligatoire — puis
+// points libres. Chaque point : sujet, détail, mise en place, objectif +
+// échéance (l'objectif daté entre dans le bandeau « À suivre »). Signature de
+// chaque présent, PDF envoyé au magasin et à l'AR. Vaut lancement de journée.
+// ============================================================================
+const TYPES_REUNION_LIB = { bilan_mois: 'Bilan du mois précédent', debrief: 'Débrief réunion groupe' }
+const SOUS_TYPES_LIB = { managers: 'Réunion managers', produit: 'Réunion produit', annuelle: 'Réunion annuelle', autre: 'Autre' }
+let pointSeq = 0
+
+function libelleReunionClient(type, sousType, intitule) {
+  const base = TYPES_REUNION_LIB[type] || 'Réunion mensuelle'
+  if (type !== 'debrief') return base
+  const st = sousType === 'autre' ? (intitule || 'Autre') : (SOUS_TYPES_LIB[sousType] || '')
+  return st ? base + ' — ' + st : base
+}
+
+function majReunionType() {
+  const debrief = document.getElementById('reunion-type').value === 'debrief'
+  document.getElementById('reunion-debrief-bloc').style.display = debrief ? 'block' : 'none'
+  document.getElementById('reunion-intitule-bloc').style.display = debrief && document.getElementById('reunion-soustype').value === 'autre' ? 'block' : 'none'
+}
+
+function renderPresentsReunion() {
+  document.getElementById('reunion-presents').innerHTML = state.collaborateurs.map(c =>
+    `<label><input type="checkbox" value="${escapeHtmlClient(c.nom)}" data-fonction="${escapeHtmlClient(c.poste || '')}" checked> ${escapeHtmlClient(c.nom)}${c.poste ? ' <small style="color:var(--text-dim)">(' + escapeHtmlClient(c.poste) + ')</small>' : ''}</label>`
+  ).join('') || '<div class="hint">Aucun collaborateur trouvé — ajoute les présents à la main.</div>'
+}
+
+function ajouterPresentReunion(nomParam, fonctionParam, coche) {
+  const input = document.getElementById('reunion-presents-libre')
+  let nom = nomParam, fonction = fonctionParam || ''
+  if (nom == null) {
+    const brut = input.value.trim()
+    if (!brut) return
+    const i = brut.indexOf(',')
+    nom = i > 0 ? brut.slice(0, i).trim() : brut
+    fonction = i > 0 ? brut.slice(i + 1).trim() : ''
+    input.value = ''
+  }
+  const box = document.getElementById('reunion-presents')
+  if (box.querySelector('.hint')) box.innerHTML = ''
+  const label = document.createElement('label')
+  const cb = document.createElement('input')
+  cb.type = 'checkbox'; cb.value = nom; cb.dataset.fonction = fonction; cb.checked = coche !== false
+  label.appendChild(cb)
+  label.appendChild(document.createTextNode(' ' + nom + (fonction ? ' (' + fonction + ')' : '')))
+  box.appendChild(label)
+}
+
+function htmlPointReunion(p, impose) {
+  const id = ++pointSeq
+  const badge = impose ? (p.portee === 'reseau' ? 'Sujet réseau' : 'Sujet AR') : 'Point libre'
+  return `<div class="point-reunion${impose ? ' impose' : ''}" data-pid="${id}" data-sujet-id="${impose ? p.id : ''}" data-portee="${impose ? p.portee : ''}">
+    <div class="pt-tete"><span class="pt-badge${impose ? '' : ' libre'}">${badge}</span>${impose ? '' : '<button type="button" class="btn-suppr" onclick="this.closest(\'.point-reunion\').remove(); planifierBrouillon()">✕</button>'}</div>
+    ${impose
+      ? `<div class="pt-titre-fixe">${escapeHtmlClient(p.titre)}</div>${p.detail ? `<div class="pt-detail-fixe">${escapeHtmlClient(p.detail)}</div>` : ''}`
+      : `<label>Sujet</label><input type="text" class="pt-titre" maxlength="200" value="${escapeHtmlClient(p.titre || '')}">
+         <label>Détail (l'explication)</label><textarea class="pt-detail">${escapeHtmlClient(p.detail || '')}</textarea>`}
+    <label>Mise en place${impose ? ' (obligatoire)' : ''}</label><textarea class="pt-mep">${escapeHtmlClient(p.miseEnPlace || '')}</textarea>
+    <div class="pt-ligne">
+      <div><label>Objectif</label><input type="text" class="pt-objectif" maxlength="500" value="${escapeHtmlClient(p.objectif || '')}"></div>
+      <div><label>Échéance</label><input type="date" class="pt-echeance" value="${escapeHtmlClient(p.echeance || '')}"></div>
+    </div>
+  </div>`
+}
+
+function ajouterPointReunion(p) {
+  document.getElementById('reunion-points').insertAdjacentHTML('beforeend', htmlPointReunion(p || {}, false))
+}
+
+function lirePointsReunion(selector) {
+  return [...document.querySelectorAll(selector + ' .point-reunion')].map(el => {
+    const sujetId = el.dataset.sujetId ? Number(el.dataset.sujetId) : null
+    const sujet = sujetId ? (state.reunionSujets || []).find(s => s.id === sujetId) : null
+    const val = cls => { const x = el.querySelector(cls); return x ? x.value.trim() : '' }
+    return {
+      sujetId, portee: el.dataset.portee || null,
+      titre: sujet ? sujet.titre : val('.pt-titre'),
+      detail: sujet ? (sujet.detail || '') : val('.pt-detail'),
+      miseEnPlace: val('.pt-mep'), objectif: val('.pt-objectif'), echeance: val('.pt-echeance'),
+    }
+  })
+}
+
+async function chargerSujetsImposes(valeursExistantes) {
+  const box = document.getElementById('reunion-points-imposes')
+  const hint = document.getElementById('reunion-sujets-hint')
+  const date = document.getElementById('reunion-date').value || todayIso()
+  const mois = date.slice(0, 7)
+  const garder = {}
+  ;(valeursExistantes || lirePointsReunion('#reunion-points-imposes')).forEach(p => { if (p.sujetId) garder[p.sujetId] = p })
+  state.reunionSujetsMois = mois
+  hint.textContent = 'Chargement des sujets imposés…'
+  try {
+    const res = await fetch(RELAY + '/reunion-sujets?magasin_code=' + encodeURIComponent(state.currentMagasin.code) + '&mois=' + mois, { headers: { 'X-Store-Token': STORE_TOKEN } })
+    const data = await res.json()
+    if (!res.ok || !data.ok) throw new Error(data.error || 'erreur')
+    state.reunionSujets = data.sujets || []
+  } catch (e) {
+    state.reunionSujets = []
+    hint.textContent = 'Sujets imposés indisponibles (connexion ?) — réessaie avant de valider.'
+    box.innerHTML = ''
+    return
+  }
+  const [y, m] = mois.split('-')
+  hint.textContent = state.reunionSujets.length
+    ? `${state.reunionSujets.length} sujet(s) à traiter obligatoirement en ${MOIS_FR[parseInt(m, 10) - 1].toLowerCase()} ${y} — la mise en place est obligatoire.`
+    : `Aucun sujet imposé pour ${MOIS_FR[parseInt(m, 10) - 1].toLowerCase()} ${y}.`
+  box.innerHTML = state.reunionSujets.map(s => htmlPointReunion({ ...s, ...(garder[s.id] ? { miseEnPlace: garder[s.id].miseEnPlace, objectif: garder[s.id].objectif, echeance: garder[s.id].echeance } : {}) }, true)).join('')
+}
+
+function onReunionDateChange() {
+  const mois = (document.getElementById('reunion-date').value || '').slice(0, 7)
+  if (mois && mois !== state.reunionSujetsMois) chargerSujetsImposes()
+}
+
+async function startReunion() {
+  if (!state.currentMagasin) return
+  document.getElementById('reunion-date').value = todayIso()
+  ;['reunion-remplipar', 'reunion-poste', 'reunion-intitule', 'reunion-presents-libre'].forEach(id => { document.getElementById(id).value = '' })
+  document.getElementById('reunion-type').value = 'bilan_mois'
+  document.getElementById('reunion-soustype').value = 'managers'
+  majReunionType()
+  document.getElementById('reunion-points').innerHTML = ''
+  document.getElementById('reunion-points-imposes').innerHTML = ''
+  state.reunionSujets = []
+  goTo('screen-reunion')
+  if (state.collabPromise) await state.collabPromise
+  renderPresentsReunion()
+  await chargerSujetsImposes([])
+  if (!document.querySelector('#reunion-points .point-reunion')) ajouterPointReunion()
+}
+
+function lireReunionForm() {
+  return {
+    remplipar: document.getElementById('reunion-remplipar').value.trim(),
+    poste: document.getElementById('reunion-poste').value.trim(),
+    date: document.getElementById('reunion-date').value,
+    typeReunion: document.getElementById('reunion-type').value,
+    sousType: document.getElementById('reunion-soustype').value,
+    intitule: document.getElementById('reunion-intitule').value.trim(),
+    presents: [...document.querySelectorAll('#reunion-presents input[type=checkbox]')].map(cb => ({ nom: cb.value, fonction: cb.dataset.fonction || '', coche: cb.checked })),
+    imposes: lirePointsReunion('#reunion-points-imposes'),
+    points: lirePointsReunion('#reunion-points'),
+  }
+}
+
+async function remplirReunionForm(f) {
+  if (!f) return
+  document.getElementById('reunion-remplipar').value = f.remplipar || ''
+  document.getElementById('reunion-poste').value = f.poste || ''
+  document.getElementById('reunion-date').value = f.date || todayIso()
+  document.getElementById('reunion-type').value = f.typeReunion || 'bilan_mois'
+  document.getElementById('reunion-soustype').value = f.sousType || 'managers'
+  document.getElementById('reunion-intitule').value = f.intitule || ''
+  majReunionType()
+  const box = document.getElementById('reunion-presents')
+  ;(f.presents || []).forEach(p => {
+    const cb = [...box.querySelectorAll('input[type=checkbox]')].find(x => x.value === p.nom)
+    if (cb) cb.checked = !!p.coche
+    else ajouterPresentReunion(p.nom, p.fonction, !!p.coche)
+  })
+  await chargerSujetsImposes(f.imposes || [])
+  document.getElementById('reunion-points').innerHTML = ''
+  ;(f.points || []).forEach(p => ajouterPointReunion(p))
+  if (!document.querySelector('#reunion-points .point-reunion')) ajouterPointReunion()
+}
+
+function allerSignaturesReunion() {
+  const f = lireReunionForm()
+  if (!f.remplipar || !f.date) { showToast('Merci de renseigner ton prénom et la date'); return }
+  if (f.typeReunion === 'debrief' && f.sousType === 'autre' && !f.intitule) { showToast('Précise l\'intitulé de la réunion'); return }
+  if (state.reunionSujetsMois !== f.date.slice(0, 7)) { showToast('Sujets imposés pas encore chargés pour ce mois — patiente un instant'); chargerSujetsImposes(); return }
+  const manque = f.imposes.find(p => !p.miseEnPlace)
+  if (manque) { showToast(`Mise en place obligatoire pour « ${manque.titre} »`); return }
+  const points = [...f.imposes, ...f.points.filter(p => p.titre || p.detail || p.miseEnPlace || p.objectif)]
+  if (points.some(p => !p.titre)) { showToast('Chaque point doit avoir un sujet'); return }
+  if (points.some(p => p.objectif && !p.echeance)) { showToast('Chaque objectif doit avoir une échéance'); return }
+  if (!points.length) { showToast('Ajoute au moins un point à la réunion'); return }
+  const presents = f.presents.filter(p => p.coche)
+  if (!presents.length) { showToast('Coche au moins une personne présente'); return }
+  state.reunionForm = f
+  document.getElementById('reunion-signatures').innerHTML = presents.map((p, i) => `
+    <div class="sig-presence" data-nom="${escapeHtmlClient(p.nom)}">
+      <div class="sig-nom"><span>${escapeHtmlClient(p.nom)}${p.fonction ? ' <small>' + escapeHtmlClient(p.fonction) + '</small>' : ''}</span>
+        <button type="button" class="btn-absent" onclick="marquerAbsentReunion(this)">Absent</button></div>
+      <div class="sig-canvas-wrap"><canvas id="sig-reunion-${i}"></canvas></div>
+      <div class="sig-actions"><span class="sig-empty-hint">Signe avec le doigt / la souris</span><button type="button" onclick="clearSignature('sig-reunion-${i}')">Effacer</button></div>
+    </div>`).join('')
+  goTo('screen-reunion-sig')
+  presents.forEach((p, i) => initSignaturePad('sig-reunion-' + i))
+}
+
+function marquerAbsentReunion(btn) {
+  const bloc = btn.closest('.sig-presence')
+  const nom = bloc.dataset.nom
+  if (!confirm(`${nom} n'était finalement pas présent(e) ? Il/elle passera dans les absents.`)) return
+  const cb = [...document.querySelectorAll('#reunion-presents input[type=checkbox]')].find(x => x.value === nom)
+  if (cb) cb.checked = false
+  bloc.remove()
+  enregistrerBrouillon()
+  if (!document.querySelector('#reunion-signatures .sig-presence')) { showToast('Plus aucun présent'); goTo('screen-reunion') }
+}
+
+// Signature réduite (fond blanc, 360×120, JPEG) : quelques Ko au lieu de
+// plusieurs dizaines — 10 signatures par réunion × 115 magasins × 12 mois.
+function signatureCompacte(canvasId) {
+  const src = document.getElementById(canvasId)
+  const pad = sigPads[canvasId]
+  if (!src || !pad || !pad.hasInk) return null
+  const c = document.createElement('canvas')
+  c.width = 360; c.height = 120
+  const ctx = c.getContext('2d')
+  ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height)
+  ctx.drawImage(src, 0, 0, c.width, c.height)
+  return c.toDataURL('image/jpeg', 0.6)
+}
+
+function previewReunion() {
+  const f = state.reunionForm || lireReunionForm()
+  const blocs = [...document.querySelectorAll('#reunion-signatures .sig-presence')]
+  const presents = blocs.map(b => {
+    const canvas = b.querySelector('canvas')
+    const p = f.presents.find(x => x.nom === b.dataset.nom) || { nom: b.dataset.nom }
+    return { nom: p.nom, fonction: p.fonction || '', signature: signatureCompacte(canvas.id) }
+  })
+  const sansSig = presents.filter(p => !p.signature)
+  if (sansSig.length) { showToast(`Signature manquante : ${sansSig.map(p => p.nom).join(', ')}`); return }
+  const nomsPresents = new Set(presents.map(p => p.nom))
+  const absents = f.presents.filter(p => !nomsPresents.has(p.nom)).map(p => p.nom)
+  const points = [...f.imposes, ...f.points.filter(p => p.titre)]
+  state.pending = {
+    kind: 'reunion', remplipar: f.remplipar, poste: f.poste, date: f.date,
+    typeReunion: f.typeReunion, sousType: f.typeReunion === 'debrief' ? f.sousType : null, intitule: f.intitule,
+    libelle: libelleReunionClient(f.typeReunion, f.sousType, f.intitule),
+    presents, absents, points, returnScreen: 'screen-reunion-sig',
+  }
+  document.getElementById('preview-titre').textContent = 'Aperçu — Réunion mensuelle'
+  document.getElementById('preview-content').innerHTML =
+    previewRow('Magasin', state.currentMagasin ? escapeHtmlClient(state.currentMagasin.libelle) : '') +
+    previewRow('Type', escapeHtmlClient(state.pending.libelle)) +
+    previewRow('Animée par', escapeHtmlClient(f.remplipar + (f.poste ? ' (' + f.poste + ')' : ''))) +
+    previewRow('Date', formatDateFr(f.date)) +
+    previewRow('Présents', escapeHtmlClient(presents.map(p => p.nom).join(', '))) +
+    previewRow('Absents', escapeHtmlClient(absents.join(', ')) || 'Aucun') +
+    points.map(p => `<div class="preview-block"><h3>${p.sujetId ? (p.portee === 'reseau' ? '🔒 Réseau — ' : '🔒 AR — ') : ''}${escapeHtmlClient(p.titre)}</h3>` +
+      (p.detail ? `<div class="preview-text">${escapeHtmlClient(p.detail)}</div>` : '') +
+      (p.miseEnPlace ? `<div class="preview-text"><b>Mise en place :</b> ${escapeHtmlClient(p.miseEnPlace)}</div>` : '') +
+      (p.objectif ? `<div class="preview-text"><b>Objectif :</b> ${escapeHtmlClient(p.objectif)}${p.echeance ? ' — échéance ' + formatDateFr(p.echeance) : ''}</div>` : '') + '</div>').join('') +
+    presents.map(p => previewSigBlock('Signature — ' + escapeHtmlClient(p.nom), p.signature)).join('')
+  goTo('screen-preview')
+}
+
+function generateReunionPdf(pending) {
+  const { jsPDF } = window.jspdf
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true })
+  setupMontserratFont(doc)
+  const W = 210, H = 297, mar = 14
+  let y = 0
+  function ensureSpace(needed) { if (y + needed > H - 18) { doc.addPage(); y = 16 } }
+  function sectionLabel(title) {
+    ensureSpace(10)
+    doc.setFont('Montserrat', 'bold'); doc.setFontSize(10); doc.setTextColor(...RED)
+    doc.text(pdfSafe(title.toUpperCase()), mar, y)
+    y += 5.5
+  }
+  function bodyText(label, value, indent) {
+    if (!value) return
+    const x = mar + (indent || 0), w = W - mar - x
+    ensureSpace(12)
+    doc.setFont('Montserrat', 'bold'); doc.setFontSize(8.5); doc.setTextColor(...ROSE_TXT)
+    doc.text(pdfSafe(label), x, y); y += 4.3
+    doc.setFont('Montserrat', 'normal'); doc.setFontSize(10); doc.setTextColor(44, 44, 42)
+    doc.splitTextToSize(pdfSafe(value), w).forEach(line => { ensureSpace(5); doc.text(line, x, y); y += 5 })
+    y += 1.5
+  }
+  function fitOneLine(text, maxW) {
+    let s = String(text)
+    if (doc.getTextWidth(s) <= maxW) return s
+    while (s.length > 1 && doc.getTextWidth(s + '…') > maxW) s = s.slice(0, -1)
+    return s.replace(/\s+$/, '') + '…'
+  }
+  function vignettes(items) {
+    const gap = 2.5, cellH = 10.5, cellW = (W - 2 * mar - gap * (items.length - 1)) / items.length
+    ensureSpace(cellH + 4)
+    items.forEach((it, i) => {
+      const cx = mar + i * (cellW + gap)
+      doc.setFillColor(...ROSE); doc.roundedRect(cx, y, cellW, cellH, 1.3, 1.3, 'F')
+      doc.setFont('Montserrat', 'bold'); doc.setFontSize(5.8); doc.setTextColor(...ROSE_TXT)
+      doc.text(pdfSafe(it.label), cx + 1.8, y + 3.6)
+      doc.setFont('Montserrat', 'bold'); doc.setFontSize(9); doc.setTextColor(...RED)
+      doc.text(fitOneLine(pdfSafe(it.val || '-'), cellW - 3.6), cx + 1.8, y + 8.3)
+    })
+    y += cellH + 5
+  }
+  const magasinNom = pending.magasinLibelle || (state.currentMagasin ? state.currentMagasin.libelle : '')
+  y = pdfHeader(doc, W, mar, 'Réunion mensuelle', magasinNom, pending.date)
+  y -= 1.5
+  vignettes([{ label: 'TYPE', val: pending.libelle }, { label: 'DATE', val: formatDateFr(pending.date) }])
+  vignettes([{ label: 'ANIMÉE PAR', val: pending.remplipar + (pending.poste ? ' (' + pending.poste + ')' : '') }, { label: 'PRÉSENTS / ABSENTS', val: (pending.presents || []).length + ' / ' + (pending.absents || []).length }])
+
+  sectionLabel('Points traités')
+  ;(pending.points || []).forEach((p, i) => {
+    ensureSpace(16)
+    doc.setFillColor(...ROSE); doc.rect(mar, y - 3.8, 1.2, 5.2, 'F')
+    doc.setFont('Montserrat', 'bold'); doc.setFontSize(10.5); doc.setTextColor(...NOIR)
+    const tag = p.sujetId ? (p.portee === 'reseau' ? ' [sujet réseau]' : ' [sujet AR]') : ''
+    doc.splitTextToSize(pdfSafe((i + 1) + '. ' + p.titre + tag), W - 2 * mar - 4).forEach(line => { ensureSpace(5.5); doc.text(line, mar + 3, y); y += 5.2 })
+    y += 0.8
+    bodyText('Détail', p.detail, 3)
+    bodyText('Mise en place', p.miseEnPlace, 3)
+    bodyText('Objectif', p.objectif ? p.objectif + (p.echeance ? ' — échéance : ' + formatDateFr(p.echeance) : '') : '', 3)
+    y += 2
+  })
+
+  if ((pending.absents || []).length) {
+    sectionLabel('Absents')
+    doc.setFont('Montserrat', 'normal'); doc.setFontSize(10); doc.setTextColor(44, 44, 42)
+    doc.splitTextToSize(pdfSafe(pending.absents.join(', ')), W - 2 * mar).forEach(line => { ensureSpace(5); doc.text(line, mar, y); y += 5 })
+    y += 3
+  }
+
+  sectionLabel('Présents — émargement')
+  doc.setFont('Montserrat', 'normal'); doc.setFontSize(8); doc.setTextColor(...GRIS)
+  ensureSpace(6); doc.text(pdfSafe('Chaque signataire atteste de sa présence et de la bonne réception des informations de cette réunion.'), mar, y); y += 5
+  const cols = 3, gap = 4, cellW = (W - 2 * mar - gap * (cols - 1)) / cols, cellH = 24
+  ;(pending.presents || []).forEach((p, i) => {
+    const col = i % cols
+    if (col === 0) ensureSpace(cellH + 3)
+    const cx = mar + col * (cellW + gap)
+    doc.setDrawColor(230, 200, 198); doc.roundedRect(cx, y, cellW, cellH, 1.3, 1.3, 'S')
+    doc.setFont('Montserrat', 'bold'); doc.setFontSize(8); doc.setTextColor(...NOIR)
+    doc.text(fitOneLine(pdfSafe(p.nom), cellW - 3), cx + 1.5, y + 4)
+    if (p.fonction) { doc.setFont('Montserrat', 'normal'); doc.setFontSize(6.5); doc.setTextColor(...GRIS); doc.text(fitOneLine(pdfSafe(p.fonction), cellW - 3), cx + 1.5, y + 7.2) }
+    if (p.signature) { try { doc.addImage(p.signature, p.signature.indexOf('image/png') > 0 ? 'PNG' : 'JPEG', cx + 1.5, y + 8.5, cellW - 3, 14) } catch (e) {} }
+    if (col === cols - 1 || i === pending.presents.length - 1) y += cellH + 3
+  })
+
+  const n = doc.internal.getNumberOfPages()
+  for (let i = 1; i <= n; i++) { doc.setPage(i); pdfFooter(doc, W, H, mar, i, n) }
+  return doc.output('arraybuffer')
+}
+
+// ============================================================================
+// BROUILLONS SERVEUR (14/10) — toutes les tuiles. Le manager prépare à
+// l'avance (sur le PC du magasin) et reprend sur n'importe quel appareil.
+// Même capture que la sauvegarde locale, sans les signatures (elles se font
+// au moment de l'entretien / de la réunion). Plusieurs brouillons par
+// magasin, supprimés à l'envoi, purgés après 30 jours sans modification.
+// ============================================================================
+async function enregistrerBrouillonServeur() {
+  const d = capturerBrouillon()
+  if (!d) { showToast('Rien à enregistrer sur cet écran'); return }
+  d.signatures = {}
+  const screen = document.getElementById(d.screenId)
+  const champPrenom = screen.querySelector('input[id$="-remplipar"]')
+  let creePar = champPrenom ? champPrenom.value.trim() : ''
+  if (!creePar) {
+    creePar = (prompt('Ton prénom (pour retrouver le brouillon) :') || '').trim()
+    if (!creePar) return
+    if (champPrenom) champPrenom.value = creePar
+    d.champs[champPrenom ? champPrenom.id : '_'] = creePar
+  }
+  let libelle = ECRANS_SAISIE[d.screenId] || 'Saisie'
+  if (d.screenId === 'screen-reunion' && d.reunion) libelle = 'Réunion — ' + libelleReunionClient(d.reunion.typeReunion, d.reunion.sousType, d.reunion.intitule)
+  else if (d.screenId === 'screen-ecoute-fb' && d.modele) libelle += ' (' + ({ taux_concretisation: 'Taux de concrét.', decouverte_optique: 'Découverte optique', decouverte_audio: 'Découverte audio', vierge: 'Vierge' }[d.modele] || d.modele) + ')'
+  else if (d.screenId === 'screen-pilotage' && d.type) libelle = LIBELLES_TYPE_COURT[d.type] || libelle
+  if (d.collabNom) libelle += ' · ' + d.collabNom
+  try {
+    const res = await fetch(RELAY + '/brouillon-save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Store-Token': STORE_TOKEN },
+      body: JSON.stringify({ id: state.brouillonServeurId || null, magasinCode: state.currentMagasin.code, ecran: d.screenId, libelle, creePar, data: d }),
+    })
+    const rep = await res.json().catch(() => ({}))
+    if (!res.ok || !rep.ok) throw new Error(rep.error || 'erreur serveur')
+    state.brouillonServeurId = rep.id
+    enregistrerBrouillon()
+    showToast('Brouillon enregistré — à reprendre depuis le menu du magasin')
+  } catch (e) {
+    showToast('Brouillon non enregistré : ' + e.message)
+  }
+}
+
+async function loadBrouillonsServeur() {
+  const el = document.getElementById('brouillons-serveur')
+  el.innerHTML = ''
+  if (!state.currentMagasin) return
+  const code = state.currentMagasin.code
+  try {
+    const res = await fetch(RELAY + '/brouillons?magasin_code=' + encodeURIComponent(code), { headers: { 'X-Store-Token': STORE_TOKEN } })
+    const data = await res.json()
+    if (!state.currentMagasin || state.currentMagasin.code !== code) return
+    const list = data.brouillons || []
+    if (!list.length) return
+    el.innerHTML = `<div class="brouillons-box"><h3>📝 Brouillons en cours (${list.length})</h3>` + list.map(b => {
+      const quand = new Date(String(b.updated_at).replace(' ', 'T') + 'Z')
+      const q = isNaN(quand) ? '' : quand.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) + ' à ' + quand.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+      return `<div class="brouillon-row"><div class="br-txt"><b>${escapeHtmlClient(b.libelle || ECRANS_SAISIE[b.ecran] || 'Saisie')}</b>
+        <span class="br-meta">${b.cree_par ? 'Par ' + escapeHtmlClient(b.cree_par) + ' · ' : ''}modifié le ${q}</span></div>
+        <button type="button" class="btn-secondary" onclick="supprimerBrouillonServeur(${b.id}, true)">🗑</button>
+        <button type="button" class="btn-primary" onclick="reprendreBrouillonServeur(${b.id})">Reprendre</button></div>`
+    }).join('') + '</div>'
+  } catch (e) { /* encart optionnel */ }
+}
+
+async function reprendreBrouillonServeur(id) {
+  try {
+    const res = await fetch(RELAY + '/brouillon-get?id=' + id + '&magasin_code=' + encodeURIComponent(state.currentMagasin.code), { headers: { 'X-Store-Token': STORE_TOKEN } })
+    const data = await res.json()
+    if (!res.ok || !data.ok) throw new Error(data.error || 'erreur')
+    const d = data.brouillon.data || {}
+    d.serveurId = id
+    await reprendreBrouillon(d)
+  } catch (e) {
+    showToast('Reprise impossible : ' + e.message)
+    loadBrouillonsServeur()
+  }
+}
+
+async function supprimerBrouillonServeur(id, demander) {
+  if (!id) return
+  if (demander && !confirm('Supprimer définitivement ce brouillon ?')) return
+  try {
+    await fetch(RELAY + '/brouillon-supprimer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Store-Token': STORE_TOKEN },
+      body: JSON.stringify({ id, magasinCode: state.currentMagasin.code }),
+    })
+  } catch (e) { /* purge à 30 jours de toute façon */ }
+  if (demander) loadBrouillonsServeur()
+}
+
+// ============================================================================
+// SUJETS IMPOSÉS (14/10) — Olivier : sujets réseau ; AR : sujets pour ses
+// magasins. Un sujet vaut pour un mois : il apparaît, verrouillé, dans toute
+// réunion de ce mois tant que le magasin ne l'a pas traité.
+// ============================================================================
+function moisOptionsSujets() {
+  const d = new Date(), out = []
+  for (let i = 0; i < 6; i++) {
+    const x = new Date(d.getFullYear(), d.getMonth() + i, 1)
+    const v = x.getFullYear() + '-' + String(x.getMonth() + 1).padStart(2, '0')
+    out.push(`<option value="${v}">${MOIS_FR[x.getMonth()]} ${x.getFullYear()}</option>`)
+  }
+  return out.join('')
+}
+
+async function openSujets() {
+  goTo('screen-sujets')
+  if (!state.arSession) { const s = dashboardSession(); if (s) { state.arSession = s.token; state.arName = s.ar } }
+  document.getElementById('sujet-mois').innerHTML = moisOptionsSujets()
+  if (state.arSession) await loadSujetsAdmin()
+}
+
+async function sujetsLogin() {
+  try {
+    const res = await fetch(RELAY + '/ar-login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Store-Token': STORE_TOKEN },
+      body: JSON.stringify({ zimbraUser: document.getElementById('sujets-user').value, zimbraPass: document.getElementById('sujets-pass').value }),
+    })
+    const data = await res.json()
+    if (!res.ok || !data.sessionToken) throw new Error('login refusé')
+    state.arSession = data.sessionToken
+    state.arName = data.ar || null
+    await loadSujetsAdmin()
+  } catch (e) { showToast('Connexion refusée') }
+}
+
+async function loadSujetsAdmin() {
+  try {
+    const res = await fetch(RELAY + '/reunion-sujets-admin', { headers: { 'X-Store-Token': STORE_TOKEN, 'X-AR-Session': state.arSession } })
+    if (res.status === 401) {
+      state.arSession = null
+      document.getElementById('sujets-contenu').style.display = 'none'
+      document.getElementById('sujets-login').style.display = 'block'
+      return
+    }
+    const data = await res.json()
+    if (!data.ok) throw new Error(data.error || 'erreur')
+    document.getElementById('sujets-login').style.display = 'none'
+    document.getElementById('sujets-contenu').style.display = 'block'
+    state.sujetsAdmin = data.sujets || []
+    document.getElementById('sujets-portee').textContent = data.estOlivier
+      ? 'Tes sujets s\'appliquent à tout le réseau. Les sujets des AR sont affichés pour information (tu peux les modifier).'
+      : `Tes sujets s'appliquent à tes magasins (${data.ar}). Les sujets réseau d'Olivier sont affichés pour information.`
+    renderSujetsAdmin()
+  } catch (e) { showToast('Impossible de charger les sujets : ' + e.message) }
+}
+
+function renderSujetsAdmin() {
+  const list = state.sujetsAdmin || []
+  document.getElementById('sujets-liste').innerHTML = list.length ? list.map(s => {
+    const [y, m] = s.mois.split('-')
+    const portee = s.portee === 'reseau' ? 'Réseau' : 'AR ' + escapeHtmlClient(s.ar || '')
+    return `<div class="sujet-row"><b>${escapeHtmlClient(s.titre)}</b>${s.detail ? `<div style="white-space:pre-wrap;color:var(--text-dim);margin-top:4px">${escapeHtmlClient(s.detail)}</div>` : ''}
+      <div class="sujet-meta">${MOIS_FR[parseInt(m, 10) - 1]} ${y} · ${portee} · traité par ${s.nb_traites || 0} / ${s.nb_magasins || 0} magasin(s)</div>
+      ${s.modifiable ? `<div class="sujet-btns"><button type="button" class="btn-secondary" onclick="editerSujet(${s.id})">Modifier</button><button type="button" class="btn-secondary" onclick="supprimerSujet(${s.id})">🗑 Supprimer</button></div>` : ''}</div>`
+  }).join('') : '<div class="hint">Aucun sujet à venir.</div>'
+}
+
+function resetFormSujet() {
+  state.sujetEditId = null
+  document.getElementById('sujet-titre').value = ''
+  document.getElementById('sujet-detail').value = ''
+  document.getElementById('sujet-form-titre').textContent = 'Nouveau sujet'
+  document.getElementById('btn-sujet-save').textContent = 'Ajouter le sujet'
+  document.getElementById('btn-sujet-annuler').style.display = 'none'
+}
+
+function editerSujet(id) {
+  const s = (state.sujetsAdmin || []).find(x => x.id === id)
+  if (!s) return
+  state.sujetEditId = id
+  const sel = document.getElementById('sujet-mois')
+  if (![...sel.options].some(o => o.value === s.mois)) sel.insertAdjacentHTML('afterbegin', `<option value="${s.mois}">${s.mois}</option>`)
+  sel.value = s.mois
+  document.getElementById('sujet-titre').value = s.titre
+  document.getElementById('sujet-detail').value = s.detail || ''
+  document.getElementById('sujet-form-titre').textContent = 'Modifier le sujet'
+  document.getElementById('btn-sujet-save').textContent = 'Enregistrer la modification'
+  document.getElementById('btn-sujet-annuler').style.display = 'block'
+  document.getElementById('sujet-titre').scrollIntoView({ behavior: 'smooth', block: 'center' })
+}
+
+async function enregistrerSujet() {
+  const mois = document.getElementById('sujet-mois').value
+  const titre = document.getElementById('sujet-titre').value.trim()
+  const detail = document.getElementById('sujet-detail').value.trim()
+  if (!titre) { showToast('Le sujet est obligatoire'); return }
+  try {
+    const res = await fetch(RELAY + '/reunion-sujet-save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Store-Token': STORE_TOKEN, 'X-AR-Session': state.arSession },
+      body: JSON.stringify({ id: state.sujetEditId || null, mois, titre, detail }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || !data.ok) throw new Error(data.error || ('Erreur ' + res.status))
+    showToast(state.sujetEditId ? 'Sujet modifié' : 'Sujet ajouté')
+    resetFormSujet()
+    await loadSujetsAdmin()
+  } catch (e) { showToast('Enregistrement impossible : ' + e.message) }
+}
+
+async function supprimerSujet(id) {
+  const s = (state.sujetsAdmin || []).find(x => x.id === id)
+  if (!s || !confirm(`Supprimer le sujet « ${s.titre} » ?\n\nLes réunions déjà enregistrées le gardent ; il ne sera plus proposé aux magasins qui ne l'ont pas encore traité.`)) return
+  try {
+    const res = await fetch(RELAY + '/reunion-sujet-supprimer', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Store-Token': STORE_TOKEN, 'X-AR-Session': state.arSession },
+      body: JSON.stringify({ id }),
+    })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok || !data.ok) throw new Error(data.error || ('Erreur ' + res.status))
+    await loadSujetsAdmin()
+  } catch (e) { showToast('Suppression impossible : ' + e.message) }
 }
 
 // ============================================================================
