@@ -1303,7 +1303,10 @@ async function fetchPrefill(matricule) {
   }
   const prefill = { ...(stats || {}) }
   if (mag && mag.caAudioMagPct != null) prefill.caAudioMag = mag.caAudioMagPct
-  if (mag && mag.positionnementAnnuel != null) prefill.positionnementAnnuel = mag.positionnementAnnuel
+  if (mag && mag.positionnementAnnuel != null) {
+    prefill.positionnementAnnuel = mag.positionnementAnnuel
+    if (mag.positionnementAnnuelSource === 'suivi-stats') prefill.champsVerrouilles = (prefill.champsVerrouilles || []).concat(['positionnementAnnuel'])
+  }
   return { prefill, stats, mag }
 }
 // 05/11/2026 : priorité Suivi Stats (valeurs mesurées, non modifiables 🔒), puis PEDLV, puis saisie libre
@@ -1504,7 +1507,7 @@ async function onValorisationCollabChange(matricule) {
   if (document.getElementById('valorisation-collab').value !== matricule) return
   renderStatFields('valorisation-stats', VALORISATION_STATS, prefill)
   document.getElementById('valorisation-stats-hint').textContent = matricule ? prefillHint(stats)
-    : (prefill.positionnementAnnuel != null ? 'Positionnement annuel repris du dernier bilan de passage.' : '')
+    : (prefill.positionnementAnnuel != null ? (prefill.champsVerrouilles && prefill.champsVerrouilles.includes('positionnementAnnuel') ? '🔒 Positionnement annuel : Suivi Stats (cumul à fin du dernier mois).' : 'Positionnement annuel repris du dernier bilan de passage.') : '')
 }
 
 // ============================================================================
