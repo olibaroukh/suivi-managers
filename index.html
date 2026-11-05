@@ -940,8 +940,8 @@ select,input,textarea,button{font-family:inherit}
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.11.05-1'
-const SW_VERSION = '2026.11.05-1'
+const APP_VERSION = '2026.11.05-2'
+const SW_VERSION = '2026.11.05-2'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://zimbra-relay.oli-baroukh.workers.dev/referentiel/magasins.csv'
@@ -1119,7 +1119,7 @@ async function loadCollaborateurs(magasinCode) {
 const STAT = {
   pm:            { key: 'pm', label: 'PM', source: 'pmOpt', unit: '€' },
   pmAudioVente:  { key: 'pm', label: 'PM/vente', source: 'pmAudio', unit: '€' },
-  pmProthese:    { key: 'pmProthese', label: 'PM/prothèse', source: null, unit: '€' },
+  pmProthese:    { key: 'pmProthese', label: 'PM/prothèse', source: 'pmProthese', unit: '€' },
   nbVente:       { key: 'nbVente', label: 'Nbre de ventes', source: 'nbVenteOpt', unit: '' },
   fform:         { key: 'fform', label: 'Fform', source: null, unit: '' },
   posAnnuel:     { key: 'posAnnuel', label: 'Positionnement annuel', source: 'positionnementAnnuel', unit: '%' },
@@ -1267,7 +1267,7 @@ function renderStatFields(containerId, fields, prefill) {
     <div class="field">
       <label>${f.label}${f.source || f.combo ? '' : ' <span style="opacity:.6">(saisie)</span>'}</label>
       <div style="display:flex; align-items:baseline; gap:2px;">
-        <input type="text" id="stat-${containerId}-${f.key}" value="${statPrefillValue(f, prefill)}" style="flex:1;">
+        <input type="text" id="stat-${containerId}-${f.key}" value="${statPrefillValue(f, prefill)}" style="flex:1;${champVerrouille(f, prefill) ? 'opacity:.75;' : ''}" ${champVerrouille(f, prefill) ? 'readonly title="Valeur Suivi Stats, non modifiable"' : ''}>
         ${f.unit ? `<span style="font-size:11px; color:#888; flex-shrink:0;">${f.unit}</span>` : ''}
       </div>
     </div>
@@ -1306,10 +1306,17 @@ async function fetchPrefill(matricule) {
   if (mag && mag.positionnementAnnuel != null) prefill.positionnementAnnuel = mag.positionnementAnnuel
   return { prefill, stats, mag }
 }
+// 05/11/2026 : priorité Suivi Stats (valeurs mesurées, non modifiables 🔒), puis PEDLV, puis saisie libre
+function champVerrouille(f, prefill) {
+  const v = prefill && prefill.champsVerrouilles
+  if (!v || !v.length) return false
+  return f.combo ? f.combo.every(src => v.includes(src)) : !!(f.source && v.includes(f.source))
+}
 function prefillHint(stats) {
+  if (stats && stats.source === 'suivi-stats') return `🔒 ${stats.sourceLibelle} — valeurs mesurées, non modifiables. Les autres champs restent à saisir.`
   return stats
-    ? `Stats pré-remplies (période ${stats.periode}) — modifiables. Les champs « (saisie) » ne sont pas dans l'import PEDLV.`
-    : 'Pas de stats PEDLV trouvées pour ce collaborateur — saisie libre.'
+    ? `Stats pré-remplies (PEDLV, période ${stats.periode}) — modifiables.`
+    : 'Pas de stats trouvées pour ce collaborateur — saisie libre.'
 }
 
 // ── Grille compacte des points de contrôle (26/09) : case Fait, choix + / −,
@@ -2002,7 +2009,7 @@ const PILOTAGE_FIELDS = {
   pilotage_optique: [
     { key: 'pm', label: 'PM', source: 'pmOpt', unit: '€' },
     { key: 'mdc', label: 'MDC', source: 'mdc', unit: '%' },
-    { key: 'transition', label: 'Transition', source: null, unit: '' },
+    { key: 'transition', label: 'Transition', source: 'transitionPct', unit: '%' },
     { key: 'pc', label: 'Pack Confort', source: null, unit: '', combo: ['packConfortPct', 'packConfortPm'], comboUnits: ['%', '€'] },
     { key: 'nbVente', label: 'Nbre de vente', source: 'nbVenteOpt', unit: '' },
     { key: 'sop', label: 'SOP', source: 'sop', unit: '%' },
@@ -2015,7 +2022,7 @@ const PILOTAGE_FIELDS = {
   ],
   pilotage_audio: [
     { key: 'pm', label: 'PM', source: 'pmAudio', unit: '€' },
-    { key: 'ouiezen', label: 'Ouiezen Prem', source: null, unit: '' },
+    { key: 'ouiezen', label: 'Ouiezen Prem', source: 'ouiezen', unit: '%' },
     { key: 'caAccessoires', label: 'CA accessoires', source: 'caAccessoiresPct', unit: '%' },
     { key: 'caAudioMag', label: 'CA audio/CA mag', source: 'caAudioMag', unit: '%' },
     { key: 'txConcret', label: 'Tx de concret', source: 'txConcretAudio', unit: '%' },
@@ -2040,7 +2047,7 @@ function renderPilotageStatsGrid(containerId, type, prefillData) {
     <div class="field">
       <label>${f.label}</label>
       <div style="display:flex; align-items:baseline; gap:2px;">
-        <input type="text" id="stat-${containerId}-${f.key}" value="${pilotagePrefillValue(f, prefillData)}" style="flex:1;">
+        <input type="text" id="stat-${containerId}-${f.key}" value="${pilotagePrefillValue(f, prefillData)}" style="flex:1;${champVerrouille(f, prefillData) ? 'opacity:.75;' : ''}" ${champVerrouille(f, prefillData) ? 'readonly title="Valeur Suivi Stats, non modifiable"' : ''}>
         ${f.unit ? `<span style="font-size:11px; color:#888; flex-shrink:0;">${f.unit}</span>` : ''}
       </div>
     </div>
@@ -2096,9 +2103,7 @@ async function onPilotageCollabChange() {
   const { prefill, stats } = await fetchPrefill(matricule)
   if (document.getElementById('pilotage-collab').value !== matricule) return
   renderPilotageStatsGrid('pilotage-stats-avant', state.currentType, prefill)
-  document.getElementById('pilotage-stats-hint').textContent = stats
-    ? `Stats pré-remplies (période ${stats.periode}) — modifiables.`
-    : 'Pas de stats trouvées pour ce collaborateur — saisie libre.'
+  document.getElementById('pilotage-stats-hint').textContent = prefillHint(stats)
   await reprise
 }
 document.getElementById('pilotage-collab').addEventListener('change', onPilotageCollabChange)
