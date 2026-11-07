@@ -940,8 +940,8 @@ select,input,textarea,button{font-family:inherit}
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.11.05-4'
-const SW_VERSION = '2026.11.05-4'
+const APP_VERSION = '2026.11.07-1'
+const SW_VERSION = '2026.11.07-1'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://zimbra-relay.oli-baroukh.workers.dev/referentiel/magasins.csv'
@@ -1133,7 +1133,7 @@ const STAT = {
   transitions:   { key: 'transitions', label: 'Transitions', source: 'transitionPct', unit: '%' },
   mdc:           { key: 'mdc', label: 'MDC', source: 'mdc', unit: '%' },
   pc:            { key: 'pc', label: 'Pack Confort', source: null, unit: '', combo: ['packConfortPct', 'packConfortPm'], comboUnits: ['%', '€'] },
-  arMax:         { key: 'arMax', label: 'AR MAX', source: null, unit: '' },
+  arMax:         { key: 'arMax', label: 'AR MAX', source: 'arMax', unit: '%' }, // 07/11 : = antireflet HG (Suivi Stats)
   ar3:           { key: 'ar3', label: 'AR 3', source: 'ar3', unit: '%' },
   pm1ere:        { key: 'pm1ere', label: 'PM 1ère paire', source: 'pm1erePaire', unit: '€' },
   testAuditif:   { key: 'testAuditif', label: 'Tests auditifs/mois', source: 'pctTestAuditif', unit: '%' },
@@ -2020,7 +2020,7 @@ const PILOTAGE_FIELDS = {
     { key: 'progIndiv', label: 'Prog indiv', source: null, unit: '' },
     { key: 'txConcret', label: 'Tx de concret', source: 'txConcretOpt', unit: '%' },
     { key: 'pm1ere', label: 'PM 1ère paire', source: 'pm1erePaire', unit: '€' },
-    { key: 'unifIndiv', label: 'Unif Indiv', source: null, unit: '' },
+    { key: 'unifIndiv', label: 'Unif Indiv', source: 'unifIndiv', unit: '%' }, // 07/11 : % du magasin (Suivi Stats)
     { key: 'testAuditif', label: 'Tests auditifs/mois', source: 'pctTestAuditif', unit: '%' },
   ],
   pilotage_audio: [
