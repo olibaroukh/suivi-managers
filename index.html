@@ -166,6 +166,9 @@
   .stats-grid .field label{ margin:0 0 2px; font-size:11px; color:var(--text-dim); }
   .stats-grid .field input{ border:none; padding:2px 0; font-size:14px; background:transparent; }
   .stats-hint{ font-size:11px; color:var(--text-dim); margin-top:4px; }
+  .source-choix{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:12px; color:var(--text-dim); margin-top:8px; }
+  .source-choix button{ font-size:12px; padding:4px 10px; border-radius:14px; border:1px solid var(--text-dim); background:transparent; color:inherit; cursor:pointer; }
+  .source-choix button.actif{ background:#E22F2A; border-color:#E22F2A; color:#fff; font-weight:700; }
   .presents-list label{ display:flex; align-items:center; font-weight:400; gap:8px; padding:6px 0; border-bottom:1px solid var(--card-border); color:var(--creme); }
   .presents-list input{ width:auto; }
   .toast{
@@ -434,6 +437,7 @@ select,input,textarea,button{font-family:inherit}
 
     <h3 id="ecoute-stats-titre">1. Niveau commercial</h3>
     <div class="stats-grid" id="ecoute-stats"></div>
+    <div class="source-choix" data-ecran="ecoute"><span>Source des chiffres :</span><button type="button" data-src="suivi" class="actif">Suivi Stats</button><button type="button" data-src="pedlv">PEDLV</button></div>
     <div class="stats-hint" id="ecoute-stats-hint"></div>
     <div id="ecoute-qualitatif-wrap" style="display:none;">
       <label>Qualitatif</label>
@@ -522,6 +526,7 @@ select,input,textarea,button{font-family:inherit}
 
     <h3>Indicateurs actuels</h3>
     <div class="stats-grid" id="pilotage-stats-avant"></div>
+    <div class="source-choix" data-ecran="pilotage"><span>Source des chiffres :</span><button type="button" data-src="suivi" class="actif">Suivi Stats</button><button type="button" data-src="pedlv">PEDLV</button></div>
     <div class="stats-hint" id="pilotage-stats-hint"></div>
 
     <h3>1. Valoriser ce qui va bien</h3>
@@ -590,6 +595,7 @@ select,input,textarea,button{font-family:inherit}
 
     <h3>Indicateurs</h3>
     <div class="stats-grid" id="valorisation-stats"></div>
+    <div class="source-choix" data-ecran="valorisation"><span>Source des chiffres :</span><button type="button" data-src="suivi" class="actif">Suivi Stats</button><button type="button" data-src="pedlv">PEDLV</button></div>
     <div class="stats-hint" id="valorisation-stats-hint"></div>
     <label>L'évolution de sa tâche</label>
     <div class="ta-wrap"><textarea id="valorisation-evolution" class="ta-compact"></textarea><button type="button" class="mic-btn" onclick="toggleDictation('valorisation-evolution', this)">🎤</button></div>
@@ -940,8 +946,8 @@ select,input,textarea,button{font-family:inherit}
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.11.07-1'
-const SW_VERSION = '2026.11.07-1'
+const APP_VERSION = '2026.11.10-1'
+const SW_VERSION = '2026.11.10-1'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://zimbra-relay.oli-baroukh.workers.dev/referentiel/magasins.csv'
@@ -1290,14 +1296,14 @@ async function fetchPrefill(matricule) {
   let stats = null, mag = null
   if (matricule) {
     try {
-      const res = await fetch(RELAY + '/collab-stats?matricules=' + encodeURIComponent(matricule), { headers: { 'X-Store-Token': STORE_TOKEN } })
+      const res = await fetch(RELAY + '/collab-stats?matricules=' + encodeURIComponent(matricule) + (state.sourceStats === 'pedlv' ? '&source=pedlv' : ''), { headers: { 'X-Store-Token': STORE_TOKEN } })
       const data = await res.json()
       stats = data.collaborateurs && data.collaborateurs[matricule] || null
     } catch (e) {}
   }
   if (state.currentMagasin) {
     try {
-      const resMag = await fetch(RELAY + '/store-monthly-stats?magasin_code=' + encodeURIComponent(state.currentMagasin.code), { headers: { 'X-Store-Token': STORE_TOKEN } })
+      const resMag = await fetch(RELAY + '/store-monthly-stats?magasin_code=' + encodeURIComponent(state.currentMagasin.code) + (state.sourceStats === 'pedlv' ? '&source=pedlv' : ''), { headers: { 'X-Store-Token': STORE_TOKEN } })
       mag = await resMag.json()
     } catch (e) {}
   }
@@ -1309,6 +1315,21 @@ async function fetchPrefill(matricule) {
   }
   return { prefill, stats, mag }
 }
+// 10/11/2026 : choix de la source des chiffres dans chaque entretien — Suivi Stats (cumul à fin du dernier mois, 🔒)
+// par défaut, ou PEDLV (extraction « à date », modifiable ; indicateurs absents de PEDLV laissés vides). La source
+// retenue est enregistrée avec l'entretien (data.sourceStats).
+function majChoixSource() {
+  document.querySelectorAll('.source-choix button').forEach(b => b.classList.toggle('actif', b.dataset.src === (state.sourceStats || 'suivi')))
+}
+document.addEventListener('click', (e) => {
+  const b = e.target.closest && e.target.closest('.source-choix button'); if (!b) return
+  if (state.sourceStats === b.dataset.src) return
+  state.sourceStats = b.dataset.src; majChoixSource()
+  const ecran = b.closest('.source-choix').dataset.ecran
+  if (ecran === 'ecoute') onEcouteCollabChange()
+  else if (ecran === 'pilotage') onPilotageCollabChange()
+  else if (ecran === 'valorisation') onValorisationCollabChange(document.getElementById('valorisation-collab').value)
+})
 // 05/11/2026 : priorité Suivi Stats (valeurs mesurées, non modifiables 🔒), puis PEDLV, puis saisie libre
 function champVerrouille(f, prefill) {
   const v = prefill && prefill.champsVerrouilles
@@ -1316,6 +1337,9 @@ function champVerrouille(f, prefill) {
   return f.combo ? f.combo.every(src => v.includes(src)) : !!(f.source && v.includes(f.source))
 }
 function prefillHint(stats) {
+  if (state.sourceStats === 'pedlv') return stats
+    ? `Stats PEDLV (extraction ${stats.periode || 'à date'}) — modifiables. Les indicateurs absents de PEDLV restent à saisir.`
+    : 'Pas de stats PEDLV pour ce collaborateur — saisie libre.'
   if (stats && stats.source === 'suivi-stats') return `🔒 ${stats.sourceLibelle} — valeurs mesurées, non modifiables. Les autres champs restent à saisir.`
   return stats
     ? `Stats pré-remplies (PEDLV, période ${stats.periode}) — modifiables.`
@@ -1460,6 +1484,7 @@ async function startEcoute(modele) {
   const opt = collabSel.selectedOptions[0]
   renderStatFields('ecoute-stats', m.stats(opt && opt.dataset.poste), null)
   if (isVierge) renderStatFields('ecoute-objectifs', m.stats(), null)
+  state.sourceStats = 'suivi'; majChoixSource()
   document.getElementById('ecoute-stats-hint').textContent = ''
   document.getElementById('ecoute-reprise').innerHTML = ''
   goTo('screen-ecoute-fb')
@@ -1495,6 +1520,7 @@ function startValorisation() {
   state.currentType = 'valorisation'
   document.getElementById('valorisation-date').value = todayIso()
   renderStatFields('valorisation-stats', VALORISATION_STATS, null)
+  state.sourceStats = 'suivi'; majChoixSource()
   document.getElementById('valorisation-stats-hint').textContent = ''
   goTo('screen-valorisation')
   initSignaturePad('sig-valorisation-manager')
@@ -2090,6 +2116,7 @@ async function startEntretien(type) {
   renderPilotageStatsGrid('pilotage-stats-avant', type, null)
   renderPilotageStatsGrid('pilotage-stats-objectif', type, null)
   document.getElementById('pilotage-echeances').innerHTML = ''
+  state.sourceStats = 'suivi'; majChoixSource()
   document.getElementById('pilotage-stats-hint').textContent = ''
   goTo('screen-pilotage')
   loadReprise('pilotage-reprise', type, document.getElementById('pilotage-collab').value)
@@ -2948,7 +2975,7 @@ function previewEntretien(type) {
   const reprises = readReprises('ecoute-reprise')
   data.reprises = reprises
 
-  state.pending = { kind: 'entretien', type: 'ecoute_fb', remplipar, date, matricule, collaborateurNom, data, suivis, reprises, returnScreen: 'screen-ecoute-fb' }
+  state.pending = { kind: 'entretien', type: 'ecoute_fb', remplipar, date, matricule, collaborateurNom, data, suivis, reprises, sourceStats: state.sourceStats === 'pedlv' ? 'pedlv' : 'suivi-stats', returnScreen: 'screen-ecoute-fb' }
 
   let html =
     previewRow('Magasin', state.currentMagasin ? state.currentMagasin.libelle : '') +
@@ -3032,7 +3059,7 @@ function previewPilotage() {
   const matricule = collabSelect.value
   const collaborateurNom = matricule ? collabSelect.options[collabSelect.selectedIndex].text : ''
 
-  state.pending = { kind: 'entretien', type, remplipar, date, matricule, collaborateurNom, data, suivis, reprises, returnScreen: 'screen-pilotage' }
+  state.pending = { kind: 'entretien', type, remplipar, date, matricule, collaborateurNom, data, suivis, reprises, sourceStats: state.sourceStats === 'pedlv' ? 'pedlv' : 'suivi-stats', returnScreen: 'screen-pilotage' }
 
   // N'affiche que les champs remplis (indicateurs "actuels" comme "objectifs")
   // — un champ vide n'a pas de sens à montrer, et c'est ce qui permet aux
@@ -3082,7 +3109,7 @@ function previewValorisation() {
     signatureManager: getSignatureDataURL('sig-valorisation-manager'),
     signatureCollaborateur: getSignatureDataURL('sig-valorisation-collab'),
   }
-  state.pending = { kind: 'entretien', type: 'valorisation', remplipar, date, matricule, collaborateurNom, data, suivis: [], reprises: [], returnScreen: 'screen-valorisation' }
+  state.pending = { kind: 'entretien', type: 'valorisation', remplipar, date, matricule, collaborateurNom, data, suivis: [], reprises: [], sourceStats: state.sourceStats === 'pedlv' ? 'pedlv' : 'suivi-stats', returnScreen: 'screen-valorisation' }
   document.getElementById('preview-titre').textContent = 'Aperçu — Entretien de valorisation'
   document.getElementById('preview-content').innerHTML =
     previewRow('Magasin', state.currentMagasin ? state.currentMagasin.libelle : '') +
@@ -3348,7 +3375,7 @@ async function confirmSendInterne() {
         body: JSON.stringify({
           type: pending.type, magasinCode: state.currentMagasin.code,
           collaborateurMatricule: pending.matricule || null, collaborateurNom: pending.collaborateurNom,
-          remplipar: pending.remplipar, date: pending.date, data: pending.data,
+          remplipar: pending.remplipar, date: pending.date, data: pending.sourceStats ? { ...(pending.data || {}), sourceStats: pending.sourceStats } : pending.data,
           suivis: pending.suivis || [], reprises: (pending.reprises || []).map(r => ({ id: r.id, statut: r.statut })),
           pdfBase64, pdfFilename,
         }),
