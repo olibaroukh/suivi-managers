@@ -946,8 +946,8 @@ select,input,textarea,button{font-family:inherit}
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.11.10-1'
-const SW_VERSION = '2026.11.10-1'
+const APP_VERSION = '2026.11.23-1'
+const SW_VERSION = '2026.11.23-1'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://zimbra-relay.oli-baroukh.workers.dev/referentiel/magasins.csv'
@@ -3758,6 +3758,10 @@ function appliquerValeurs(screen, d) {
   for (const [id, val] of Object.entries(d.champs || {})) {
     const el = document.getElementById(id)
     if (!el || !screen.contains(el)) continue
+    // 23/11/2026 : à la reprise d'un brouillon, les stats viennent d'être pré-remplies
+    // (Suivi Stats / PEDLV) — on ne les écrase ni par un champ verrouillé 🔒, ni par une
+    // valeur vide enregistrée avant que les stats n'arrivent (cas Vanessa / Quincy).
+    if (/^stat-/.test(id) && (el.readOnly || (String(val).trim() === '' && el.value.trim() !== ''))) continue
     if (el.type === 'checkbox' || el.type === 'radio') el.checked = !!val
     else el.value = val
   }
