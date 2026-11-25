@@ -946,8 +946,8 @@ select,input,textarea,button{font-family:inherit}
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.11.25-1'
-const SW_VERSION = '2026.11.25-1'
+const APP_VERSION = '2026.11.25-2'
+const SW_VERSION = '2026.11.25-2'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://zimbra-relay.oli-baroukh.workers.dev/referentiel/magasins.csv'
@@ -3351,6 +3351,9 @@ async function confirmSend() {
 async function confirmSendInterne() {
   const pending = state.pending
   if (!pending) { goTo('screen-menu'); return }
+  // 25/11/2026 : garde-fou — une date d'un mois précédent fait compter l'entretien sur ce mois-là.
+  if (pending.kind !== 'reunion' && pending.date && pending.date.slice(0, 7) < todayIso().slice(0, 7)
+    && !confirm('Attention : la date choisie (' + formatDateFr(pending.date) + ') est dans un mois précédent ; ' + (pending.kind === 'lancement' ? 'ce lancement' : 'cet entretien') + ' comptera pour ce mois-là, pas pour le mois en cours.\n\nOK = envoyer quand même · Annuler = revenir corriger la date')) return
   const brouillonServeurId = state.brouillonServeurId
   const apresEnvoi = () => { if (brouillonServeurId) supprimerBrouillonServeur(brouillonServeurId, false).then(loadBrouillonsServeur) }
 
@@ -3878,10 +3881,17 @@ async function reprendreBrouillon(dServeur) {
       if (b) cls.forEach(c => b.classList.add(c))
     }
     for (const id of d.ouverts || []) { const el = document.getElementById(id); if (el) el.classList.add('open') }
+    // 25/11/2026 (cas Vélizy) : un brouillon commencé un autre jour garde la date du jour de la reprise,
+    // sinon un entretien préparé le 31/10 et envoyé en novembre comptait pour octobre.
+    let dateMaj = false
+    ;['ecoute-date', 'pilotage-date', 'valorisation-date', 'remotivation-date', 'recadrage-date', 'lancement-date'].forEach(id => {
+      const el = document.getElementById(id)
+      if (el && screen.contains(el) && el.value && el.value < todayIso()) { el.value = todayIso(); dateMaj = true }
+    })
     screen.querySelectorAll('[id^="ctrl-notebtn-"]').forEach(b => refreshNoteBtn(b.id.replace('ctrl-notebtn-', '')))
     for (const [id, url] of Object.entries(d.signatures || {})) await dessinerSignature(id, url)
     state.brouillonServeurId = d.serveurId || null
-    showToast(dServeur ? 'Brouillon repris — il sera supprimé à l\'envoi' : 'Saisie reprise — vérifie avant d\'envoyer')
+    showToast((dServeur ? 'Brouillon repris — il sera supprimé à l\'envoi' : 'Saisie reprise — vérifie avant d\'envoyer') + (dateMaj ? ' · date mise à aujourd\'hui' : ''))
   } catch (e) {
     console.warn('Reprise du brouillon impossible', e)
     showToast('Reprise impossible — le brouillon est conservé')
