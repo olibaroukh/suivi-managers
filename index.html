@@ -946,8 +946,8 @@ select,input,textarea,button{font-family:inherit}
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.11.25-2'
-const SW_VERSION = '2026.11.25-2'
+const APP_VERSION = '2026.11.25-3'
+const SW_VERSION = '2026.11.25-3'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://zimbra-relay.oli-baroukh.workers.dev/referentiel/magasins.csv'
@@ -1027,7 +1027,7 @@ function renderArSelect() {
 // RECHERCHE MAGASIN
 // ============================================================================
 document.getElementById('mag-search').addEventListener('input', (e) => {
-  const q = e.target.value.trim().toLowerCase()
+  const q = rechercheNorm(e.target.value)
   const resultsEl = document.getElementById('mag-results')
   if (q.length < 2) { resultsEl.innerHTML = ''; return }
 
@@ -1035,7 +1035,7 @@ document.getElementById('mag-search').addEventListener('input', (e) => {
   if (state.currentAR && state.currentAR !== 'Olivier (tout le réseau)') {
     pool = pool.filter(m => m.animateur === state.currentAR)
   }
-  const matches = pool.filter(m => m.libelle.toLowerCase().includes(q)).slice(0, 20)
+  const matches = pool.filter(m => rechercheNorm(m.libelle + ' ' + (m.code || '')).includes(q)).slice(0, 20)
 
   resultsEl.innerHTML = matches.map(m =>
     `<div class="search-item" data-code="${m.code}">${m.libelle}</div>`
@@ -2237,6 +2237,10 @@ function formatDateFr(iso) {
 // St/Sainte ici, juste pour filtrer une liste déjà chargée).
 function normalizeName(str) {
   return String(str || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim()
+}
+// 25/11/2026 : recherche sans accents, majuscules ni ponctuation (Vélizy = velizy, St-Germain = st germain)
+function rechercheNorm(str) {
+  return normalizeName(str).replace(/œ/g, 'oe').replace(/æ/g, 'ae').replace(/[^a-z0-9]+/g, ' ').replace(/\s+/g, ' ').trim()
 }
 
 // ============================================================================
@@ -3573,21 +3577,21 @@ function rechercheHistorique() {
   clearTimeout(histRechercheTimer)
   histRechercheTimer = setTimeout(() => {
     const brut = document.getElementById('historique-search').value || ''
-    const q = normalizeName(brut)
+    const q = rechercheNorm(brut)
     let code = null
     if (q.length >= 3) {
-      const trouves = (state.magasins || []).filter(m => normalizeName(m.libelle || '').includes(q))
-      const exact = trouves.find(m => normalizeName(m.libelle || '') === q)
+      const trouves = (state.magasins || []).filter(m => rechercheNorm(m.libelle || '').includes(q))
+      const exact = trouves.find(m => rechercheNorm(m.libelle || '') === q)
       if (exact) code = exact.code; else if (trouves.length === 1) code = trouves[0].code
     }
     if ((code || null) !== (state.historiqueCode || null) && (code || !q)) loadHistorique(code, brut)
   }, 400)
 }
 function renderHistoriqueFiltered() {
-  const q = normalizeName(document.getElementById('historique-search').value || '')
+  const q = rechercheNorm(document.getElementById('historique-search').value || '')
   // Historique chargé pour un magasin (par son code) : tout est affiché, même si le libellé enregistré
   // à l'époque diffère du libellé actuel du référentiel.
-  const matches = (libelle) => !q || !!state.historiqueCode || normalizeName(libelle || '').includes(q)
+  const matches = (libelle) => !q || !!state.historiqueCode || rechercheNorm(libelle || '').includes(q)
 
   const entretiens = (state.historiqueEntretiens || []).filter(e => matches(e.magasin_libelle))
   const lancements = (state.historiqueLancements || []).filter(l => matches(l.magasin_libelle))
