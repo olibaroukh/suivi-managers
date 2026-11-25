@@ -933,7 +933,7 @@ select,input,textarea,button{font-family:inherit}
       </form>
     </div>
     <div id="historique-liste" style="display:none;">
-      <input type="text" id="historique-search" placeholder="Rechercher un magasin..." oninput="renderHistoriqueFiltered()" style="margin:8px 0 14px;">
+      <input type="text" id="historique-search" placeholder="Rechercher un magasin..." oninput="rechercheHistorique()" style="margin:8px 0 14px;">
       <div id="historique-content"></div>
     </div>
   </section>
@@ -946,8 +946,8 @@ select,input,textarea,button{font-family:inherit}
 // ============================================================================
 // CONFIGURATION — à vérifier/compléter avant mise en prod
 // ============================================================================
-const APP_VERSION = '2026.11.23-1'
-const SW_VERSION = '2026.11.23-1'
+const APP_VERSION = '2026.11.25-1'
+const SW_VERSION = '2026.11.25-1'
 const RELAY = 'https://zimbra-relay.oli-baroukh.workers.dev'
 // URL du référentiel magasins.csv — À CONFIRMER (repo réel non vérifié pour cette appli)
 const MAGASINS_CSV_URL = 'https://zimbra-relay.oli-baroukh.workers.dev/referentiel/magasins.csv'
@@ -3455,12 +3455,9 @@ function openHistorique() {
   if (state.arSession && document.getElementById('historique-liste').style.display === 'none') {
     document.getElementById('historique-login').style.display = 'none'
     document.getElementById('historique-liste').style.display = 'block'
-    loadHistorique().then(() => {
-      if (state.currentMagasin && state.arSession) {
-        document.getElementById('historique-search').value = state.currentMagasin.libelle
-        renderHistoriqueFiltered()
-      }
-    })
+    // 25/11/2026 : ouvert depuis un magasin → son historique complet (et non les 50 derniers du réseau)
+    const mag = state.currentMagasin
+    loadHistorique(mag ? mag.code : null, mag ? mag.libelle : '')
   }
 }
 // 18/09 : l'Historique est accessible sans magasin sélectionné — le retour
@@ -3483,7 +3480,8 @@ async function historiqueLogin() {
     state.arName = data.ar || null
     document.getElementById('historique-login').style.display = 'none'
     document.getElementById('historique-liste').style.display = 'block'
-    await loadHistorique()
+    const mag = state.currentMagasin
+    await loadHistorique(mag ? mag.code : null, mag ? mag.libelle : '')
   } catch (e) {
     showToast('Connexion refusée')
   }
@@ -3523,9 +3521,14 @@ function renderGrouped(tree, renderItem) {
   }).join('')
 }
 
-async function loadHistorique() {
+// 25/11/2026 (cas Vélizy) : le serveur ne renvoie que les N derniers enregistrements du périmètre ;
+// sans code magasin, un magasin peu actif récemment disparaissait de la liste. On charge donc
+// l'historique du magasin choisi (code), jusqu'à 200 éléments par catégorie.
+async function loadHistorique(code, recherche) {
   try {
-    const res = await fetch(RELAY + '/historique-managers', {
+    const qs = '?limit=200' + (code ? '&magasin_code=' + encodeURIComponent(code) : '')
+    state.historiqueCode = code || null
+    const res = await fetch(RELAY + '/historique-managers' + qs, {
       headers: { 'X-Store-Token': STORE_TOKEN, 'X-AR-Session': state.arSession }
     })
     if (res.status === 401) {
@@ -3541,7 +3544,7 @@ async function loadHistorique() {
     state.historiqueEntretiens = data.entretiens || []
     state.historiqueLancements = data.lancements || []
     state.historiqueReunions = data.reunions || []
-    document.getElementById('historique-search').value = ''
+    document.getElementById('historique-search').value = recherche || ''
     renderHistoriqueFiltered()
   } catch (e) {
     showToast('Impossible de charger l\'historique')
@@ -3560,9 +3563,28 @@ function libelleHistorique(e) {
 // Recherche par magasin (17/09) — filtre côté client sur les données déjà
 // chargées (pas de nouvel appel réseau à chaque frappe), insensible à la
 // casse et aux accents.
+// Recherche : dès qu'un seul magasin correspond, son historique complet est rechargé depuis le serveur.
+let histRechercheTimer = null
+function rechercheHistorique() {
+  renderHistoriqueFiltered()
+  clearTimeout(histRechercheTimer)
+  histRechercheTimer = setTimeout(() => {
+    const brut = document.getElementById('historique-search').value || ''
+    const q = normalizeName(brut)
+    let code = null
+    if (q.length >= 3) {
+      const trouves = (state.magasins || []).filter(m => normalizeName(m.libelle || '').includes(q))
+      const exact = trouves.find(m => normalizeName(m.libelle || '') === q)
+      if (exact) code = exact.code; else if (trouves.length === 1) code = trouves[0].code
+    }
+    if ((code || null) !== (state.historiqueCode || null) && (code || !q)) loadHistorique(code, brut)
+  }, 400)
+}
 function renderHistoriqueFiltered() {
   const q = normalizeName(document.getElementById('historique-search').value || '')
-  const matches = (libelle) => !q || normalizeName(libelle || '').includes(q)
+  // Historique chargé pour un magasin (par son code) : tout est affiché, même si le libellé enregistré
+  // à l'époque diffère du libellé actuel du référentiel.
+  const matches = (libelle) => !q || !!state.historiqueCode || normalizeName(libelle || '').includes(q)
 
   const entretiens = (state.historiqueEntretiens || []).filter(e => matches(e.magasin_libelle))
   const lancements = (state.historiqueLancements || []).filter(l => matches(l.magasin_libelle))
